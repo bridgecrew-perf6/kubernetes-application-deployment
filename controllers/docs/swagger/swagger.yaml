@@ -1,0 +1,12 @@
+info:
+  contact: {}
+  license: {}
+paths:
+  /api/v1/kubernetes/deploy:
+    post:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster

@@ -1,0 +1,6 @@
+{
+  "port":"",
+  "istio_engine_url":"",
+  "knative_engine_url":"",
+  "logging_engine_url":""
+}

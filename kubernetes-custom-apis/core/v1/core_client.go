@@ -11,9 +11,10 @@ type RuntimeConfigV1Alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *RuntimeConfigV1Alpha1Client) NewRuntimeConfigs(namespace string) RuntimeConfigInterface {
+func (c *RuntimeConfigV1Alpha1Client) NewRuntimeConfigs(namespace, resourceName string) RuntimeConfigInterface {
 	return &runtimeConfigclient{
-		client: c.restClient,
-		ns:     namespace,
+		client:       c.restClient,
+		ns:           namespace,
+		resourceName: resourceName,
 	}
 }

@@ -16,4 +16,5 @@ const (
 	KubernetesDeployment     = "deployment"
 	KubernetesDaemonSet      = "daemonsets"
 	KubernetesCronJobs       = "cronjobs"
+	IstioComponent           = "istio-component"
 )

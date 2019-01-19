@@ -30,10 +30,12 @@ func NewClient(cfg *rest.Config, schemeGroupVersion schema.GroupVersion) (*Runti
 		return nil, err
 	}
 	config := *cfg
-	config.GroupVersion = &schemeGroupVersion
+
+	config.ContentConfig.GroupVersion = &schemeGroupVersion
 	config.APIPath = "/apis"
-	config.ContentType = runtime.ContentTypeJSON
+	//config.ContentType = runtime.ContentTypeJSON
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: serializer.NewCodecFactory(scheme)}
+	config.UserAgent = rest.DefaultKubernetesUserAgent()
 	client, err := rest.RESTClientFor(&config)
 	if err != nil {
 		return nil, err

@@ -18,6 +18,9 @@ func NewServicesLauncher(c *kubernetes.Clientset) *ServicesLauncher {
 	return this
 }
 func (p *ServicesLauncher) LaunchService(req *v1.Service) (*v1.Service, error) {
+	if req.Namespace == "" {
+		req.Namespace = "default"
+	}
 	return p.kubeClient.CoreV1().Services(req.Namespace).Create(req)
 }
 

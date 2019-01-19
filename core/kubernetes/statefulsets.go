@@ -31,6 +31,9 @@ func NewStatefulsetLauncher(c *kubernetes.Clientset) *StatefulsetLauncher {
 }
 
 func (p *StatefulsetLauncher) LaunchStatefulSet(req v1.StatefulSet) (set *v1.StatefulSet, err error) {
+	if req.Namespace == "" {
+		req.Namespace = "default"
+	}
 	_, err = CreateNameSpace(p.kubeClient, req.Namespace)
 	if err != nil {
 		utils.Error.Println(err)

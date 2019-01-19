@@ -37,6 +37,7 @@ func main() {
 	r.Run(":" + constants.ServicePort)
 }
 func main_X() {
+
 	client, err := kubernetes.NewForConfig(&rest.Config{Host: "https://54.237.228.34:6443", Username: "cloudplex", Password: "64bdySICej", TLSClientConfig: rest.TLSClientConfig{Insecure: true}})
 	utils.Error.Println(err)
 	pods, err := client.CoreV1().Pods("default").List(metav1.ListOptions{})

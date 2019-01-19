@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
@@ -12,25 +13,39 @@ type runtimeConfigclient struct {
 }
 
 type RuntimeConfigInterface interface {
-	Create(obj *RuntimeConfig) (*RuntimeConfig, error)
-	Update(obj *RuntimeConfig) (*RuntimeConfig, error)
+	Create(obj interface{}) (interface{}, error)
+	Update(obj interface{}) (interface{}, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
-	Get(name string) (*RuntimeConfig, error)
+	Get(name string) (interface{}, error)
 }
 
-func (c *runtimeConfigclient) Create(obj *RuntimeConfig) (*RuntimeConfig, error) {
+func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	err := c.client.Post().
+	raw_data, err := c.client.Post().
 		Namespace(c.ns).Resource(c.resourceName).
-		Body(obj).Do().Into(result)
+		Body(obj).Do().Raw()
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(raw_data, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, err
 }
 
-func (c *runtimeConfigclient) Update(obj *RuntimeConfig) (*RuntimeConfig, error) {
+func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	err := c.client.Put().
+	raw_data, err := c.client.Put().
 		Namespace(c.ns).Resource(c.resourceName).
-		Body(obj).Do().Into(result)
+		Body(obj).Do().Raw()
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(raw_data, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, err
 }
 
@@ -41,10 +56,17 @@ func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions
 		Error()
 }
 
-func (c *runtimeConfigclient) Get(name string) (*RuntimeConfig, error) {
+func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	result := &RuntimeConfig{}
-	err := c.client.Get().
+	raw_data, err := c.client.Get().
 		Namespace(c.ns).Resource(c.resourceName).
-		Name(name).Do().Into(result)
+		Name(name).Do().Raw()
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(raw_data, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, err
 }

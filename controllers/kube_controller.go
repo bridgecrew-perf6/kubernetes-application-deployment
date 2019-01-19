@@ -45,8 +45,8 @@ func (c *KubeController) DeployService(g *gin.Context) {
 	}
 	err = core.StartServiceDeployment(&req)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "kubernetes service deployment failed", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"status": "service deployment failed", "error": err.Error()})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"status": "kubernetes service deployment successfully", "error": nil})
+		g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "error": nil})
 	}
 }

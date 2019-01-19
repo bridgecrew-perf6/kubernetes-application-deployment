@@ -9,6 +9,10 @@ import (
 )
 
 func CreateNameSpace(client *kubernetes.Clientset, namespace string) (*v1.Namespace, error) {
+	existingNamespace, err := client.CoreV1().Namespaces().Get(namespace, v12.GetOptions{})
+	if err == nil {
+		return existingNamespace, nil
+	}
 	return client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: v12.ObjectMeta{Name: namespace}})
 }
 

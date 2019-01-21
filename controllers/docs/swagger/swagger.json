@@ -15,6 +15,38 @@
                 ],
                 "summary": "deploy services on kubernetes cluster"
             }
+        },
+        "/api/v1/registry": {
+            "get": {
+                "description": "deploy services on kubernetes cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster"
+            },
+            "post": {
+                "description": "deploy services on kubernetes cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster"
+            },
+            "delete": {
+                "description": "deploy services on kubernetes cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster"
+            }
         }
     }
 }

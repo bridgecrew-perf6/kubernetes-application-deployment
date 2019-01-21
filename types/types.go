@@ -29,10 +29,22 @@ type KubernetesClusterInfo struct {
 	URL       string      `json:"url" binding:"required"`
 	TLSConfig interface{} `json:"tls_client_config"`
 }
-
-type FilesAttributes struct {
-	FileName      string `bson:"file_name" json:"file_name"`
-	FilePath      string `bson:"path" json:"path"`
-	FileType      string `bson:"file_type" json:"file_type"`
-	FileContentes string `bson:"file_contents" json:"file_contents"`
+type RegistryRequest struct {
+	ClusterInfo         *KubernetesClusterInfo `json:"cluster_info" binding:"required"`
+	Name                string                 `json:"name"  binding:"required"`
+	Namespace           string                 `json:"namespace"  binding:"required"`
+	RegistryCredentials `json:"registry_credentials"`
 }
+type RegistryCredentials struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Url      string `json:"url" binding:"required"`
+}
+
+//type FilesAttributes struct {
+//	FileName      string `bson:"file_name" json:"file_name"`
+//	FilePath      string `bson:"path" json:"path"`
+//	FileType      string `bson:"file_type" json:"file_type"`
+//	FileContentes string `bson:"file_contents" json:"file_contents"`
+//}

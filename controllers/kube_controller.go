@@ -17,7 +17,7 @@ func NewController() (*KubeController, error) {
 
 // @title Kubernetes Deployment Engine
 // @version 1.0
-// @description Kubernetes server deployment engin.
+// @description Kubernetes server deployment engine.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -30,10 +30,13 @@ func NewController() (*KubeController, error) {
 // @host engine.swagger.io
 // @BasePath /api/v1/
 
+// @Title Get
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
+// @Param body body types.ServiceRequest true "body for template content"
 // @Accept  json
 // @Produce  json
+// @Failure 400 {object} types.HTTPError
 // @router /api/v1/kubernetes/deploy [post]
 func (c *KubeController) DeployService(g *gin.Context) {
 	req := types.ServiceRequest{}

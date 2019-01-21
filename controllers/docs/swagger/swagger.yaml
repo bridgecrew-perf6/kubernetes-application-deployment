@@ -10,3 +10,25 @@ paths:
       produces:
       - application/json
       summary: deploy services on kubernetes cluster
+  /api/v1/registry:
+    delete:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster
+    get:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster
+    post:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster

@@ -16,15 +16,20 @@ import (
 	"strings"
 )
 
+func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Config, client *kubernetes.Clientset, err error) {
+	config = &rest.Config{Host: req.URL,
+		Username:        req.Username,
+		Password:        req.Password,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+	}
+	client, err = kubernetes.NewForConfig(config)
+	return config, client, err
+}
 func StartServiceDeployment(req *types.ServiceRequest) error {
 	if req.ClusterInfo == nil {
 		return errors.New("cluster configuration not found in request")
 	}
-	config := rest.Config{Host: req.ClusterInfo.URL,
-		Username:        req.ClusterInfo.Username,
-		Password:        req.ClusterInfo.Password,
-		TLSClientConfig: rest.TLSClientConfig{Insecure: true}}
-	client, err := kubernetes.NewForConfig(&config)
+	config, client, err := createKubernetesClient(req.ClusterInfo)
 	if err != nil {
 		utils.Error.Println(err)
 		return err
@@ -37,17 +42,17 @@ func StartServiceDeployment(req *types.ServiceRequest) error {
 		}
 		switch kubeType {
 		case constants.KubernetesStatefulSets:
-			err = DeployStatefulSets(client, data)
+			err = deployStatefulSets(client, data)
 		case constants.KubernetesService:
-			err = DeployKubernetesService(client, data)
+			err = deployKubernetesService(client, data)
 		case constants.KubernetesConfigMaps:
-			err = DeployKubernetesConfigMap(client, data)
+			err = deployKubernetesConfigMap(client, data)
 		case constants.KubernetesDeployment:
-			err = DeployKubernetesDeployment(client, data)
+			err = deployKubernetesDeployment(client, data)
 		default:
 			//for now default case is for istio and knative
 			utils.Info.Println(kubeType)
-			err = DeployCRDS(client, &config, kubeType, data)
+			err = deployCRDS(client, config, kubeType, data)
 		}
 		if err != nil {
 			errs = append(errs, err.Error())
@@ -60,7 +65,8 @@ func StartServiceDeployment(req *types.ServiceRequest) error {
 	}
 	return nil
 }
-func DeployStatefulSets(client *kubernetes.Clientset, data []interface{}) error {
+
+func deployStatefulSets(client *kubernetes.Clientset, data []interface{}) error {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(client)
 	raw, err := json.Marshal(data)
@@ -91,8 +97,7 @@ func DeployStatefulSets(client *kubernetes.Clientset, data []interface{}) error 
 	}
 	return nil
 }
-
-func DeployKubernetesService(client *kubernetes.Clientset, data []interface{}) error {
+func deployKubernetesService(client *kubernetes.Clientset, data []interface{}) error {
 	var errs []string
 	svc := appKubernetes.NewServicesLauncher(client)
 	raw, err := json.Marshal(data)
@@ -123,8 +128,7 @@ func DeployKubernetesService(client *kubernetes.Clientset, data []interface{}) e
 	}
 	return nil
 }
-
-func DeployKubernetesConfigMap(client *kubernetes.Clientset, data []interface{}) error {
+func deployKubernetesConfigMap(client *kubernetes.Clientset, data []interface{}) error {
 	var errs []string
 	svc := appKubernetes.NewConfigLauncher(client)
 	raw, err := json.Marshal(data)
@@ -155,8 +159,7 @@ func DeployKubernetesConfigMap(client *kubernetes.Clientset, data []interface{})
 	}
 	return nil
 }
-
-func DeployKubernetesDeployment(client *kubernetes.Clientset, data []interface{}) error {
+func deployKubernetesDeployment(client *kubernetes.Clientset, data []interface{}) error {
 	var errs []string
 	depObj := appKubernetes.NewDeploymentLauncher(client)
 	raw, err := json.Marshal(data)
@@ -188,8 +191,7 @@ func DeployKubernetesDeployment(client *kubernetes.Clientset, data []interface{}
 
 	return nil
 }
-
-func DeployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, data []interface{}) error {
+func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, data []interface{}) error {
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -248,7 +250,6 @@ func DeployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 	}
 	return nil
 }
-
 func findKey(istiojsonData map[string]interface{}, key string) (string, error) {
 	keyData, ok := istiojsonData[key]
 	if !ok {
@@ -261,4 +262,41 @@ func findKey(istiojsonData map[string]interface{}, key string) (string, error) {
 		return "", errors.New(key + " type is not string")
 	}
 	return data, nil
+}
+
+func CreateDockerRegistryCredentials(req *types.RegistryRequest) (*v12.Secret, error) {
+	_, client, err := createKubernetesClient(req.ClusterInfo)
+	if err != nil {
+		utils.Error.Println(err)
+		return nil, err
+	}
+	if req.Namespace == "" {
+		req.Namespace = "default"
+	}
+	secrets := appKubernetes.NewSecretsLauncher(client)
+	return secrets.CreateRegistrySecret(req.Name, req.Namespace, req.Username, req.Password, req.Email, req.Url)
+}
+func GetDockerRegistryCredentials(req *types.RegistryRequest) (*v12.Secret, error) {
+	_, client, err := createKubernetesClient(req.ClusterInfo)
+	if err != nil {
+		utils.Error.Println(err)
+		return nil, err
+	}
+	if req.Namespace == "" {
+		req.Namespace = "default"
+	}
+	secrets := appKubernetes.NewSecretsLauncher(client)
+	return secrets.GetRegistrySecret(req.Name, req.Namespace)
+}
+func DeleteDockerRegistryCredentials(req *types.RegistryRequest) error {
+	_, client, err := createKubernetesClient(req.ClusterInfo)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	if req.Namespace == "" {
+		req.Namespace = "default"
+	}
+	secrets := appKubernetes.NewSecretsLauncher(client)
+	return secrets.DeleteRegistrySecret(req.Name, req.Namespace)
 }

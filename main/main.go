@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/rest"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/controllers"
+	_ "kubernetes-services-deployment/controllers/docs"
 	"kubernetes-services-deployment/utils"
 	"os"
 )

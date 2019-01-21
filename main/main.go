@@ -19,6 +19,20 @@ func init() {
 	utils.LoggerInit(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 }
 
+// @title Kubernetes Deployment Engine
+// @version 1.0
+// @description Kubernetes server deployment engine.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host engine.swagger.io
+// @BasePath /api/v1/
 func main() {
 	r := gin.Default()
 	utils.InitFlags()

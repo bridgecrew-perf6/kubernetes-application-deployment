@@ -54,9 +54,11 @@ func (p *StatefulsetLauncher) PatchStatefulSets(req v1.StatefulSet) (set *v1.Sta
 func (p *StatefulsetLauncher) GetStatefulSet(name, namespace string) (set *v1.StatefulSet, err error) {
 	return p.kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
 }
-
-func (p *StatefulsetLauncher) DeleteStatefulSet(namespace, serviceName string) {
-
+func (p *StatefulsetLauncher) GetAllStatefulSet(namespace string) (set *v1.StatefulSetList, err error) {
+	return p.kubeClient.AppsV1().StatefulSets(namespace).List(metav1.ListOptions{})
+}
+func (p *StatefulsetLauncher) DeleteStatefulSet(namespace, serviceName string) error {
+	return p.kubeClient.AppsV1().StatefulSets(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 	//p.DeletePV(namespace,serviceName)
 }
 

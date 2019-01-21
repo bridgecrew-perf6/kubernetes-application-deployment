@@ -6,7 +6,7 @@
     "paths": {
         "/api/v1/kubernetes/deploy": {
             "post": {
-                "description": "deploy services on kubernetes cluster",
+                "description": "deploy services on kubernetes cluste",
                 "consumes": [
                     "application/json"
                 ],
@@ -46,6 +46,78 @@
                     "application/json"
                 ],
                 "summary": "deploy services on kubernetes cluster"
+            }
+        },
+        "/api/v1/statefulsets/{namespace}": {
+            "get": {
+                "description": "get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get status of  all kubernetes services deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Namespace of kubernetes cluster",
+                        "name": "namespace",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "/api/v1/statefulsets/{name}/{namespace}": {
+            "get": {
+                "description": "get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get status of kubernetes services deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the kubernetes service",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of the kubernetes service",
+                        "name": "namespace",
+                        "in": "path"
+                    }
+                ]
+            },
+            "delete": {
+                "description": "get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get status of kubernetes services deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the kubernetes service",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of the kubernetes service",
+                        "name": "namespace",
+                        "in": "path"
+                    }
+                ]
             }
         }
     }

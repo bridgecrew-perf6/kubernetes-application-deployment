@@ -6,7 +6,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: deploy services on kubernetes cluster
+      description: deploy services on kubernetes cluste
       produces:
       - application/json
       summary: deploy services on kubernetes cluster
@@ -32,3 +32,54 @@ paths:
       produces:
       - application/json
       summary: deploy services on kubernetes cluster
+  /api/v1/statefulsets/{name}/{namespace}:
+    delete:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+  /api/v1/statefulsets/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of all kubernetes services deployment on a Kubernetes
+        Cluster. If you need all services status then pass namespace=""
+      parameters:
+      - description: Namespace of kubernetes cluster
+        in: path
+        name: namespace
+        type: string
+      produces:
+      - application/json
+      summary: get status of  all kubernetes services deployment

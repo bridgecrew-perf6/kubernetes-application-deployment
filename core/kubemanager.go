@@ -300,3 +300,46 @@ func DeleteDockerRegistryCredentials(req *types.RegistryRequest) error {
 	secrets := appKubernetes.NewSecretsLauncher(client)
 	return secrets.DeleteRegistrySecret(req.Name, req.Namespace)
 }
+
+func ListStatefulSets(username, password, host_url, namespace string) (*v1.StatefulSetList, error) {
+	cluster_info := types.KubernetesClusterInfo{
+		Username: username,
+		Password: password,
+		URL:      host_url,
+	}
+	_, client, err := createKubernetesClient(&cluster_info)
+	if err != nil {
+		utils.Error.Println(err)
+		return nil, err
+	}
+	statefulsetObj := appKubernetes.NewStatefulsetLauncher(client)
+	return statefulsetObj.GetAllStatefulSet(namespace)
+}
+func GetStatefulSet(username, password, host_url, namespace, name string) (*v1.StatefulSet, error) {
+	cluster_info := types.KubernetesClusterInfo{
+		Username: username,
+		Password: password,
+		URL:      host_url,
+	}
+	_, client, err := createKubernetesClient(&cluster_info)
+	if err != nil {
+		utils.Error.Println(err)
+		return nil, err
+	}
+	statefulsetObj := appKubernetes.NewStatefulsetLauncher(client)
+	return statefulsetObj.GetStatefulSet(namespace, name)
+}
+func DeleteStatefulSet(username, password, host_url, namespace, name string) error {
+	cluster_info := types.KubernetesClusterInfo{
+		Username: username,
+		Password: password,
+		URL:      host_url,
+	}
+	_, client, err := createKubernetesClient(&cluster_info)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	statefulsetObj := appKubernetes.NewStatefulsetLauncher(client)
+	return statefulsetObj.DeleteStatefulSet(namespace, name)
+}

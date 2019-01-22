@@ -75,7 +75,6 @@ func (c *KubeController) GetStatefulSetsStatus(g *gin.Context) {
 	g.JSON(http.StatusOK, gin.H{"error": nil, "data": string(d)})
 }
 
-// @group Statefulsets
 // @Summary get status of kubernetes services deployment
 // @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param name path string true "Name of the kubernetes service"

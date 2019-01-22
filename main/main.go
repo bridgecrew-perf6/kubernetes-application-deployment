@@ -4,13 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/controllers"
-	_ "kubernetes-services-deployment/controllers/docs"
+	"kubernetes-services-deployment/controllers/docs"
 	"kubernetes-services-deployment/utils"
 	"os"
 )
@@ -48,6 +49,11 @@ func main() {
 	if constants.ServicePort == "" {
 		constants.ServicePort = "8089"
 	}
+	docs.SwaggerInfo.Title = "Kubernetes Deployment Engine"
+	docs.SwaggerInfo.Description = "Kubernetes server deployment engine."
+	docs.SwaggerInfo.Version = "1.0"
+
+	docs.SwaggerInfo.BasePath = "/api/v1"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Run(":" + constants.ServicePort)
 }

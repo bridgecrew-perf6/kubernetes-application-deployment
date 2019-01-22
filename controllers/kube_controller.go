@@ -17,7 +17,7 @@ func NewController() (*KubeController, error) {
 
 // @Title Get
 // @Summary deploy services on kubernetes cluster
-// @Description deploy services on kubernetes cluste
+// @Description deploy services on kubernetes cluster
 // @Accept  json
 // @Produce  json
 // @router /api/v1/kubernetes/deploy [post]

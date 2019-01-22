@@ -14,11 +14,12 @@ import (
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
+
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry [post]
 func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
-	req := types.RegistryRequest{}
+	var req types.RegistryRequest
 	err := g.ShouldBind(&req)
 	if err != nil {
 		utils.Error.Println(err)
@@ -49,17 +50,31 @@ func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
+// @Param name path string true "Name of the kubernetes service"
+// @Param namespace path string false "Namespace of the kubernetes service"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/registry [get]
+// @router /api/v1/registry/{namespace}/{name} [get]
 func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 	req := types.RegistryRequest{}
-	err := g.ShouldBind(&req)
-	if err != nil {
-		utils.Error.Println(err)
-		utils.NewError(g, http.StatusBadRequest, err)
+	namespace := g.Param("namespace")
+	name := g.Param("name")
+	username := g.GetHeader("username")
+	password := g.GetHeader("password")
+	hostUrl := g.GetHeader("host_url")
+	if username == "" || password == "" || hostUrl == "" {
+		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "username, password or host_url is missing."})
 		return
 	}
+	if name == "" {
+		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
+		return
+	}
+	req.RegistryCredentials.Username = username
+	req.RegistryCredentials.Password = password
+	req.RegistryCredentials.Url = hostUrl
+	req.Namespace = namespace
+	req.Name = name
 	data, err := core.GetDockerRegistryCredentials(&req)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
@@ -79,18 +94,32 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
+// @Param name path string true "Name of the kubernetes service"
+// @Param namespace path string false "Namespace of the kubernetes service"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/registry [delete]
+// @router /api/v1/registry/{namespace}/{name} [delete]
 func (c *KubeController) DeleteRegistrySecret(g *gin.Context) {
 	req := types.RegistryRequest{}
-	err := g.ShouldBind(&req)
-	if err != nil {
-		utils.Error.Println(err)
-		g.JSON(http.StatusBadRequest, gin.H{"status": "", "Error": err.Error()})
+	namespace := g.Param("namespace")
+	name := g.Param("name")
+	username := g.GetHeader("username")
+	password := g.GetHeader("password")
+	hostUrl := g.GetHeader("host_url")
+	if username == "" || password == "" || hostUrl == "" {
+		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "username, password or host_url is missing."})
 		return
 	}
-	err = core.DeleteDockerRegistryCredentials(&req)
+	if name == "" {
+		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
+		return
+	}
+	req.RegistryCredentials.Username = username
+	req.RegistryCredentials.Password = password
+	req.RegistryCredentials.Url = hostUrl
+	req.Namespace = namespace
+	req.Name = name
+	err := core.DeleteDockerRegistryCredentials(&req)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to delete secrets", "Error": err.Error()})
 		return

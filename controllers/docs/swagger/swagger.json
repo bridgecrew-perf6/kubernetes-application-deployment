@@ -1,12 +1,18 @@
 {
+    "swagger": "2.0",
     "info": {
+        "description": "deploy services on kubernetes cluster",
+        "title": "Get",
         "contact": {},
-        "license": {}
+        "license": {},
+        "version": "{{.Version}}"
     },
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
     "paths": {
         "/api/v1/kubernetes/deploy": {
             "post": {
-                "description": "deploy services on kubernetes cluste",
+                "description": "deploy services on kubernetes cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -17,6 +23,16 @@
             }
         },
         "/api/v1/registry": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ]
+            }
+        },
+        "/api/v1/registry/{namespace}/{name}": {
             "get": {
                 "description": "deploy services on kubernetes cluster",
                 "consumes": [
@@ -25,17 +41,22 @@
                 "produces": [
                     "application/json"
                 ],
-                "summary": "deploy services on kubernetes cluster"
-            },
-            "post": {
-                "description": "deploy services on kubernetes cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "deploy services on kubernetes cluster"
+                "summary": "deploy services on kubernetes cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the kubernetes service",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of the kubernetes service",
+                        "name": "namespace",
+                        "in": "path"
+                    }
+                ]
             },
             "delete": {
                 "description": "deploy services on kubernetes cluster",
@@ -45,7 +66,22 @@
                 "produces": [
                     "application/json"
                 ],
-                "summary": "deploy services on kubernetes cluster"
+                "summary": "deploy services on kubernetes cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the kubernetes service",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of the kubernetes service",
+                        "name": "namespace",
+                        "in": "path"
+                    }
+                ]
             }
         },
         "/api/v1/statefulsets/{namespace}": {

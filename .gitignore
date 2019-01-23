@@ -1,8 +1,5 @@
 .project
-pkg/
-bin/
 .idea/
-temp/
 *.exe
 *.iml
 .project

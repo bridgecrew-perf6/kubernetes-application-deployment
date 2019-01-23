@@ -8,8 +8,3 @@ temp/
 .project
 .cache
 .idea
-src/code.google.com/
-src/github.com/
-src/bitbucket.org/
-src/gopkg.in/
-src/golang.org/

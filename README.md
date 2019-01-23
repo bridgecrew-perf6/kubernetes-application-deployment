@@ -4,13 +4,15 @@ Deploy services on a deployed Kubernetes cluster
 
 ###Build
 ```
-docker build -t kubernetes-deployment-engine
+docker build -t kubernetes-deployment-engine . 
 ```
 
 ###Docker Run Command
 ```
-   docker  run -it \
-   -p 8089:8089
+   docker  run -d \
+   --name kube-deployment-engine\
+   --restart always \
+   -p 8089:8089 \
    kubernetes-deployment-engine
 ```
 

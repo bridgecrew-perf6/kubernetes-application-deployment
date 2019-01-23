@@ -1,0 +1,94 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "currencyservice"
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "currencyservice"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "currencyservice"
+              }
+            },
+            "spec": {
+              "terminationGracePeriodSeconds": 5,
+              "containers": [
+                {
+                  "name": "server",
+                  "image": "haseebh/microservices-demo-app_currencyservice:a79a443",
+                  "ports": [
+                    {
+                      "name": "grpc",
+                      "containerPort": 7000
+                    }
+                  ],
+                  "readinessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:7000"
+                      ]
+                    }
+                  },
+                  "livenessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:7000"
+                      ]
+                    }
+                  },
+                  "resources": {
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "64Mi"
+                    },
+                    "limits": {
+                      "cpu": "200m",
+                      "memory": "128Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [
+      {
+        "metadata": {
+          "name": "currencyservice"
+        },
+        "spec": {
+          "type": "ClusterIP",
+          "selector": {
+            "app": "currencyservice"
+          },
+          "ports": [
+            {
+              "name": "grpc",
+              "port": 7000,
+              "targetPort": 7000
+            }
+          ]
+        }
+      }
+    ],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "recommendationservice"
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "recommendationservice"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "recommendationservice"
+              }
+            },
+            "spec": {
+              "terminationGracePeriodSeconds": 5,
+              "containers": [
+                {
+                  "name": "server",
+                  "image": "haseebh/microservices-demo-app_recommendationservice:a79a443",
+                  "ports": [
+                    {
+                      "containerPort": 8080
+                    }
+                  ],
+                  "readinessProbe": {
+                    "periodSeconds": 5,
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:8080"
+                      ]
+                    }
+                  },
+                  "livenessProbe": {
+                    "periodSeconds": 5,
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:8080"
+                      ]
+                    }
+                  },
+                  "env": [
+                    {
+                      "name": "PRODUCT_CATALOG_SERVICE_ADDR",
+                      "value": "productcatalogservice:3550"
+                    }
+                  ],
+                  "resources": {
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "220Mi"
+                    },
+                    "limits": {
+                      "cpu": "200m",
+                      "memory": "450Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [
+      {
+        "metadata": {
+          "name": "recommendationservice"
+        },
+        "spec": {
+          "type": "ClusterIP",
+          "selector": {
+            "app": "recommendationservice"
+          },
+          "ports": [
+            {
+              "name": "grpc",
+              "port": 8080,
+              "targetPort": 8080
+            }
+          ]
+        }
+      }
+    ],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

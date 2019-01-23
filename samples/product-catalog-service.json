@@ -1,0 +1,93 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "productcatalogservice"
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "productcatalogservice"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "productcatalogservice"
+              }
+            },
+            "spec": {
+              "terminationGracePeriodSeconds": 5,
+              "containers": [
+                {
+                  "name": "server",
+                  "image": "haseebh/microservices-demo-app_productcatalogservice:a79a443",
+                  "ports": [
+                    {
+                      "containerPort": 3550
+                    }
+                  ],
+                  "readinessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:3550"
+                      ]
+                    }
+                  },
+                  "livenessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:3550"
+                      ]
+                    }
+                  },
+                  "resources": {
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "64Mi"
+                    },
+                    "limits": {
+                      "cpu": "200m",
+                      "memory": "128Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [
+      {
+        "metadata": {
+          "name": "productcatalogservice"
+        },
+        "spec": {
+          "type": "ClusterIP",
+          "selector": {
+            "app": "productcatalogservice"
+          },
+          "ports": [
+            {
+              "name": "grpc",
+              "port": 3550,
+              "targetPort": 3550
+            }
+          ]
+        }
+      }
+    ],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

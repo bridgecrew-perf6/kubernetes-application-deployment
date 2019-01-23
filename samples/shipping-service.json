@@ -1,0 +1,93 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "shippingservice"
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "shippingservice"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "shippingservice"
+              }
+            },
+            "spec": {
+              "containers": [
+                {
+                  "name": "server",
+                  "image": "haseebh/microservices-demo-app_shippingservice:a79a443",
+                  "ports": [
+                    {
+                      "containerPort": 50051
+                    }
+                  ],
+                  "readinessProbe": {
+                    "periodSeconds": 5,
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:50051"
+                      ]
+                    }
+                  },
+                  "livenessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:50051"
+                      ]
+                    }
+                  },
+                  "resources": {
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "64Mi"
+                    },
+                    "limits": {
+                      "cpu": "200m",
+                      "memory": "128Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [
+      {
+        "metadata": {
+          "name": "shippingservice"
+        },
+        "spec": {
+          "type": "ClusterIP",
+          "selector": {
+            "app": "shippingservice"
+          },
+          "ports": [
+            {
+              "name": "grpc",
+              "port": 50051,
+              "targetPort": 50051
+            }
+          ]
+        }
+      }
+    ],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

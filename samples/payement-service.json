@@ -1,0 +1,93 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "paymentservice"
+        },
+        "spec": {
+          "selector": {
+            "matchLabels": {
+              "app": "paymentservice"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "paymentservice"
+              }
+            },
+            "spec": {
+              "terminationGracePeriodSeconds": 5,
+              "containers": [
+                {
+                  "name": "server",
+                  "image": "haseebh/microservices-demo-app_paymentservice:a79a443",
+                  "ports": [
+                    {
+                      "containerPort": 50051
+                    }
+                  ],
+                  "readinessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:50051"
+                      ]
+                    }
+                  },
+                  "livenessProbe": {
+                    "exec": {
+                      "command": [
+                        "/bin/grpc_health_probe",
+                        "-addr=:50051"
+                      ]
+                    }
+                  },
+                  "resources": {
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "64Mi"
+                    },
+                    "limits": {
+                      "cpu": "200m",
+                      "memory": "128Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [
+      {
+        "metadata": {
+          "name": "paymentservice"
+        },
+        "spec": {
+          "type": "ClusterIP",
+          "selector": {
+            "app": "paymentservice"
+          },
+          "ports": [
+            {
+              "name": "grpc",
+              "port": 50051,
+              "targetPort": 50051
+            }
+          ]
+        }
+      }
+    ],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

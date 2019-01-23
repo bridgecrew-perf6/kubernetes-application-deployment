@@ -1,0 +1,82 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [
+      {
+        "metadata": {
+          "name": "loadgenerator"
+        },
+        "spec": {
+          "replicas": 1,
+          "selector": {
+              "matchLabels": {
+                "app": "loadgenerator"
+              }
+            },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "loadgenerator"
+              }
+            },
+            "spec": {
+              "terminationGracePeriodSeconds": 5,
+              "restartPolicy": "Always",
+              "initContainers": [
+                {
+                  "name": "wait-frontend",
+                  "image": "alpine:3.6",
+                  "command": [
+                    "sh",
+                    "-c",
+                    "set -x;  apk add --no-cache curl;\nuntil timeout -t 2 curl -f \"http://${FRONTEND_ADDR}\"; do\necho \"waiting for http://${FRONTEND_ADDR}\";\nsleep 2;\ndone;"
+                  ],
+                  "env": [
+                    {
+                      "name": "FRONTEND_ADDR",
+                      "value": "frontend:80"
+                    }
+                  ]
+                }
+              ],
+              "containers": [
+                {
+                  "name": "main",
+                  "image": "haseebh/microservices-demo-app_loadgenerator:a79a443",
+                  "env": [
+                    {
+                      "name": "FRONTEND_ADDR",
+                      "value": "frontend:80"
+                    },
+                    {
+                      "name": "USERS",
+                      "value": "10"
+                    }
+                  ],
+                  "resources": {
+                    "requests": {
+                      "cpu": "300m",
+                      "memory": "256Mi"
+                    },
+                    "limits": {
+                      "cpu": "500m",
+                      "memory": "512Mi"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "kubernetes-service": [],
+    "configmap": [],
+    "istio-component": [],
+    "knative-component": []
+  }
+}

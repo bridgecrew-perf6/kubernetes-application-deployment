@@ -1,0 +1,43 @@
+{
+  "cluster_info": {
+    "username": "cloudplex",
+    "password": "64bdySICej",
+    "url": "https://54.237.228.34:6443"
+  },
+  "serivce": {
+    "deployment": [],
+    "kubernetes-service": [],
+    "configmap": [],
+    "istio-component": [
+      {
+        "apiVersion": "networking.istio.io/v1alpha3",
+        "kind": "ServiceEntry",
+        "metadata": {
+          "name": "whitelist-egress-googleapis"
+        },
+        "spec": {
+          "hosts": [
+            "169.254.169.254",
+            "metadata.google",
+            "metadata.google.internal",
+            "accounts.google.com",
+            "*.googleapis.com"
+          ],
+          "ports": [
+            {
+              "number": 80,
+              "protocol": "HTTP",
+              "name": "http"
+            },
+            {
+              "number": 443,
+              "protocol": "HTTPS",
+              "name": "https"
+            }
+          ]
+        }
+      }
+    ],
+    "knative-component": []
+  }
+}

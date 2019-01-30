@@ -303,6 +303,12 @@
 			"revisionTime": "2019-01-16T04:19:20Z"
 		},
 		{
+			"checksumSHA1": "bhX9GCMtACwF4bEFcVFRoHLz7xQ=",
+			"path": "golang.org/x/net/publicsuffix",
+			"revision": "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf",
+			"revisionTime": "2018-09-25T13:55:50Z"
+		},
+		{
 			"checksumSHA1": "fGrr3kDkfV4EssZZPSp/Z4Ei5Ak=",
 			"path": "golang.org/x/net/webdav",
 			"revision": "915654e7eabcea33ae277abbecf52f0d8b7a9fdc",
@@ -410,6 +416,12 @@
 			"path": "gopkg.in/inf.v0",
 			"revision": "cf30b7cf64c2979f27127ba17706f30a3489337c",
 			"revisionTime": "2019-01-16T04:19:20Z"
+		},
+		{
+			"checksumSHA1": "mEfWfHUJeXcJCfayvFTDxMBb3rY=",
+			"path": "gopkg.in/resty.v1",
+			"revision": "03c09fa32a21b7b27b8dbb3877826c1ab3d2daa2",
+			"revisionTime": "2019-01-06T18:11:41Z"
 		},
 		{
 			"checksumSHA1": "oNqPrS2edE8peI3ah2INe379k8E=",

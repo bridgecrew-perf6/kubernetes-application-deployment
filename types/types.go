@@ -48,3 +48,17 @@ type RegistryCredentials struct {
 //	FileType      string `bson:"file_type" json:"file_type"`
 //	FileContentes string `bson:"file_contents" json:"file_contents"`
 //}
+
+type LoggingRequest struct {
+	Message     string `json:"message"`
+	Id          string `json:"id"`
+	Environment string `json:"environment"`
+	Service     string `json:"service"`
+	Level       string `json:"level"`
+}
+type ResponseData struct {
+	StatusCode int         `json:"status_code"`
+	Body       interface{} `json:"body"`
+	Error      error       `json:"error"`
+	Status     string      `json:"status"`
+}

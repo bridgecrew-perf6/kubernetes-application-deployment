@@ -3,6 +3,8 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"gopkg.in/resty.v1"
+	"kubernetes-services-deployment/types"
 	"net/http"
 	"reflect"
 )
@@ -42,4 +44,13 @@ func Notify_Generic(state interface{}, path string) {
 
 	}
 
+}
+func PostNotify(url string, data interface{}) types.ResponseData {
+	req := resty.New()
+	resp, err := req.R().SetBody(data).Post(url)
+	if err != nil {
+		Error.Println(err)
+		return types.ResponseData{Error: err}
+	}
+	return types.ResponseData{StatusCode: resp.StatusCode(), Status: resp.Status(), Body: string(resp.Body())}
 }

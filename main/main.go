@@ -47,14 +47,14 @@ func main() {
 			dag.POST("deploy", c.DeployService)
 		}
 		///statefulsets APIs
-		v1.GET("/statefulsets/{namespace}", c.ListStatefulSetsStatus)
-		v1.GET("/statefulsets/{namespace}/{name}", c.GetStatefulSetsStatus)
-		v1.DELETE("/statefulsets/{namespace}/{name}", c.DeleteStatefulSetsStatus)
+		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
+		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)
+		v1.DELETE("/statefulsets/:namespace/:name", c.DeleteStatefulSetsStatus)
 
 		//secrets APIs
 		v1.POST("registry", c.CreateRegistrySecret)
-		v1.GET("/registry/{namespace}/{name}", c.GetStatefulSetsStatus)
-		v1.DELETE("/registry/{namespace}/{name}", c.DeleteRegistrySecret)
+		v1.GET("/registry/:namespace/:name", c.GetStatefulSetsStatus)
+		v1.DELETE("/registry/:namespace/:name", c.DeleteRegistrySecret)
 	}
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

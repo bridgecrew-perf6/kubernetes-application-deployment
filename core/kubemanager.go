@@ -218,7 +218,7 @@ func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 		groupVersion := ""
 		if len(groupInfo) == 1 {
 			groupName = ""
-			groupVersion = groupInfo[1]
+			groupVersion = groupInfo[0]
 		} else {
 			groupName = groupInfo[0]
 			groupVersion = groupInfo[1]

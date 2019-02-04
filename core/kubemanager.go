@@ -209,11 +209,11 @@ func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 		raw, _ := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		groupInfo := strings.Split(runtimeConfig[i].APIVersion, "/")
-		if len(groupInfo) != 2 {
-			utils.Error.Println("apiVersion " + runtimeConfig[i].APIVersion + "is wrong")
-			errs = append(errs, "apiVersion "+runtimeConfig[i].APIVersion+"is wrong")
+		/*if len(groupInfo)  {
+			utils.Error.Println("apiVersion " + runtimeConfig[i].APIVersion + " is wrong")
+			errs = append(errs, "apiVersion "+runtimeConfig[i].APIVersion+" is wrong")
 			continue
-		}
+		}*/
 		rest.InClusterConfig()
 		schemaDef := schema.GroupVersion{Group: groupInfo[0], Version: groupInfo[1]}
 		alphaClient, err := v1alpha.NewClient(config, schemaDef)

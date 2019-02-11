@@ -22,7 +22,7 @@ func (t *SchemaGroupTemp) AddKnownTypes(scheme *runtime.Scheme) error {
 	metav1.AddToGroupVersion(scheme, t.SchemeGroupVersion)
 	return nil
 }
-func NewClient(cfg *rest.Config, schemeGroupVersion schema.GroupVersion) (*RuntimeConfigV1Alpha1Client, error) {
+func NewClient(cfg *rest.Config, schemeGroupVersion schema.GroupVersion, APIPath string) (*RuntimeConfigV1Alpha1Client, error) {
 	scheme := runtime.NewScheme()
 	t := SchemaGroupTemp{SchemeGroupVersion: schemeGroupVersion}
 	SchemeBuilder := runtime.NewSchemeBuilder(t.AddKnownTypes)
@@ -32,7 +32,7 @@ func NewClient(cfg *rest.Config, schemeGroupVersion schema.GroupVersion) (*Runti
 	config := *cfg
 
 	config.ContentConfig.GroupVersion = &schemeGroupVersion
-	config.APIPath = "/apis"
+	config.APIPath = APIPath
 	//config.ContentType = runtime.ContentTypeJSON
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: serializer.NewCodecFactory(scheme)}
 	config.UserAgent = rest.DefaultKubernetesUserAgent()

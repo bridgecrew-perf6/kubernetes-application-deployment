@@ -6,6 +6,8 @@ type RuntimeConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              interface{} `json:"spec"`
+	Data              interface{} `json:"data,omitempty"`
+	Type              interface{} `json:"type,omitempty"`
 	Status            interface{} `json:"status,omitempty"`
 }
 type RuntimeConfigList struct {

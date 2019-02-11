@@ -198,7 +198,7 @@ func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 		utils.Error.Println(err)
 		return err
 	}
-	runtimeConfig := []v1alpha.RuntimeConfig{}
+	var runtimeConfig []interface{}
 	err = json.Unmarshal(raw, &runtimeConfig)
 	if err != nil {
 		utils.Error.Println(err)
@@ -208,10 +208,16 @@ func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 	for i := range runtimeConfig {
 		raw, _ := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
-		groupInfo := strings.Split(runtimeConfig[i].APIVersion, "/")
+		runtimeObj := v1alpha.RuntimeConfig{}
+		if err != nil {
+			utils.Error.Println(err)
+			return err
+		}
+		err := json.Unmarshal(raw, &runtimeConfig)
+		groupInfo := strings.Split(runtimeObj.APIVersion, "/")
 		if len(groupInfo) == 0 {
-			utils.Error.Println("apiVersion " + runtimeConfig[i].APIVersion + " is wrong")
-			errs = append(errs, "apiVersion "+runtimeConfig[i].APIVersion+" is wrong")
+			utils.Error.Println("apiVersion " + runtimeObj.APIVersion + " is wrong")
+			errs = append(errs, "apiVersion "+runtimeObj.APIVersion+" is wrong")
 			continue
 		}
 		groupName := ""
@@ -233,13 +239,13 @@ func deployCRDS(client *kubernetes.Clientset, config *rest.Config, key string, d
 		}
 
 		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
-		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+		crdPlural := utils.Pluralize(strings.ToLower(runtimeObj.Kind))
 
 		namespace := ""
-		if runtimeConfig[i].Namespace == "" {
+		if runtimeObj.Namespace == "" {
 			namespace = "default"
 		} else {
-			namespace = runtimeConfig[i].Namespace
+			namespace = runtimeObj.Namespace
 		}
 		utils.Info.Println(crdPlural, namespace)
 

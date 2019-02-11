@@ -21,7 +21,7 @@ type Status struct {
 
 type ServiceRequest struct {
 	ClusterInfo *KubernetesClusterInfo   `json:"kubernetes_credentials" binding:"required"`
-	ServiceData map[string][]interface{} `json:"serivce" binding:"required"`
+	ServiceData map[string][]interface{} `json:"service" binding:"required"`
 }
 type KubernetesClusterInfo struct {
 	Username  string      `json:"username" binding:"required"`

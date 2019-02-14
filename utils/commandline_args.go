@@ -4,8 +4,8 @@ import (
 	"github.com/urfave/cli"
 	"log"
 
-	"os"
 	"kubernetes-services-deployment/constants"
+	"os"
 )
 
 func InitFlags() error {
@@ -13,15 +13,9 @@ func InitFlags() error {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "port",
-			Usage:       "port for the application. default:8088",
+			Usage:       "port for the application. default:8089",
 			Destination: &constants.ServicePort,
 			EnvVar:      "PORT",
-		},
-		cli.StringFlag{
-			Name:        "istio_engine_url",
-			Usage:       "ip:port",
-			Destination: &constants.IstioEngineURL,
-			EnvVar:      "ISTIO_ENGINE_URL",
 		},
 		cli.StringFlag{
 			Name:        "logging_engine_url",
@@ -30,10 +24,22 @@ func InitFlags() error {
 			EnvVar:      "LOGGING_ENGINE_URL",
 		},
 		cli.StringFlag{
-			Name:        "knative_engine_url",
-			Usage:       "knative ip:port ",
-			Destination: &constants.KnativeEngineURL,
-			EnvVar:      "KNATIVE_ENGINE_URL",
+			Name:        "cluster_engine_url",
+			Usage:       "cluster ip:port ",
+			Destination: &constants.ClusterAPI,
+			EnvVar:      "CLUSTER_ENGINE_URL",
+		},
+		cli.StringFlag{
+			Name:        "kubernetes_engine_url",
+			Usage:       "kubernetes ip:port ",
+			Destination: &constants.KubernetesEngineURL,
+			EnvVar:      "KUBERNETES_ENGINE_URL",
+		},
+		cli.StringFlag{
+			Name:        "environment_engine_url",
+			Usage:       "Environment ip:port ",
+			Destination: &constants.EnvironmentEngineURL,
+			EnvVar:      "ENVIRONMENT_ENGINE_URL",
 		},
 	}
 	app.Action = func(c *cli.Context) error {

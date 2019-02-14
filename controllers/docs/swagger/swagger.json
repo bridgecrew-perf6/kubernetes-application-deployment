@@ -1,25 +1,70 @@
 {
-    "swagger": "2.0",
     "info": {
-        "description": "deploy services on kubernetes cluster",
-        "title": "Get",
         "contact": {},
-        "license": {},
-        "version": "{{.Version}}"
+        "license": {}
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/kubernetes/deploy": {
-            "post": {
-                "description": "deploy services on kubernetes cluster",
+        "/api/v1/deployment/{namespace}": {
+            "get": {
+                "description": "get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "deploy services on kubernetes cluster"
+                "summary": "get status of  all kubernetes services deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of kubernetes cluster",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/api/v1/deployment/{name}/{namespace}": {
+            "get": {
+                "description": "get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get status of kubernetes services deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name of the kubernetes service",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Namespace of the kubernetes service",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ]
             }
         },
         "/api/v1/registry": {
@@ -45,6 +90,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Name of the kubernetes service",
                         "name": "name",
                         "in": "path",
@@ -54,7 +106,8 @@
                         "type": "string",
                         "description": "Namespace of the kubernetes service",
                         "name": "namespace",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ]
             },
@@ -70,6 +123,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Name of the kubernetes service",
                         "name": "name",
                         "in": "path",
@@ -79,9 +139,32 @@
                         "type": "string",
                         "description": "Namespace of the kubernetes service",
                         "name": "namespace",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ]
+            }
+        },
+        "/api/v1/solution": {
+            "get": {
+                "description": "deploy services on kubernetes cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster"
+            },
+            "post": {
+                "description": "deploy services on kubernetes cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster"
             }
         },
         "/api/v1/statefulsets/{namespace}": {
@@ -97,9 +180,17 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Namespace of kubernetes cluster",
                         "name": "namespace",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ]
             }
@@ -117,6 +208,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Name of the kubernetes service",
                         "name": "name",
                         "in": "path",
@@ -126,7 +224,8 @@
                         "type": "string",
                         "description": "Namespace of the kubernetes service",
                         "name": "namespace",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ]
             },
@@ -142,6 +241,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "project id",
+                        "name": "project_id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Name of the kubernetes service",
                         "name": "name",
                         "in": "path",
@@ -151,7 +257,8 @@
                         "type": "string",
                         "description": "Namespace of the kubernetes service",
                         "name": "namespace",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     }
                 ]
             }

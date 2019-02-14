@@ -37,3 +37,6 @@ func (p *Deployments) DeleteDeployments(name, namespace string) error {
 func (p *Deployments) GetDeployments(name, namespace string) (*v1.Deployment, error) {
 	return p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
 }
+func (p *Deployments) GetAllDeployments(namespace string) (set *v1.DeploymentList, err error) {
+	return p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})
+}

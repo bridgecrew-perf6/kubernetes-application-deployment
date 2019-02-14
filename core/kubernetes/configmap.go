@@ -31,3 +31,6 @@ func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {
 func (cm *ConfigMap) GetConfigMap(name, namespace string) (*v1.ConfigMap, error) {
 	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
 }
+func (cm *ConfigMap) GetAllConfigMap(namespace string) (*v1.ConfigMapList, error) {
+	return cm.kubeClient.CoreV1().ConfigMaps(namespace).List(v12.ListOptions{})
+}

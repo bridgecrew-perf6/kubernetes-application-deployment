@@ -2,7 +2,6 @@ package utils
 
 import (
 	"github.com/gin-gonic/gin"
-
 	"kubernetes-services-deployment/types"
 )
 

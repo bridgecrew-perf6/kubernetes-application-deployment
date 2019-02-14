@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
@@ -64,6 +65,7 @@ func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(string(raw_data))
 	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err

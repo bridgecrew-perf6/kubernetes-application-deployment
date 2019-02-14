@@ -31,9 +31,12 @@ func (p *ServicesLauncher) UpdateService(req *v1.Service) (*v1.Service, error) {
 	}
 	return p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.MergePatchType, r)
 }
-func (p *ServicesLauncher) DeleteServices(namespace string, serviceName string) error {
+func (p *ServicesLauncher) DeleteServices(serviceName, namespace string) error {
 	return p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 }
 func (p *ServicesLauncher) GetService(name, namespace string) (*v1.Service, error) {
 	return p.kubeClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+}
+func (p *ServicesLauncher) GetAllServices(namespace string) (*v1.ServiceList, error) {
+	return p.kubeClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
 }

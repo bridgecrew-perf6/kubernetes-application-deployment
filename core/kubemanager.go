@@ -97,7 +97,8 @@ func StartServiceDeployment(req *types.ServiceRequest) error {
 	}
 	return nil
 }
-func GetServiceDeployment(req *types.ServiceRequest) (responses []interface{}, err error) {
+func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
@@ -131,7 +132,8 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses []interface{}, e
 		if err != nil {
 			errs = append(errs, err.Error())
 		} else {
-			responses = append(responses, respTemp)
+
+			responses[kubeType] = respTemp
 		}
 	}
 	if len(errs) >= 1 {
@@ -324,7 +326,7 @@ func (c *KubernetesClient) deployCRDS(key string, data []interface{}) error {
 	}
 	return nil
 }
-func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp v1.StatefulSetList, err error) {
+func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp []*v1.StatefulSet, err error) {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
 	raw, err := json.Marshal(data)
@@ -347,7 +349,7 @@ func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp v1.Stateful
 			utils.Error.Println("fail to get kubernetes statefulset. Error: ", err)
 		} else {
 			utils.Info.Println("kubernetes statefulset fetched successfully")
-			resp.Items = append(resp.Items, *respTemp)
+			resp = append(resp, respTemp)
 		}
 	}
 	if len(errs) >= 1 {
@@ -356,7 +358,7 @@ func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp v1.Stateful
 	}
 	return resp, nil
 }
-func (c *KubernetesClient) getKubernetesService(data []interface{}) (resp v12.ServiceList, err error) {
+func (c *KubernetesClient) getKubernetesService(data []interface{}) (resp []*v12.Service, err error) {
 	var errs []string
 	svc := appKubernetes.NewServicesLauncher(c.Client)
 	raw, err := json.Marshal(data)
@@ -379,7 +381,7 @@ func (c *KubernetesClient) getKubernetesService(data []interface{}) (resp v12.Se
 			utils.Error.Println("kubernetes service deployed failed. Error: ", err)
 		} else {
 			utils.Info.Println("kubernetes service deployed successfully")
-			resp.Items = append(resp.Items, *respTemp)
+			resp = append(resp, respTemp)
 		}
 	}
 	if len(errs) >= 1 {
@@ -388,7 +390,7 @@ func (c *KubernetesClient) getKubernetesService(data []interface{}) (resp v12.Se
 	}
 	return resp, nil
 }
-func (c *KubernetesClient) getKubernetesConfigMap(data []interface{}) (resp v12.ConfigMapList, err error) {
+func (c *KubernetesClient) getKubernetesConfigMap(data []interface{}) (resp []*v12.ConfigMap, err error) {
 	var errs []string
 	svc := appKubernetes.NewConfigLauncher(c.Client)
 	raw, err := json.Marshal(data)
@@ -411,7 +413,7 @@ func (c *KubernetesClient) getKubernetesConfigMap(data []interface{}) (resp v12.
 			utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
 		} else {
 			utils.Info.Println("kubernetes configmap deployed successfully")
-			resp.Items = append(resp.Items, *respTemp)
+			resp = append(resp, respTemp)
 		}
 	}
 	if len(errs) >= 1 {
@@ -420,7 +422,7 @@ func (c *KubernetesClient) getKubernetesConfigMap(data []interface{}) (resp v12.
 	}
 	return resp, nil
 }
-func (c *KubernetesClient) getKubernetesDeployment(data []interface{}) (resp v1.DeploymentList, err error) {
+func (c *KubernetesClient) getKubernetesDeployment(data []interface{}) (resp []*v1.Deployment, err error) {
 	var errs []string
 	depObj := appKubernetes.NewDeploymentLauncher(c.Client)
 	raw, err := json.Marshal(data)
@@ -443,7 +445,7 @@ func (c *KubernetesClient) getKubernetesDeployment(data []interface{}) (resp v1.
 			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
 		} else {
 			utils.Info.Println("kubernetes deployment deployed successfully")
-			resp.Items = append(resp.Items, *respTemp)
+			resp = append(resp, respTemp)
 		}
 	}
 	if len(errs) >= 1 {

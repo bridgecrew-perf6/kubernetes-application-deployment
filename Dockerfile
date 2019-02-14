@@ -6,6 +6,8 @@ WORKDIR /go/src/kubernetes-services-deployment/
 # Copy the current code into our workdir
 COPY . .
 ENV GOPATH /go/
+RUN go get -u github.com/swaggo/swag/cmd/swag
+RUN cd controllers/ && swag init
 RUN go build -o service-engine main/main.go
 
 # final stage

@@ -48,6 +48,7 @@ func main() {
 		}*/
 		v1.POST("/solution", c.DeployService)
 		v1.GET("/solution", c.GetService)
+		v1.DELETE("/solution", c.DeleteService)
 		///statefulsets APIs
 		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
 		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)

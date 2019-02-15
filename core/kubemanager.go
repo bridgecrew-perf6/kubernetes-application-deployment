@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
+	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
@@ -134,6 +135,49 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 		} else {
 
 			responses[kubeType] = respTemp
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ";")
+		return nil, errors.New(finalErr)
+
+	}
+	return responses, nil
+}
+func DeleteServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+	responses = make(map[string]interface{})
+	if req == nil {
+		return responses, errors.New("invalid request while starting deployment")
+	}
+	c, err := GetKubernetesClient(req.ProjectId)
+	if err != nil {
+		utils.Error.Println(err)
+		return responses, err
+	}
+	var errs []string
+	for kubeType, data := range req.ServiceData {
+
+		utils.Info.Println(len(data))
+		if len(data) == 0 {
+			continue
+		}
+		switch kubeType {
+		case constants.KubernetesStatefulSets:
+			err = c.deleteStatefulSets(data)
+		case constants.KubernetesService:
+			err = c.deleteKubernetesService(data)
+		case constants.KubernetesConfigMaps:
+			err = c.deleteKubernetesConfigMap(data)
+		case constants.KubernetesDeployment:
+			err = c.deleteKubernetesDeployment(data)
+		default:
+			//for now default case is for istio and knative
+			utils.Info.Println(kubeType)
+			err = c.deleteCRDS(kubeType, data)
+
+		}
+		if err != nil {
+			errs = append(errs, err.Error())
 		}
 	}
 	if len(errs) >= 1 {
@@ -526,6 +570,174 @@ func (c *KubernetesClient) getCRDClient(apiVersion string) (*v1alpha.RuntimeConf
 		return nil, err
 	}
 	return alphaClient, nil
+}
+
+func (c *KubernetesClient) deleteStatefulSets(data []interface{}) error {
+	var errs []string
+	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	req := []v1.StatefulSet{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		err = statefulset.DeleteStatefulSet(req[i].Name, req[i].Namespace)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes statefulsets deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes statefulsets deployed successfully")
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return errors.New(finalErr)
+	}
+	return nil
+}
+func (c *KubernetesClient) deleteKubernetesService(data []interface{}) error {
+	var errs []string
+	svc := appKubernetes.NewServicesLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	req := []v12.Service{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		err = svc.DeleteServices(req[i].Name, req[i].Namespace)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes service deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes service deployed successfully")
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return errors.New(finalErr)
+	}
+	return nil
+}
+func (c *KubernetesClient) deleteKubernetesConfigMap(data []interface{}) error {
+	var errs []string
+	svc := appKubernetes.NewConfigLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	req := []v12.ConfigMap{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		err := svc.DeleteConfigMap(req[i].Name, req[i].Namespace)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes configmap deployed successfully")
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return errors.New(finalErr)
+	}
+	return nil
+}
+func (c *KubernetesClient) deleteKubernetesDeployment(data []interface{}) error {
+	var errs []string
+	depObj := appKubernetes.NewDeploymentLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	req := []v1.Deployment{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		err = depObj.DeleteDeployments(req[i].Name, req[i].Namespace)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes deployment deployed successfully")
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return errors.New(finalErr)
+	}
+
+	return nil
+}
+func (c *KubernetesClient) deleteCRDS(key string, data []interface{}) (err error) {
+	var errs []string
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	var runtimeConfig []v1alpha.RuntimeConfig
+	err = json.Unmarshal(raw, &runtimeConfig)
+	if err != nil {
+		utils.Error.Println(err)
+		return err
+	}
+	utils.Info.Println(len(runtimeConfig))
+	for i := range runtimeConfig {
+		rest.InClusterConfig()
+		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+		namespace := ""
+		if runtimeConfig[i].Namespace == "" {
+			namespace = "default"
+		} else {
+			namespace = runtimeConfig[i].Namespace
+		}
+		alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("failed to fetch data. Error: ", err)
+		} else {
+			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig[i].Name, &v13.DeleteOptions{})
+			if err != nil {
+				errs = append(errs, err.Error())
+				utils.Error.Println("failed to fetch data. Error: ", err)
+			}
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		err = errors.New(finalErr)
+	}
+	return err
 }
 
 func (c *KubernetesClient) CreateDockerRegistryCredentials(req *types.RegistryRequest) (*v12.Secret, error) {

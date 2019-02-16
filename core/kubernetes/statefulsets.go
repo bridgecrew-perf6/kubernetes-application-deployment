@@ -48,7 +48,12 @@ func (p *StatefulsetLauncher) PatchStatefulSets(req v1.StatefulSet) (set *v1.Sta
 	if err != nil {
 		return nil, err
 	}
-	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Patch(req.Name, kubernetesTypes.JSONPatchType, r)
+	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+
+}
+func (p *StatefulsetLauncher) UpdateStatefulSets(req *v1.StatefulSet) (set *v1.StatefulSet, err error) {
+
+	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Update(req)
 
 }
 func (p *StatefulsetLauncher) GetStatefulSet(name, namespace string) (set *v1.StatefulSet, err error) {

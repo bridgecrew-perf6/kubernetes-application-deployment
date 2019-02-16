@@ -24,12 +24,15 @@ func (p *ServicesLauncher) LaunchService(req *v1.Service) (*v1.Service, error) {
 	return p.kubeClient.CoreV1().Services(req.Namespace).Create(req)
 }
 
-func (p *ServicesLauncher) UpdateService(req *v1.Service) (*v1.Service, error) {
+func (p *ServicesLauncher) PatchService(req *v1.Service) (*v1.Service, error) {
 	r, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	return p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.MergePatchType, r)
+	return p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+}
+func (p *ServicesLauncher) UpdateService(req *v1.Service) (*v1.Service, error) {
+	return p.kubeClient.CoreV1().Services(req.Namespace).Update(req)
 }
 func (p *ServicesLauncher) DeleteServices(serviceName, namespace string) error {
 	return p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})

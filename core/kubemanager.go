@@ -6,6 +6,7 @@ import (
 	v12 "k8s.io/api/core/v1"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -178,6 +179,52 @@ func DeleteServiceDeployment(req *types.ServiceRequest) (responses map[string]in
 		}
 		if err != nil {
 			errs = append(errs, err.Error())
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ";")
+		return nil, errors.New(finalErr)
+
+	}
+	return responses, nil
+}
+func PatchServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+	responses = make(map[string]interface{})
+	if req == nil {
+		return responses, errors.New("invalid request while starting deployment")
+	}
+	c, err := GetKubernetesClient(req.ProjectId)
+	if err != nil {
+		utils.Error.Println(err)
+		return responses, err
+	}
+	var errs []string
+	for kubeType, data := range req.ServiceData {
+		var respTemp interface{}
+		utils.Info.Println(len(data))
+		if len(data) == 0 {
+			continue
+		}
+		switch kubeType {
+		case constants.KubernetesStatefulSets:
+			respTemp, err = c.patchStatefulSets(data)
+		case constants.KubernetesService:
+			respTemp, err = c.patchKubernetesService(data)
+		case constants.KubernetesConfigMaps:
+			respTemp, err = c.patchKubernetesConfigMap(data)
+		case constants.KubernetesDeployment:
+			respTemp, err = c.patchKubernetesDeployment(data)
+		default:
+			//for now default case is for istio and knative
+			utils.Info.Println(kubeType)
+			respTemp, err = c.getCRDS(kubeType, data)
+
+		}
+		if err != nil {
+			errs = append(errs, err.Error())
+		} else {
+
+			responses[kubeType] = respTemp
 		}
 	}
 	if len(errs) >= 1 {
@@ -738,6 +785,380 @@ func (c *KubernetesClient) deleteCRDS(key string, data []interface{}) (err error
 		err = errors.New(finalErr)
 	}
 	return err
+}
+
+func (c *KubernetesClient) patchStatefulSets(data []interface{}) (resp []*v1.StatefulSet, err error) {
+	var errs []string
+	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v1.StatefulSet{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := statefulset.PatchStatefulSets(req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("fail to get kubernetes statefulset. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes statefulset fetched successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) patchKubernetesService(data []interface{}) (resp []*v12.Service, err error) {
+	var errs []string
+	svc := appKubernetes.NewServicesLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.Service{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := svc.PatchService(&req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes service deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes service deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) patchKubernetesConfigMap(data []interface{}) (resp []*v12.ConfigMap, err error) {
+	var errs []string
+	svc := appKubernetes.NewConfigLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.ConfigMap{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := svc.PatchConfigMap(req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes configmap deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) patchKubernetesDeployment(data []interface{}) (resp []*v1.Deployment, err error) {
+	var errs []string
+	depObj := appKubernetes.NewDeploymentLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v1.Deployment{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := depObj.PatchDeployments(req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes deployment deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
+func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	var runtimeConfig []v1alpha.RuntimeConfig
+	err = json.Unmarshal(raw, &runtimeConfig)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	utils.Info.Println(len(runtimeConfig))
+	for i := range runtimeConfig {
+		raw, err := json.Marshal(runtimeConfig[i])
+		utils.Info.Println(string(raw))
+		runtimeObj := v1alpha.RuntimeConfig{}
+		if err != nil {
+			utils.Error.Println(err)
+			return resp, err
+		}
+		err = json.Unmarshal(raw, &runtimeObj)
+		if err != nil {
+			utils.Error.Println(err)
+			return resp, err
+		}
+		rest.InClusterConfig()
+		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+		namespace := ""
+		if runtimeConfig[i].Namespace == "" {
+			namespace = "default"
+		} else {
+			namespace = runtimeConfig[i].Namespace
+		}
+		alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
+		if err != nil {
+
+		}
+		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig[i].Name, kubernetesTypes.StrategicMergePatchType, raw)
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("failed to fetch data. Error: ", err)
+		} else {
+			utils.Info.Println("")
+			dd, _ := json.Marshal(data)
+			resp = append(resp, data)
+			utils.Info.Println(string(dd))
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		err = errors.New(finalErr)
+	}
+	return resp, err
+}
+
+func (c *KubernetesClient) putStatefulSets(data []interface{}) (resp []*v1.StatefulSet, err error) {
+	var errs []string
+	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v1.StatefulSet{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := statefulset.UpdateStatefulSets(&req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("fail to get kubernetes statefulset. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes statefulset fetched successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) putKubernetesService(data []interface{}) (resp []*v12.Service, err error) {
+	var errs []string
+	svc := appKubernetes.NewServicesLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.Service{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := svc.UpdateService(&req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes service deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes service deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) putKubernetesConfigMap(data []interface{}) (resp []*v12.ConfigMap, err error) {
+	var errs []string
+	svc := appKubernetes.NewConfigLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.ConfigMap{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := svc.UpdateConfigMap(&req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes configmap deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+	return resp, nil
+}
+func (c *KubernetesClient) putKubernetesDeployment(data []interface{}) (resp []*v1.Deployment, err error) {
+	var errs []string
+	depObj := appKubernetes.NewDeploymentLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v1.Deployment{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := depObj.UpdateDeployments(&req[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes deployment deployed successfully")
+			resp = append(resp, respTemp)
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
+func (c *KubernetesClient) putRDS(key string, data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	var runtimeConfig []v1alpha.RuntimeConfig
+	err = json.Unmarshal(raw, &runtimeConfig)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	utils.Info.Println(len(runtimeConfig))
+	for i := range runtimeConfig {
+		raw, err := json.Marshal(runtimeConfig[i])
+		utils.Info.Println(string(raw))
+		runtimeObj := v1alpha.RuntimeConfig{}
+		if err != nil {
+			utils.Error.Println(err)
+			return resp, err
+		}
+		err = json.Unmarshal(raw, &runtimeObj)
+		if err != nil {
+			utils.Error.Println(err)
+			return resp, err
+		}
+		rest.InClusterConfig()
+		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+		namespace := ""
+		if runtimeConfig[i].Namespace == "" {
+			namespace = "default"
+		} else {
+			namespace = runtimeConfig[i].Namespace
+		}
+		alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
+		if err != nil {
+
+		}
+		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig[i])
+		if err != nil {
+			errs = append(errs, err.Error())
+			utils.Error.Println("failed to fetch data. Error: ", err)
+		} else {
+			utils.Info.Println("")
+			dd, _ := json.Marshal(data)
+			resp = append(resp, data)
+			utils.Info.Println(string(dd))
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		err = errors.New(finalErr)
+	}
+	return resp, err
 }
 
 func (c *KubernetesClient) CreateDockerRegistryCredentials(req *types.RegistryRequest) (*v12.Secret, error) {

@@ -1,8 +1,10 @@
 package kubernetes
 
 import (
+	"encoding/json"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -22,8 +24,19 @@ func (cm *ConfigMap) CreateConfigMap(configMap v1.ConfigMap) (*v1.ConfigMap, err
 
 	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
 }
-func (cm *ConfigMap) PatchConfigMap() {
-
+func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (*v1.ConfigMap, error) {
+	r, err := json.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+}
+func (cm *ConfigMap) UpdateConfigMap(configMap *v1.ConfigMap) (*v1.ConfigMap, error) {
+	r, err := json.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Update(configMap)
 }
 func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {
 	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})

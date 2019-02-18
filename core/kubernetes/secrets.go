@@ -1,8 +1,6 @@
 package kubernetes
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -17,20 +15,9 @@ func NewSecretsLauncher(c *kubernetes.Clientset) *SecretsLauncher {
 	this.kubeClient = c
 	return this
 }
-func (p *SecretsLauncher) CreateRegistrySecret(name, namespace, username, password, email, registryUrl string) (*v1.Secret, error) {
-	dockerConf := map[string]map[string]string{
-		registryUrl: {
-			"email": email,
-			"auth":  base64.StdEncoding.EncodeToString([]byte(username + ":" + password)),
-		},
-	}
-	dockerConfMarshaled, _ := json.Marshal(dockerConf)
+func (p *SecretsLauncher) CreateRegistrySecret(req *v1.Secret) (*v1.Secret, error) {
 
-	data := map[string][]byte{
-		".dockercfg": dockerConfMarshaled,
-	}
-	config := v1.Secret{Type: v1.SecretTypeDockercfg, ObjectMeta: v12.ObjectMeta{Name: name, Namespace: namespace}, Data: data}
-	return p.kubeClient.CoreV1().Secrets(namespace).Create(&config)
+	return p.kubeClient.CoreV1().Secrets(req.Namespace).Create(req)
 }
 
 func (p *SecretsLauncher) GetRegistrySecret(name, namespace string) (*v1.Secret, error) {

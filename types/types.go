@@ -1,6 +1,7 @@
 package types
 
 import (
+	"k8s.io/api/core/v1"
 	"time"
 )
 
@@ -20,7 +21,8 @@ type Status struct {
 }
 
 type ServiceRequest struct {
-	ClusterInfo *KubernetesClusterInfo   `json:"kubernetes_credentials" binding:"required"`
+	//ClusterInfo *KubernetesClusterInfo   `json:"kubernetes_credentials"`
+	ProjectId   *string                  `json:"project_id" binding:"required"`
 	ServiceData map[string][]interface{} `json:"service" binding:"required"`
 }
 type KubernetesClusterInfo struct {
@@ -30,10 +32,8 @@ type KubernetesClusterInfo struct {
 	TLSConfig interface{} `json:"tls_client_config"`
 }
 type RegistryRequest struct {
-	ClusterInfo         *KubernetesClusterInfo `json:"cluster_info" binding:"required"`
-	Name                string                 `json:"name"  binding:"required"`
-	Namespace           string                 `json:"namespace"  binding:"required"`
-	RegistryCredentials `json:"registry_credentials"`
+	ProjectId *string    `json:"project_id" binding:"required"`
+	Secrets   *v1.Secret `json:"secrets" binding:"required"`
 }
 type RegistryCredentials struct {
 	Username string `json:"username" binding:"required"`

@@ -1,8 +1,10 @@
 package kubernetes
 
 import (
+	"encoding/json"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"kubernetes-services-deployment/utils"
 )
@@ -28,12 +30,23 @@ func (p *Deployments) CreateDeployments(req v1.Deployment) (dep *v1.Deployment, 
 	}
 	return p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
 }
-func (cm *Deployments) PatchDeployments() {
+func (p *Deployments) PatchDeployments(req v1.Deployment) (*v1.Deployment, error) {
+	r, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	return p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+}
+func (p *Deployments) UpdateDeployments(req *v1.Deployment) (*v1.Deployment, error) {
 
+	return p.kubeClient.AppsV1().Deployments(req.Namespace).Update(req)
 }
 func (p *Deployments) DeleteDeployments(name, namespace string) error {
 	return p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
 }
 func (p *Deployments) GetDeployments(name, namespace string) (*v1.Deployment, error) {
 	return p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+}
+func (p *Deployments) GetAllDeployments(namespace string) (set *v1.DeploymentList, err error) {
+	return p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})
 }

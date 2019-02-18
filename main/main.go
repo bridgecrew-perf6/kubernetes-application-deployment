@@ -42,10 +42,15 @@ func main() {
 	c, _ := controllers.NewController()
 	v1 := e.Group("/api/v1")
 	{
-		dag := v1.Group("/kubernetes")
+		/*dag := v1.Group("/kubernetes")
 		{
 			dag.POST("deploy", c.DeployService)
-		}
+		}*/
+		v1.POST("/solution", c.DeployService)
+		v1.GET("/solution", c.GetService)
+		v1.DELETE("/solution", c.DeleteService)
+		v1.PATCH("/solution", c.PatchService)
+		v1.PUT("solution", c.PutService)
 		///statefulsets APIs
 		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
 		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)
@@ -55,6 +60,11 @@ func main() {
 		v1.POST("registry", c.CreateRegistrySecret)
 		v1.GET("/registry/:namespace/:name", c.GetStatefulSetsStatus)
 		v1.DELETE("/registry/:namespace/:name", c.DeleteRegistrySecret)
+		//deployment APIs
+		v1.GET("/deployment/:namespace", c.ListDeploymentStatus)
+		v1.GET("/deployment/:namespace/:name", c.GetDeploymentStatus)
+		v1.DELETE("/deployment/:namespace/:name", c.DeleteDeployment)
+
 	}
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

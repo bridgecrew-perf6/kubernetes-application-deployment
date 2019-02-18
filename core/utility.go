@@ -42,6 +42,7 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 
 		return "", "", err
 	}
+	utils.Info.Println(clusterObj)
 	publicIp, PrivateIp := GetMasterIP(clusterObj)
 	return publicIp, PrivateIp, nil
 
@@ -111,7 +112,7 @@ func GetProject(projectId *string) (project *types.Project, err error) {
 		utils.Error.Println("project id is null. send valid project id in request")
 		return project, errors.New("project id is null. send valid project id in request")
 	}
-	notification := strings.Replace(constants.EnvironmentEngineEndpoint, "{envId}", *projectId, -1)
+	notification := strings.Replace(constants.ProjectEngineEndpoint, "{project_id}", *projectId, -1)
 	enviornmentEndpoint := constants.EnvironmentEngineURL + notification
 	utils.Info.Println(enviornmentEndpoint)
 	clusterApiClient := resty.New()

@@ -33,11 +33,11 @@ func (c *KubeController) DeployService(g *gin.Context) {
 		return
 	}
 
-	err = core.StartServiceDeployment(&req)
+	responses, err := core.StartServiceDeployment(&req)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "service deployment failed", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "project_id": req.ProjectId})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "error": nil})
+		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
 	}
 }
 
@@ -65,11 +65,14 @@ func (c *KubeController) GetService(g *gin.Context) {
 	}
 
 	responses, err := core.GetServiceDeployment(&req)
+
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to fetch data", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
+		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
+		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
 	}
+
 }
 
 // @Title Get
@@ -97,9 +100,10 @@ func (c *KubeController) DeleteService(g *gin.Context) {
 
 	responses, err := core.DeleteServiceDeployment(&req)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to fetch data", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
+		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
+		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
 	}
 }
 
@@ -128,9 +132,10 @@ func (c *KubeController) PatchService(g *gin.Context) {
 
 	responses, err := core.PatchServiceDeployment(&req)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to fetch data", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
+		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
+		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
 	}
 }
 
@@ -159,8 +164,9 @@ func (c *KubeController) PutService(g *gin.Context) {
 
 	responses, err := core.PutServiceDeployment(&req)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to fetch data", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
 	} else {
-		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
+		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
+		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
 	}
 }

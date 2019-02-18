@@ -28,5 +28,5 @@ const (
 	KUBERNETES_GET_CREDENTIALS_ENDPOINT = "/api/v1/credentials/{envId}"
 	KUBERNETES_MASTER_PORT              = "6443"
 
-	EnvironmentEngineEndpoint = "/environments/{envId}"
+	ProjectEngineEndpoint = "/projects/{project_id}"
 )

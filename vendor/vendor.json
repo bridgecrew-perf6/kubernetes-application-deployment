@@ -418,6 +418,18 @@
 			"revisionTime": "2019-01-16T04:19:20Z"
 		},
 		{
+			"checksumSHA1": "iWat5rSjWr0QAR9npAQ5Wh/hax0=",
+			"path": "gopkg.in/mgo.v2/bson",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "tYqbV1+RQqp2+yNkYFPJym0BozM=",
+			"path": "gopkg.in/mgo.v2/internal/json",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
 			"checksumSHA1": "mEfWfHUJeXcJCfayvFTDxMBb3rY=",
 			"path": "gopkg.in/resty.v1",
 			"revision": "03c09fa32a21b7b27b8dbb3877826c1ab3d2daa2",

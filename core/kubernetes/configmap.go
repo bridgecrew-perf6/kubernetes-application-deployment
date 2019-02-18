@@ -32,10 +32,7 @@ func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (*v1.ConfigMap, erro
 	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
 }
 func (cm *ConfigMap) UpdateConfigMap(configMap *v1.ConfigMap) (*v1.ConfigMap, error) {
-	r, err := json.Marshal(configMap)
-	if err != nil {
-		return nil, err
-	}
+
 	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Update(configMap)
 }
 func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {

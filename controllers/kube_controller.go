@@ -133,3 +133,34 @@ func (c *KubeController) PatchService(g *gin.Context) {
 		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
 	}
 }
+
+// @Title Get
+// @Summary deploy services on kubernetes cluster
+// @Description deploy services on kubernetes cluster
+// @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Accept  json
+// @Produce  json
+// @router /api/v1/solution [put]
+func (c *KubeController) PutService(g *gin.Context) {
+	req := types.ServiceRequest{}
+	b, err := ioutil.ReadAll(g.Request.Body)
+	if err != nil {
+		utils.Error.Println(err)
+		utils.NewError(g, http.StatusBadRequest, err)
+		return
+	}
+	err = json.Unmarshal(b, &req)
+	utils.Info.Println(req)
+	if err != nil {
+		utils.Error.Println(err)
+		utils.NewError(g, http.StatusBadRequest, err)
+		return
+	}
+
+	responses, err := core.PutServiceDeployment(&req)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed to fetch data", "error": err.Error()})
+	} else {
+		g.JSON(http.StatusOK, gin.H{"service": responses, "error": nil})
+	}
+}

@@ -234,6 +234,52 @@ func PatchServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 	}
 	return responses, nil
 }
+func PutServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+	responses = make(map[string]interface{})
+	if req == nil {
+		return responses, errors.New("invalid request while starting deployment")
+	}
+	c, err := GetKubernetesClient(req.ProjectId)
+	if err != nil {
+		utils.Error.Println(err)
+		return responses, err
+	}
+	var errs []string
+	for kubeType, data := range req.ServiceData {
+		var respTemp interface{}
+		utils.Info.Println(len(data))
+		if len(data) == 0 {
+			continue
+		}
+		switch kubeType {
+		case constants.KubernetesStatefulSets:
+			respTemp, err = c.putStatefulSets(data)
+		case constants.KubernetesService:
+			respTemp, err = c.putKubernetesService(data)
+		case constants.KubernetesConfigMaps:
+			respTemp, err = c.putKubernetesConfigMap(data)
+		case constants.KubernetesDeployment:
+			respTemp, err = c.putKubernetesDeployment(data)
+		default:
+			//for now default case is for istio and knative
+			utils.Info.Println(kubeType)
+			respTemp, err = c.putCRDS(kubeType, data)
+
+		}
+		if err != nil {
+			errs = append(errs, err.Error())
+		} else {
+
+			responses[kubeType] = respTemp
+		}
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ";")
+		return nil, errors.New(finalErr)
+
+	}
+	return responses, nil
+}
 func (c *KubernetesClient) deployStatefulSets(data []interface{}) error {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
@@ -1103,7 +1149,7 @@ func (c *KubernetesClient) putKubernetesDeployment(data []interface{}) (resp []*
 
 	return resp, nil
 }
-func (c *KubernetesClient) putRDS(key string, data []interface{}) (resp []interface{}, err error) {
+func (c *KubernetesClient) putCRDS(key string, data []interface{}) (resp []interface{}, err error) {
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {

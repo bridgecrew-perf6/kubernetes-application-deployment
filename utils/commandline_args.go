@@ -4,8 +4,8 @@ import (
 	"github.com/urfave/cli"
 	"log"
 
-	"os"
 	"kubernetes-services-deployment/constants"
+	"os"
 )
 
 func InitFlags() error {

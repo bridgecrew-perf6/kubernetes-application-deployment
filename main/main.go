@@ -40,7 +40,7 @@ func main() {
 		constants.ServicePort = "8089"
 	}
 	c, _ := controllers.NewController()
-	v1 := e.Group("/api/v1")
+	v1 := e.Group("/ksd/api/v1")
 	{
 		/*dag := v1.Group("/kubernetes")
 		{
@@ -50,7 +50,7 @@ func main() {
 		v1.GET("/solution", c.GetService)
 		v1.DELETE("/solution", c.DeleteService)
 		v1.PATCH("/solution", c.PatchService)
-		v1.PUT("solution", c.PutService)
+		v1.PUT("/solution", c.PutService)
 		///statefulsets APIs
 		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
 		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)

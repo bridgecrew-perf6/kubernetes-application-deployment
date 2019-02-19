@@ -1043,7 +1043,7 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 		if err != nil {
 
 		}
-		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig[i].Name, kubernetesTypes.StrategicMergePatchType, raw)
+		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig[i].Name, kubernetesTypes.MergePatchType, raw)
 		if err != nil {
 			errs = append(errs, err.Error())
 			responseObj.Error = err.Error()
@@ -1054,7 +1054,6 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 			responseObj.Data = data
 			utils.Info.Println(string(dd))
 		}
-		resp = append(resp, responseObj)
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {

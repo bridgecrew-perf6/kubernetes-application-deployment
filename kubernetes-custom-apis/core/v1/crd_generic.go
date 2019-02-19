@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -24,11 +23,12 @@ type RuntimeConfigInterface interface {
 
 func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	raw_data, err := c.client.Post().
+	resultTemp := c.client.Post().
 		Namespace(c.ns).Resource(c.resourceName).
-		Body(obj).Do().Raw()
+		Body(obj).Do()
+	raw_data, err := resultTemp.Raw()
 	if err != nil {
-		return nil, err
+		return nil, resultTemp.Error()
 	}
 	err = json.Unmarshal(raw_data, result)
 	if err != nil {
@@ -39,14 +39,14 @@ func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 
 func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	raw_data, err := c.client.Put().
+	resultTemp := c.client.Put().
 		Namespace(c.ns).
 		Resource(c.resourceName).
 		Body(obj).
-		Do().
-		Raw()
+		Do()
+	raw_data, err := resultTemp.Raw()
 	if err != nil {
-		return nil, err
+		return nil, resultTemp.Error()
 	}
 	err = json.Unmarshal(raw_data, result)
 	if err != nil {
@@ -56,16 +56,17 @@ func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 }
 func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, data []byte, subresources ...string) (interface{}, error) {
 	result := &RuntimeConfig{}
-	raw_data, err := c.client.Patch(pt).
+	resultTemp := c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource(c.resourceName).
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
-		Raw()
+		Do()
+
+	raw_data, err := resultTemp.Raw()
 	if err != nil {
-		return nil, err
+		return nil, resultTemp.Error()
 	}
 	err = json.Unmarshal(raw_data, result)
 	if err != nil {
@@ -82,13 +83,13 @@ func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions
 
 func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	result := &RuntimeConfig{}
-	raw_data, err := c.client.Get().
+	resultTemp := c.client.Get().
 		Namespace(c.ns).Resource(c.resourceName).
-		Name(name).Do().Raw()
+		Name(name).Do()
+	raw_data, err := resultTemp.Raw()
 	if err != nil {
-		return nil, err
+		return nil, resultTemp.Error()
 	}
-	fmt.Println(string(raw_data))
 	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err

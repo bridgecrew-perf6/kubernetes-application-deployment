@@ -25,7 +25,7 @@ const (
 	LOGGING_LEVEL_WARN       = "warn"
 
 	CLUSTER_GET_ENDPOINT                = "/antelope/cluster/{cloud_provider}/status/"
-	KUBERNETES_GET_CREDENTIALS_ENDPOINT = "/api/v1/credentials/{envId}"
+	KUBERNETES_GET_CREDENTIALS_ENDPOINT = "/kube/api/v1/credentials/{envId}"
 	KUBERNETES_MASTER_PORT              = "6443"
 
 	ProjectEngineEndpoint = "/projects/{project_id}"

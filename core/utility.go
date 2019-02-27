@@ -24,12 +24,13 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 
 	notification := strings.Replace(constants.CLUSTER_GET_ENDPOINT, "{cloud_provider}", strings.ToLower(cloudProvider), -1)
 	clusterEndpoint := constants.ClusterAPI + notification + projectId
-	utils.Info.Println(clusterEndpoint)
+	utils.Info.Println("endpoint:", clusterEndpoint, "authorization:", authorization)
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
 		R().
 		SetHeader("Authorization", authorization).
 		Get(clusterEndpoint)
+	utils.Info.Println(string(resp.Body()))
 	if err != nil {
 		utils.Error.Println(err)
 

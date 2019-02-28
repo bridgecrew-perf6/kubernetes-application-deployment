@@ -71,7 +71,6 @@ func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 	}
 	var errs []string
 	for kubeType, data := range req.ServiceData {
-		utils.Info.Println(len(data))
 		var respTemp interface{}
 		if len(data) == 0 {
 			continue
@@ -87,7 +86,6 @@ func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 			respTemp, err = c.deployKubernetesDeployment(data)
 		default:
 			//for now default case is for istio and knative
-			utils.Info.Println(kubeType)
 			respTemp, err = c.deployCRDS(kubeType, data)
 		}
 		if err != nil {
@@ -95,7 +93,8 @@ func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 		}
 		responses[kubeType] = respTemp
 	}
-
+	r, _ := json.Marshal(responses)
+	utils.Info.Println(string(r))
 	return responses, nil
 }
 func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -111,7 +110,6 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 	var errs []string
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
-		utils.Info.Println(len(data))
 		if len(data) == 0 {
 			continue
 		}
@@ -126,17 +124,17 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 			respTemp, err = c.getKubernetesDeployment(data)
 		default:
 			//for now default case is for istio and knative
-			utils.Info.Println(kubeType)
 			respTemp, err = c.getCRDS(kubeType, data)
 
 		}
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
-
 		responses[kubeType] = respTemp
 
 	}
+	r, _ := json.Marshal(responses)
+	utils.Info.Println(string(r))
 	return responses, nil
 }
 func DeleteServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {

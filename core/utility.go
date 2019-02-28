@@ -30,7 +30,7 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 		R().
 		SetHeader("Authorization", authorization).
 		Get(clusterEndpoint)
-	utils.Info.Println(string(resp.Body()))
+	//utils.Info.Println(string(resp.Body()))
 	if err != nil {
 		utils.Error.Println(err)
 
@@ -43,8 +43,9 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 
 		return "", "", err
 	}
-	utils.Info.Println(clusterObj)
+	//utils.Info.Println(clusterObj)
 	publicIp, PrivateIp := GetMasterIP(clusterObj)
+	utils.Info.Println(publicIp, PrivateIp)
 	return publicIp, PrivateIp, nil
 
 }

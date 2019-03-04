@@ -19,8 +19,9 @@ import (
 )
 
 type KubernetesClient struct {
-	Config *rest.Config
-	Client *kubernetes.Clientset
+	Config     *rest.Config
+	Client     *kubernetes.Clientset
+	Namespaces map[string]bool
 }
 
 func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Config, client *kubernetes.Clientset, err error) {
@@ -277,17 +278,25 @@ func (c *KubernetesClient) deployStatefulSets(data []interface{}) (resp []interf
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
-		tempResp, err := statefulset.LaunchStatefulSet(req[i])
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
+			utils.Error.Println(err)
 			errs = append(errs, err.Error())
-			utils.Error.Println("kubernetes statefulsets deployed failed. Error: ", err)
 		} else {
-			responseObj.Data = tempResp
-			utils.Info.Println("kubernetes statefulsets deployed successfully")
+			tempResp, err := statefulset.LaunchStatefulSet(req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes statefulsets deployed failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes statefulsets deployed successfully")
+			}
 		}
 		resp = append(resp, responseObj)
 	}
@@ -311,18 +320,25 @@ func (c *KubernetesClient) deployKubernetesService(data []interface{}) (resp []i
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
-		tempResp, err := svc.LaunchService(&req[i])
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
+			utils.Error.Println(err)
 			errs = append(errs, err.Error())
-			responseObj.Error = err.Error()
-			utils.Error.Println("kubernetes service deployed failed. Error: ", err)
 		} else {
-			responseObj.Data = tempResp
-			utils.Info.Println("kubernetes service deployed successfully")
+			tempResp, err := svc.LaunchService(&req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes service deployed failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes service deployed successfully")
+			}
 		}
 		resp = append(resp, responseObj)
 	}
@@ -346,18 +362,26 @@ func (c *KubernetesClient) deployKubernetesConfigMap(data []interface{}) (resp [
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
-		tempResp, err := svc.CreateConfigMap(req[i])
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
+			utils.Error.Println(err)
 			errs = append(errs, err.Error())
 			responseObj.Error = err.Error()
-			utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
 		} else {
-			responseObj.Data = tempResp
-			utils.Info.Println("kubernetes configmap deployed successfully")
+			tempResp, err := svc.CreateConfigMap(req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes configmap deployed failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes configmap deployed successfully")
+			}
 		}
 		resp = append(resp, responseObj)
 	}
@@ -381,18 +405,25 @@ func (c *KubernetesClient) deployKubernetesDeployment(data []interface{}) (resp 
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
-		tempResp, err := depObj.CreateDeployments(req[i])
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
+			utils.Error.Println(err)
 			errs = append(errs, err.Error())
-			responseObj.Error = err.Error()
-			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
 		} else {
-			responseObj.Data = tempResp
-			utils.Info.Println("kubernetes deployment deployed successfully")
+			tempResp, err := depObj.CreateDeployments(req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes deployment deployed successfully")
+			}
 		}
 		resp = append(resp, responseObj)
 
@@ -417,9 +448,9 @@ func (c *KubernetesClient) deployCRDS(key string, data []interface{}) (resp []in
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
+		var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		runtimeObj := v1alpha.RuntimeConfig{}
@@ -443,20 +474,31 @@ func (c *KubernetesClient) deployCRDS(key string, data []interface{}) (resp []in
 			namespace = runtimeObj.Namespace
 		}
 		utils.Info.Println(crdPlural, namespace)
-		alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
+		c.Namespaces[namespace] = true
+		_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
 		if err != nil {
-
-		}
-		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
-		if err != nil {
+			utils.Error.Println(err)
 			errs = append(errs, err.Error())
 			responseObj.Error = err.Error()
-			utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
 		} else {
-			responseObj.Data = data
-			utils.Info.Println("kubernetes crd deployed successfully")
-			dd, _ := json.Marshal(data)
-			utils.Info.Println(string(dd))
+			alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+			} else {
+				data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
+				if err != nil {
+					errs = append(errs, err.Error())
+					responseObj.Error = err.Error()
+					utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+				} else {
+					responseObj.Data = data
+					utils.Info.Println("kubernetes crd deployed successfully")
+					dd, _ := json.Marshal(data)
+					utils.Info.Println(string(dd))
+				}
+			}
 		}
 		resp = append(resp, responseObj)
 

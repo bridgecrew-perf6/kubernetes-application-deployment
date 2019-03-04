@@ -11,5 +11,12 @@ func CreateNameSpace(client *kubernetes.Clientset, namespace string) (*v1.Namesp
 	if err == nil {
 		return existingNamespace, nil
 	}
-	return client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: v12.ObjectMeta{Name: namespace}})
+	return client.CoreV1().Namespaces().Create(&v1.Namespace{
+		ObjectMeta: v12.ObjectMeta{
+			Name: namespace,
+			Labels: map[string]string{
+				"istio-injection": "enabled",
+			},
+		},
+	})
 }

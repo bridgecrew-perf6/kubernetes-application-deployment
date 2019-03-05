@@ -264,6 +264,7 @@ func PutServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 	}
 	return responses, nil
 }
+
 func (c *KubernetesClient) deployStatefulSets(data []interface{}) (resp []interface{}, err error) {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
@@ -509,6 +510,7 @@ func (c *KubernetesClient) deployCRDS(key string, data []interface{}) (resp []in
 	}
 	return resp, nil
 }
+
 func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp []interface{}, err error) {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
@@ -523,8 +525,8 @@ func (c *KubernetesClient) getStatefulSets(data []interface{}) (resp []interface
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := statefulset.GetStatefulSet(req[i].Name, req[i].Namespace)
@@ -559,8 +561,8 @@ func (c *KubernetesClient) getKubernetesService(data []interface{}) (resp []inte
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.GetService(req[i].Name, req[i].Namespace)
@@ -595,8 +597,8 @@ func (c *KubernetesClient) getKubernetesConfigMap(data []interface{}) (resp []in
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.GetConfigMap(req[i].Name, req[i].Namespace)
@@ -631,8 +633,8 @@ func (c *KubernetesClient) getKubernetesDeployment(data []interface{}) (resp []i
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := depObj.GetDeployments(req[i].Name, req[i].Namespace)
@@ -743,8 +745,8 @@ func (c *KubernetesClient) deleteStatefulSets(data []interface{}) error {
 		utils.Error.Println(err)
 		return err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		err = statefulset.DeleteStatefulSet(req[i].Name, req[i].Namespace)
@@ -913,8 +915,8 @@ func (c *KubernetesClient) patchStatefulSets(data []interface{}) (resp []interfa
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := statefulset.PatchStatefulSets(req[i])
@@ -949,8 +951,8 @@ func (c *KubernetesClient) patchKubernetesService(data []interface{}) (resp []in
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.PatchService(&req[i])
@@ -985,8 +987,8 @@ func (c *KubernetesClient) patchKubernetesConfigMap(data []interface{}) (resp []
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.PatchConfigMap(req[i])
@@ -1020,8 +1022,8 @@ func (c *KubernetesClient) patchKubernetesDeployment(data []interface{}) (resp [
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := depObj.PatchDeployments(req[i])
@@ -1056,8 +1058,8 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 		return resp, err
 	}
 	utils.Info.Println(len(runtimeConfig))
-	var responseObj types.SolutionResp
 	for i := range runtimeConfig {
+		var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		runtimeObj := v1alpha.RuntimeConfig{}
@@ -1117,8 +1119,8 @@ func (c *KubernetesClient) putStatefulSets(data []interface{}) (resp []interface
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := statefulset.UpdateStatefulSets(&req[i])
@@ -1152,8 +1154,8 @@ func (c *KubernetesClient) putKubernetesService(data []interface{}) (resp []inte
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.UpdateService(&req[i])
@@ -1187,8 +1189,8 @@ func (c *KubernetesClient) putKubernetesConfigMap(data []interface{}) (resp []in
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := svc.UpdateConfigMap(&req[i])
@@ -1222,8 +1224,8 @@ func (c *KubernetesClient) putKubernetesDeployment(data []interface{}) (resp []i
 		utils.Error.Println(err)
 		return resp, err
 	}
-	var responseObj types.SolutionResp
 	for i := range req {
+		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println(string(raw))
 		respTemp, err := depObj.UpdateDeployments(&req[i])
@@ -1258,8 +1260,8 @@ func (c *KubernetesClient) putCRDS(key string, data []interface{}) (resp []inter
 		return resp, err
 	}
 	utils.Info.Println(len(runtimeConfig))
-	var responseObj types.SolutionResp
 	for i := range runtimeConfig {
+		var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		runtimeObj := v1alpha.RuntimeConfig{}

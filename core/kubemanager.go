@@ -58,7 +58,7 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 	if err != nil {
 		return kubeClient, err
 	}
-	return KubernetesClient{Config: config, Client: client}, nil
+	return KubernetesClient{Config: config, Client: client, Namespaces: make(map[string]bool)}, nil
 }
 func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})

@@ -7,6 +7,12 @@ type AWSCredentials struct {
 	SecretKey string `json:"access_secret"`
 	Region    string `json:"region"`
 }
+type AzureCredentials struct {
+	ClientID       string `json:"client_id"`
+	ClientSecret   string `json:"client_secret"`
+	SubscriptionID string `json:"subscription_id"`
+	TenantID       string `json:"tenant_id"`
+}
 
 type Cluster struct {
 	Name            string        `json:"name"`

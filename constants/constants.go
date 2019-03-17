@@ -29,4 +29,6 @@ const (
 	KUBERNETES_MASTER_PORT              = "6443"
 
 	ProjectEngineEndpoint = "/projects/{project_id}"
+	AWS                   = "AWS"
+	AZURE                 = "AZURE"
 )

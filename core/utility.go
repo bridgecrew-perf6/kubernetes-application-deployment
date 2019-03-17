@@ -17,9 +17,15 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 	case "aws":
 		cred, err := GetAWSCredentials(credentials)
 		if err != nil {
-
+			return "", "", err
 		}
 		authorization = cred.AccessKey + ":" + cred.SecretKey + ":" + region
+	case "azure":
+		cred, err := GetAzureCredentials(credentials)
+		if err != nil {
+			return "", "", err
+			authorization = cred.ClientID + ":" + cred.ClientSecret + ":" + cred.TenantID + ":" + cred.SubscriptionID + ":" + region
+		}
 	}
 
 	notification := strings.Replace(constants.CLUSTER_GET_ENDPOINT, "{cloud_provider}", strings.ToLower(cloudProvider), -1)
@@ -63,7 +69,19 @@ func GetAWSCredentials(data interface{}) (cred types.AWSCredentials, err error) 
 	}
 	return cred, nil
 }
-
+func GetAzureCredentials(data interface{}) (cred types.AzureCredentials, err error) {
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return cred, err
+	}
+	err = json.Unmarshal(raw, &cred)
+	if err != nil {
+		utils.Error.Println(err)
+		return cred, err
+	}
+	return cred, nil
+}
 func GetMasterIP(cluster types.Cluster) (string, string) {
 	for _, nodePool := range cluster.NodePools {
 		nodes := nodePool.Nodes

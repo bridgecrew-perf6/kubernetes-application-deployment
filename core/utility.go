@@ -24,8 +24,8 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 		cred, err := GetAzureCredentials(credentials)
 		if err != nil {
 			return "", "", err
-			authorization = cred.ClientID + ":" + cred.ClientSecret + ":" + cred.TenantID + ":" + cred.SubscriptionID + ":" + region
 		}
+		authorization = cred.ClientID + ":" + cred.ClientSecret + ":" + cred.TenantID + ":" + cred.SubscriptionID + ":" + region
 	}
 
 	notification := strings.Replace(constants.CLUSTER_GET_ENDPOINT, "{cloud_provider}", strings.ToLower(cloudProvider), -1)

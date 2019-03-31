@@ -41,6 +41,12 @@ func InitFlags() error {
 			Destination: &constants.EnvironmentEngineURL,
 			EnvVar:      "ENVIRONMENT_ENGINE_URL",
 		},
+		cli.StringFlag{
+			Name:        "robin_url",
+			Usage:       "robin ip:port ",
+			Destination: &constants.VaultURL,
+			EnvVar:      "ROBIN_URL",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil

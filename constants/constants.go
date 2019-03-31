@@ -1,11 +1,15 @@
 package constants
 
+import "github.com/patrickmn/go-cache"
+
 var (
 	LoggingURL           string
 	ServicePort          string
 	ClusterAPI           string
 	KubernetesEngineURL  string
 	EnvironmentEngineURL string
+	VaultURL             string
+	CacheObj             *cache.Cache
 )
 
 const (
@@ -29,6 +33,7 @@ const (
 	KUBERNETES_MASTER_PORT              = "6443"
 
 	ProjectEngineEndpoint = "/projects/{project_id}"
+	VaultEndpoint         = "/project/{project_id}/{cloud_provider}/credentials/{profile_id}"
 	AWS                   = "AWS"
 	AZURE                 = "AZURE"
 )

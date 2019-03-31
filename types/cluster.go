@@ -2,6 +2,9 @@ package types
 
 import "gopkg.in/mgo.v2/bson"
 
+type VaultCredentials struct {
+	Credentials interface{} `json:"credentials"`
+}
 type AWSCredentials struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"access_secret"`

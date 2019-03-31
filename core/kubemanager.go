@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
@@ -34,24 +35,46 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 	return config, client, err
 }
 func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err error) {
-
-	project, err := GetProject(projectId)
-	if err != nil {
-		return kubeClient, err
-	}
-	publicIp, privateIp, err := GetClusterMaster(*projectId, project.Data.Cloud, project.Data.Credentials, project.Data.Region)
 	kubernetesClusterIp := ""
-	if publicIp == "" {
-		kubernetesClusterIp = privateIp
+	password := ""
+	userName := ""
+	data, ok := constants.CacheObj.Get(*projectId)
+	if ok {
+		kubernetesData, ok1 := data.(types.CacheObjectData)
+		if !ok1 {
+
+		} else {
+			kubernetesClusterIp = kubernetesData.KubernetesClusterMasterIp
+			userName = kubernetesData.KubernetesCredentials.UserName
+			password = kubernetesData.KubernetesCredentials.Password
+		}
 	} else {
-		kubernetesClusterIp = publicIp
-	}
-	if err != nil {
-		return kubeClient, err
-	}
-	userName, password, err := GetKubernetesCredentials(*projectId)
-	if err != nil {
-		return kubeClient, err
+		project, err := GetProject(projectId)
+		if err != nil {
+			return kubeClient, err
+		}
+		publicIp, privateIp, err := GetClusterMaster(*projectId, project.Data.Cloud, project.Data.Credentials, project.Data.Region)
+		if publicIp == "" {
+			kubernetesClusterIp = privateIp
+		} else {
+			kubernetesClusterIp = publicIp
+		}
+		if err != nil {
+			return kubeClient, err
+		}
+		userName, password, err = GetKubernetesCredentials(*projectId)
+		if err != nil {
+			return kubeClient, err
+		}
+		data := types.CacheObjectData{
+			ProjectId:                 *projectId,
+			KubernetesClusterMasterIp: kubernetesClusterIp,
+			KubernetesCredentials: struct {
+				UserName string
+				Password string
+			}{UserName: userName, Password: password},
+		}
+		constants.CacheObj.Set(*projectId, data, cache.DefaultExpiration)
 	}
 	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + constants.KUBERNETES_MASTER_PORT + "/", Username: userName, Password: password}
 	config, client, err := createKubernetesClient(&kubernetesClusterObj)

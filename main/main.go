@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/patrickmn/go-cache"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	_ "kubernetes-services-deployment/controllers/docs"
 	"kubernetes-services-deployment/utils"
 	"os"
+	"time"
 )
 
 func init() {
@@ -35,7 +37,7 @@ func main() {
 
 	e := gin.New()
 	utils.InitFlags()
-
+	constants.CacheObj = cache.New(5*time.Minute, 5*time.Minute)
 	if constants.ServicePort == "" {
 		constants.ServicePort = "8089"
 	}

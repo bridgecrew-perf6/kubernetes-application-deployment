@@ -50,3 +50,12 @@ type SolutionResp struct {
 	Error string      `json:"error"`
 	Data  interface{} `json:"data"`
 }
+
+type CacheObjectData struct {
+	ProjectId                 string
+	KubernetesClusterMasterIp string
+	KubernetesCredentials     struct {
+		UserName string
+		Password string
+	}
+}

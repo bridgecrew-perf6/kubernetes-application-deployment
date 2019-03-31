@@ -156,5 +156,39 @@ func GetProject(projectId *string) (project *types.Project, err error) {
 	if !p.Status {
 		return project, errors.New("internal server error while fetching environment")
 	}
+	p.Data.Credentials, err = getCredentials(projectId, &p.Data.CredentialsProfileId, &p.Data.Cloud)
+	return &p, nil
+}
+
+func getCredentials(projectId, profileId, cloud_provider *string) (interface{}, error) {
+	if projectId == nil || profileId == nil {
+		utils.Error.Println("project_id/profile_id is null. send valid project_id in request")
+		return nil, errors.New("project id is null. send valid project id in request")
+	}
+	notification := strings.Replace(constants.VaultEndpoint, "{project_id}", *projectId, -1)
+	notification = strings.Replace(notification, "{cloud_provider}", *cloud_provider, -1)
+	notification = strings.Replace(notification, "{profile_id}", *profileId, -1)
+	vaultEndpoint := constants.VaultURL + notification
+	utils.Info.Println(vaultEndpoint)
+	clusterApiClient := resty.New()
+	resp, err := clusterApiClient.
+		R().
+		Get(vaultEndpoint)
+	if err != nil {
+		utils.Error.Println(err)
+		return nil, err
+	}
+	if resp.StatusCode() >= 400 {
+		utils.Error.Println("Error in Kubernetes get endpoint", resp.StatusCode(), resp.Status(), string(resp.Body()))
+		return nil, errors.New("Error in Kubernetes get endpoint" + strconv.Itoa(resp.StatusCode()) + resp.Status() + string(resp.Body()))
+	}
+	p := struct {
+		Credentials interface{} `json:"credentials"`
+	}{}
+	err = json.Unmarshal(resp.Body(), &p)
+	if err != nil {
+		utils.Info.Println(err)
+		return nil, err
+	}
 	return &p, nil
 }

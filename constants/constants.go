@@ -32,8 +32,8 @@ const (
 	KUBERNETES_GET_CREDENTIALS_ENDPOINT = "/kube/api/v1/credentials/{envId}"
 	KUBERNETES_MASTER_PORT              = "6443"
 
-	ProjectEngineEndpoint = "/projects/{project_id}"
-	VaultEndpoint         = "/project/{project_id}/{cloud_provider}/credentials"
+	ProjectEngineEndpoint = "/raccoon/projects/{project_id}"
+	VaultEndpoint         = "/robin/api/v1/project/{project_id}/{cloud_provider}/credentials"
 	AWS                   = "AWS"
 	AZURE                 = "AZURE"
 )

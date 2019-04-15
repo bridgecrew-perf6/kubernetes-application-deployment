@@ -190,5 +190,8 @@ func getCredentials(projectId, profileId, cloud_provider *string) (interface{}, 
 		utils.Info.Println(err)
 		return nil, err
 	}
-	return &p, nil
+	utils.Info.Println(string(resp.Body()))
+	utils.Info.Println(p.Credentials)
+
+	return &p.Credentials, nil
 }

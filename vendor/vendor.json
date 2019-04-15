@@ -212,6 +212,12 @@
 			"revisionTime": "2019-01-16T04:19:20Z"
 		},
 		{
+			"checksumSHA1": "q83MSNA7jutEAhK7BoQ1Qqxo6Ps=",
+			"path": "github.com/patrickmn/go-cache",
+			"revision": "5633e0862627c011927fa39556acae8b1f1df58a",
+			"revisionTime": "2018-08-15T05:31:27Z"
+		},
+		{
 			"checksumSHA1": "p+0xLINLB8f0kaBUJtdITwBLkbg=",
 			"path": "github.com/peterbourgon/diskv",
 			"revision": "0646ccaebea1ed1539efcab30cae44019090093f",

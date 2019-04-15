@@ -33,7 +33,7 @@ const (
 	KUBERNETES_MASTER_PORT              = "6443"
 
 	ProjectEngineEndpoint = "/projects/{project_id}"
-	VaultEndpoint         = "/project/{project_id}/{cloud_provider}/credentials/{profile_id}"
+	VaultEndpoint         = "/project/{project_id}/{cloud_provider}/credentials"
 	AWS                   = "AWS"
 	AZURE                 = "AZURE"
 )

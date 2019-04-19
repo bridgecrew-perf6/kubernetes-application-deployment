@@ -474,56 +474,7 @@ func (c *KubernetesClient) deployCRDS(key string, data []interface{}) (resp []in
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		var responseObj types.SolutionResp
-		raw, err := json.Marshal(runtimeConfig[i])
-		utils.Info.Println(string(raw))
-		runtimeObj := v1alpha.RuntimeConfig{}
-		if err != nil {
-			utils.Error.Println(err)
-			return resp, err
-		}
-		err = json.Unmarshal(raw, &runtimeObj)
-		if err != nil {
-			utils.Error.Println(err)
-			return resp, err
-		}
-		rest.InClusterConfig()
-		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
-		crdPlural := utils.Pluralize(strings.ToLower(runtimeObj.Kind))
-
-		namespace := ""
-		if runtimeObj.Namespace == "" {
-			namespace = "default"
-		} else {
-			namespace = runtimeObj.Namespace
-		}
-		utils.Info.Println(crdPlural, namespace)
-		c.Namespaces[namespace] = true
-		_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-		if err != nil {
-			utils.Error.Println(err)
-			errs = append(errs, err.Error())
-			responseObj.Error = err.Error()
-		} else {
-			alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
-			if err != nil {
-				errs = append(errs, err.Error())
-				responseObj.Error = err.Error()
-				utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
-			} else {
-				data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
-				if err != nil {
-					errs = append(errs, err.Error())
-					responseObj.Error = err.Error()
-					utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
-				} else {
-					responseObj.Data = data
-					utils.Info.Println("kubernetes crd deployed successfully")
-					dd, _ := json.Marshal(data)
-					utils.Info.Println(string(dd))
-				}
-			}
-		}
+		responseObj, _ := c.crdManager(runtimeConfig[i], "post")
 		resp = append(resp, responseObj)
 
 	}
@@ -1437,4 +1388,74 @@ func findKey(istiojsonData map[string]interface{}, key string) (string, error) {
 		return "", errors.New(key + " type is not string")
 	}
 	return data, nil
+}
+
+func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) (responseObj types.SolutionResp, err error) {
+
+	raw, err := json.Marshal(runtimeConfig)
+	utils.Info.Println(string(raw))
+	runtimeObj := v1alpha.RuntimeConfig{}
+	if err != nil {
+		utils.Error.Println(err)
+		responseObj.Error = err.Error()
+		return responseObj, err
+	}
+	err = json.Unmarshal(raw, &runtimeObj)
+	if err != nil {
+		utils.Error.Println(err)
+		responseObj.Error = err.Error()
+		return responseObj, err
+	}
+	rest.InClusterConfig()
+	if runtimeObj.Kind == "" || runtimeObj.APIVersion == "" {
+		utils.Error.Println("Kind/APIVersion is empty")
+		responseObj.Error = "Kind/APIVersion is empty"
+		return responseObj, errors.New("Kind/APIVersion is empty")
+	}
+	//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+	crdPlural := utils.Pluralize(strings.ToLower(runtimeObj.Kind))
+
+	namespace := ""
+	if runtimeObj.Namespace == "" {
+		namespace = "default"
+	} else {
+		namespace = runtimeObj.Namespace
+	}
+	utils.Info.Println(crdPlural, namespace)
+	c.Namespaces[namespace] = true
+	_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
+	if err != nil {
+		utils.Error.Println(err)
+		responseObj.Error = err.Error()
+		return responseObj, err
+	} else {
+		alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
+		if err != nil {
+
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+			return responseObj, err
+		} else {
+			var data interface{}
+			var err error
+			switch method {
+			case "post":
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
+			case "get":
+			case "put":
+			case "patch":
+			}
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+				return responseObj, err
+			} else {
+				responseObj.Data = data
+				utils.Info.Println("kubernetes crd deployed successfully")
+				dd, _ := json.Marshal(data)
+				utils.Info.Println(string(dd))
+			}
+		}
+	}
+	return responseObj, nil
 }

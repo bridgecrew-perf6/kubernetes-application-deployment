@@ -645,29 +645,32 @@ func (c *KubernetesClient) getCRDS(key string, data []interface{}) (resp []inter
 	}
 	for i := range runtimeConfig {
 		rest.InClusterConfig()
-		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
-		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
-		namespace := ""
-		if runtimeConfig[i].Namespace == "" {
-			namespace = "default"
-		} else {
-			namespace = runtimeConfig[i].Namespace
-		}
-		alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
-		if err != nil {
+		responseObj, _ := c.crdManager(runtimeConfig[i], "get")
 
-		}
-		var responseObj types.SolutionResp
-		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig[i].Name)
-		if err != nil {
-			errs = append(errs, err.Error())
-			responseObj.Error = err.Error()
-			utils.Error.Println("failed to fetch data. Error: ", err)
-		} else {
-			dd, _ := json.Marshal(data)
-			responseObj.Data = data
-			utils.Info.Println(string(dd))
-		}
+		/*
+			//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+			crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+			namespace := ""
+			if runtimeConfig[i].Namespace == "" {
+				namespace = "default"
+			} else {
+				namespace = runtimeConfig[i].Namespace
+			}
+			alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
+			if err != nil {
+
+			}
+			var responseObj types.SolutionResp
+			data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig[i].Name)
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("failed to fetch data. Error: ", err)
+			} else {
+				dd, _ := json.Marshal(data)
+				responseObj.Data = data
+				utils.Info.Println(string(dd))
+			}*/
 
 		resp = append(resp, responseObj)
 	}
@@ -848,7 +851,8 @@ func (c *KubernetesClient) deleteCRDS(key string, data []interface{}) (err error
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
 		rest.InClusterConfig()
-		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+		res, _ := c.crdManager(runtimeConfig[i], "delete")
+		/*//kind to crdplural  for example kind=VirtualService and plural=virtualservices
 		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
 		namespace := ""
 		if runtimeConfig[i].Namespace == "" {
@@ -866,6 +870,9 @@ func (c *KubernetesClient) deleteCRDS(key string, data []interface{}) (err error
 				errs = append(errs, err.Error())
 				utils.Error.Println("failed to fetch data. Error: ", err)
 			}
+		}*/
+		if res.Error != "" {
+			errs = append(errs, res.Error)
 		}
 	}
 	if len(errs) >= 1 {
@@ -1033,7 +1040,8 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		var responseObj types.SolutionResp
+		responseObj, _ := c.crdManager(runtimeConfig[i], "patch")
+		/*var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		runtimeObj := v1alpha.RuntimeConfig{}
@@ -1069,7 +1077,7 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 			dd, _ := json.Marshal(data)
 			responseObj.Data = data
 			utils.Info.Println(string(dd))
-		}
+		}*/
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -1235,7 +1243,8 @@ func (c *KubernetesClient) putCRDS(key string, data []interface{}) (resp []inter
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		var responseObj types.SolutionResp
+		responseObj, _ := c.crdManager(runtimeConfig[i], "put")
+		/*var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
 		runtimeObj := v1alpha.RuntimeConfig{}
@@ -1272,7 +1281,7 @@ func (c *KubernetesClient) putCRDS(key string, data []interface{}) (resp []inter
 
 			responseObj.Data = data
 			utils.Info.Println(string(dd))
-		}
+		}*/
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -1442,16 +1451,21 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 			case "post":
 				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
 			case "get":
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
 			case "put":
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
 			case "patch":
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+			case "delete":
+				err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
 			}
 			if err != nil {
 				responseObj.Error = err.Error()
-				utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+
 				return responseObj, err
 			} else {
 				responseObj.Data = data
-				utils.Info.Println("kubernetes crd deployed successfully")
+
 				dd, _ := json.Marshal(data)
 				utils.Info.Println(string(dd))
 			}

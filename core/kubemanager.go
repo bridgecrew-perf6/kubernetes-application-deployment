@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
+	storage "k8s.io/api/storage/v1"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
@@ -108,6 +109,10 @@ func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 			respTemp, err = c.deployKubernetesConfigMap(data)
 		case constants.KubernetesDeployment:
 			respTemp, err = c.deployKubernetesDeployment(data)
+		case constants.KubernetesPersistentVolumeClaims:
+			respTemp, err = c.deployKubernetesPVC(data)
+		case constants.KubernetesStorageClasses:
+			respTemp, err = c.deployKubernetesStorageClasses(data)
 		default:
 			//for now default case is for istio and knative
 			respTemp, err = c.deployCRDS(kubeType, data)
@@ -146,6 +151,10 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 			respTemp, err = c.getKubernetesConfigMap(data)
 		case constants.KubernetesDeployment:
 			respTemp, err = c.getKubernetesDeployment(data)
+		case constants.KubernetesPersistentVolumeClaims:
+			respTemp, err = c.getKubernetesPVC(data)
+		case constants.KubernetesStorageClasses:
+			respTemp, err = c.getKubernetesStorageClass(data)
 		default:
 			//for now default case is for istio and knative
 			respTemp, err = c.getCRDS(kubeType, data)
@@ -459,6 +468,94 @@ func (c *KubernetesClient) deployKubernetesDeployment(data []interface{}) (resp 
 
 	return resp, nil
 }
+func (c *KubernetesClient) deployKubernetesPVC(data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.PersistentVolumeClaim{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		var responseObj types.SolutionResp
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
+		if err != nil {
+			utils.Error.Println(err)
+			errs = append(errs, err.Error())
+		} else {
+			tempResp, err := depObj.CreatePersistentVolumeClaim(req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes pvc deployment failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes pvc deployed successfully")
+			}
+		}
+		resp = append(resp, responseObj)
+
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
+func (c *KubernetesClient) deployKubernetesStorageClasses(data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []storage.StorageClass{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		var responseObj types.SolutionResp
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		c.Namespaces[req[i].Namespace] = true
+		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
+		if err != nil {
+			utils.Error.Println(err)
+			errs = append(errs, err.Error())
+		} else {
+			tempResp, err := depObj.LaunchStorageClass(req[i])
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubernetes storage class deployment failed. Error: ", err)
+			} else {
+				responseObj.Data = tempResp
+				utils.Info.Println("kubernetes storage class deployed successfully")
+			}
+		}
+		resp = append(resp, responseObj)
+
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
 func (c *KubernetesClient) deployCRDS(key string, data []interface{}) (resp []interface{}, err error) {
 	var errs []string
 	raw, err := json.Marshal(data)
@@ -618,6 +715,80 @@ func (c *KubernetesClient) getKubernetesDeployment(data []interface{}) (resp []i
 			utils.Error.Println("kubernetes deployment deployed failed. Error: ", err)
 		} else {
 			utils.Info.Println("kubernetes deployment deployed successfully")
+			responseObj.Data = respTemp
+
+		}
+		resp = append(resp, responseObj)
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
+func (c *KubernetesClient) getKubernetesPVC(data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []v12.PersistentVolumeClaim{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		var responseObj types.SolutionResp
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := depObj.GetPersistentVolumeClaim(req[i].Name, req[i].Namespace)
+		if err != nil {
+			errs = append(errs, err.Error())
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubernetes pvc deployment failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes pvc deployed successfully")
+			responseObj.Data = respTemp
+
+		}
+		resp = append(resp, responseObj)
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		return resp, errors.New(finalErr)
+	}
+
+	return resp, nil
+}
+func (c *KubernetesClient) getKubernetesStorageClass(data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	req := []storage.StorageClass{}
+	err = json.Unmarshal(raw, &req)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range req {
+		var responseObj types.SolutionResp
+		raw, _ := json.Marshal(req[i])
+		utils.Info.Println(string(raw))
+		respTemp, err := depObj.GetStorageClass(req[i].Name)
+		if err != nil {
+			errs = append(errs, err.Error())
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubernetes storage-class deployment failed. Error: ", err)
+		} else {
+			utils.Info.Println("kubernetes storage-class deployed successfully")
 			responseObj.Data = respTemp
 
 		}

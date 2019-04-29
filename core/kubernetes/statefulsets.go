@@ -41,7 +41,7 @@ func (p *StatefulsetLauncher) LaunchStatefulSet(req v1.StatefulSet) (set *v1.Sta
 		return nil, err
 	}
 
-	return p.kubeClient.AppsV1().StatefulSets(set.Namespace).Create(&req)
+	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Create(&req)
 }
 
 func (p *StatefulsetLauncher) PatchStatefulSets(req v1.StatefulSet) (set *v1.StatefulSet, err error) {

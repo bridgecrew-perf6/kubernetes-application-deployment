@@ -27,6 +27,12 @@
 			"revisionTime": "2016-04-05T07:15:01Z"
 		},
 		{
+			"checksumSHA1": "R+OhQXV3cdbhycs9j7GA8ux/sU8=",
+			"path": "github.com/gedex/inflector",
+			"revision": "16278e9db8130ac7ec405dc174cfb94344f16325",
+			"revisionTime": "2017-03-07T19:08:18Z"
+		},
+		{
 			"checksumSHA1": "BhMowD2DIKSd9qq8Pzh7Y3mh2/w=",
 			"path": "github.com/gin-contrib/sse",
 			"revision": "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae",

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/gedex/inflector"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"k8s.io/api/apps/v1"
@@ -1422,7 +1423,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 		return responseObj, errors.New("Kind/APIVersion is empty")
 	}
 	//kind to crdplural  for example kind=VirtualService and plural=virtualservices
-	crdPlural := utils.Pluralize(strings.ToLower(runtimeObj.Kind))
+	crdPlural := inflector.Pluralize(strings.ToLower(runtimeObj.Kind))
 
 	namespace := ""
 	if runtimeObj.Namespace == "" {

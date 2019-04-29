@@ -515,7 +515,7 @@ func (c *KubernetesClient) deployKubernetesPVC(data []interface{}) (resp []inter
 }
 func (c *KubernetesClient) deployKubernetesStorageClasses(data []interface{}) (resp []interface{}, err error) {
 	var errs []string
-	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	depObj := appKubernetes.NewStorageLauncher(c.Client)
 	raw, err := json.Marshal(data)
 	if err != nil {
 		utils.Error.Println(err)
@@ -767,7 +767,7 @@ func (c *KubernetesClient) getKubernetesPVC(data []interface{}) (resp []interfac
 }
 func (c *KubernetesClient) getKubernetesStorageClass(data []interface{}) (resp []interface{}, err error) {
 	var errs []string
-	depObj := appKubernetes.NewStatefulsetLauncher(c.Client)
+	depObj := appKubernetes.NewStorageLauncher(c.Client)
 	raw, err := json.Marshal(data)
 	if err != nil {
 		utils.Error.Println(err)

@@ -6,11 +6,21 @@ import (
 	apimachinery "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
 )
 
-func (p *StatefulsetLauncher) createAWSStorageClass(serviceName, zones string, volume types.ExternalVolume) v1.StorageClass {
+type StorageClass struct {
+	kubeClient *kubernetes.Clientset
+}
+
+func NewStorageLauncher(c *kubernetes.Clientset) *StorageClass {
+	this := new(StorageClass)
+	this.kubeClient = c
+	return this
+}
+func (p *StorageClass) createAWSStorageClass(serviceName, zones string, volume types.ExternalVolume) v1.StorageClass {
 
 	objMeta := apimachinery.ObjectMeta{Name: serviceName}
 	provisioner := "kubernetes.io/aws-ebs"
@@ -33,7 +43,7 @@ func (p *StatefulsetLauncher) createAWSStorageClass(serviceName, zones string, v
 	return sClass
 
 }
-func (p *StatefulsetLauncher) createGCPStorageClass(serviceName string, volume types.ExternalVolume) v1.StorageClass {
+func (p *StorageClass) createGCPStorageClass(serviceName string, volume types.ExternalVolume) v1.StorageClass {
 
 	objMeta := apimachinery.ObjectMeta{Name: serviceName}
 	provisioner := "kubernetes.io/gce-pd"
@@ -52,7 +62,7 @@ func (p *StatefulsetLauncher) createGCPStorageClass(serviceName string, volume t
 	return sClass
 
 }
-func (p *StatefulsetLauncher) createAZUREStorageClass(serviceName string, volume types.ExternalVolume) v1.StorageClass {
+func (p *StorageClass) createAZUREStorageClass(serviceName string, volume types.ExternalVolume) v1.StorageClass {
 
 	objMeta := apimachinery.ObjectMeta{Name: serviceName}
 	provisioner := "kubernetes.io/azure-disk"
@@ -71,16 +81,16 @@ func (p *StatefulsetLauncher) createAZUREStorageClass(serviceName string, volume
 	return sClass
 
 }
-func (p *StatefulsetLauncher) LaunchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+func (p *StorageClass) LaunchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
 	utils.Info.Println("creating storage-class with name: '" + storageClass.Name + "'")
 	return p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
 }
 
-func (p *StatefulsetLauncher) GetStorageClass(name string) (*v1.StorageClass, error) {
+func (p *StorageClass) GetStorageClass(name string) (*v1.StorageClass, error) {
 	return p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
 }
 
-func (p *StatefulsetLauncher) PatchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+func (p *StorageClass) PatchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
 	r, err := json.Marshal(storageClass)
 	if err != nil {
 		return nil, err
@@ -89,14 +99,14 @@ func (p *StatefulsetLauncher) PatchStorageClass(storageClass v1.StorageClass) (*
 	return p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
 }
 
-func (p *StatefulsetLauncher) UpdateStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+func (p *StorageClass) UpdateStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
 	return p.kubeClient.StorageV1().StorageClasses().Update(&storageClass)
 }
 
-func (p *StatefulsetLauncher) ListStorageClass() (*v1.StorageClassList, error) {
+func (p *StorageClass) ListStorageClass() (*v1.StorageClassList, error) {
 	return p.kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
 }
 
-func (p *StatefulsetLauncher) DeleteStorageClass(name string) error {
+func (p *StorageClass) DeleteStorageClass(name string) error {
 	return p.kubeClient.StorageV1().StorageClasses().Delete(name, &metav1.DeleteOptions{})
 }

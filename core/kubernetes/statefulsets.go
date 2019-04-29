@@ -27,6 +27,7 @@ func NewStatefulsetLauncher(c *kubernetes.Clientset) *StatefulsetLauncher {
 	this.kubeService = NewServicesLauncher(c)
 	this.ingressService = NewIngressLauncher(c)
 	this.rbac = NewRBACLauncher(c)
+	this.kubeClient = c
 	return this
 }
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"k8s.io/api/storage/v1"
 	apimachinery "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
 )
@@ -69,8 +71,32 @@ func (p *StatefulsetLauncher) createAZUREStorageClass(serviceName string, volume
 	return sClass
 
 }
-func (p *StatefulsetLauncher) launchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
-	json_, _ := json.Marshal(storageClass)
-	utils.Info.Println(string(json_))
+func (p *StatefulsetLauncher) LaunchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+	utils.Info.Println("creating storage-class with name: '" + storageClass.Name + "'")
 	return p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+}
+
+func (p *StatefulsetLauncher) GetStorageClass(name string) (*v1.StorageClass, error) {
+	return p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+}
+
+func (p *StatefulsetLauncher) PatchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+	r, err := json.Marshal(storageClass)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+}
+
+func (p *StatefulsetLauncher) UpdateStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+	return p.kubeClient.StorageV1().StorageClasses().Update(&storageClass)
+}
+
+func (p *StatefulsetLauncher) ListStorageClass() (*v1.StorageClassList, error) {
+	return p.kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
+}
+
+func (p *StatefulsetLauncher) DeleteStorageClass(name string) error {
+	return p.kubeClient.StorageV1().StorageClasses().Delete(name, &metav1.DeleteOptions{})
 }

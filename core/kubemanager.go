@@ -315,7 +315,7 @@ func (c *KubernetesClient) deployStatefulSets(data []interface{}) (resp []interf
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -328,10 +328,13 @@ func (c *KubernetesClient) deployStatefulSets(data []interface{}) (resp []interf
 				responseObj.Error = err.Error()
 				utils.Error.Println("kubernetes statefulsets deployed failed. Error: ", err)
 			} else {
+
 				responseObj.Data = tempResp
 				utils.Info.Println("kubernetes statefulsets deployed successfully")
 			}
 		}
+		raw, _ = json.Marshal(responseObj)
+		utils.Info.Println("response payload", string(raw))
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -357,7 +360,7 @@ func (c *KubernetesClient) deployKubernetesService(data []interface{}) (resp []i
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -374,6 +377,8 @@ func (c *KubernetesClient) deployKubernetesService(data []interface{}) (resp []i
 				utils.Info.Println("kubernetes service deployed successfully")
 			}
 		}
+		raw, _ = json.Marshal(responseObj)
+		utils.Info.Println("response payload", string(raw))
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -399,7 +404,7 @@ func (c *KubernetesClient) deployKubernetesConfigMap(data []interface{}) (resp [
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -442,7 +447,7 @@ func (c *KubernetesClient) deployKubernetesDeployment(data []interface{}) (resp 
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -459,6 +464,8 @@ func (c *KubernetesClient) deployKubernetesDeployment(data []interface{}) (resp 
 				utils.Info.Println("kubernetes deployment deployed successfully")
 			}
 		}
+		raw, _ = json.Marshal(responseObj)
+		utils.Info.Println("response payload", string(raw))
 		resp = append(resp, responseObj)
 
 	}
@@ -486,7 +493,7 @@ func (c *KubernetesClient) deployKubernetesPVC(data []interface{}) (resp []inter
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -530,7 +537,7 @@ func (c *KubernetesClient) deployKubernetesStorageClasses(data []interface{}) (r
 	for i := range req {
 		var responseObj types.SolutionResp
 		raw, _ := json.Marshal(req[i])
-		utils.Info.Println(string(raw))
+		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
 		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
@@ -1612,7 +1619,6 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	} else {
 		alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
 		if err != nil {
-
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
 			return responseObj, err
@@ -1643,5 +1649,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 			}
 		}
 	}
+	raw, _ = json.Marshal(responseObj)
+	utils.Info.Println("response payload", string(raw))
 	return responseObj, nil
 }

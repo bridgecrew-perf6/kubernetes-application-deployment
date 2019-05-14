@@ -12,7 +12,9 @@ import (
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"kubernetes-services-deployment/constants"
 	appKubernetes "kubernetes-services-deployment/core/kubernetes"
 	v1alpha "kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
@@ -28,18 +30,27 @@ type KubernetesClient struct {
 }
 
 func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Config, client *kubernetes.Clientset, err error) {
-	config = &rest.Config{Host: req.URL,
-		Username:        req.Username,
-		Password:        req.Password,
-		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+	utils.Info.Println("kubernetes api authentication mechanism:", req.ClusterCredentials.Type)
+	switch strings.ToLower(req.ClusterCredentials.Type) {
+	case types.BasicCredentialsType:
+		config = &rest.Config{Host: req.URL,
+			Username:        req.ClusterCredentials.UserName,
+			Password:        req.ClusterCredentials.Password,
+			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+		}
+	case types.KubeconfigCredentialsType:
+		config, err = clientcmd.RESTConfigFromKubeConfig([]byte(req.ClusterCredentials.KubeConfig))
+		if err != nil {
+			utils.Info.Println(err)
+			return nil, nil, err
+		}
 	}
 	client, err = kubernetes.NewForConfig(config)
 	return config, client, err
 }
 func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err error) {
 	kubernetesClusterIp := ""
-	password := ""
-	userName := ""
+	credentials := types.Credentials{}
 	data, ok := constants.CacheObj.Get(*projectId)
 	if ok {
 		kubernetesData, ok1 := data.(types.CacheObjectData)
@@ -47,8 +58,7 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 
 		} else {
 			kubernetesClusterIp = kubernetesData.KubernetesClusterMasterIp
-			userName = kubernetesData.KubernetesCredentials.UserName
-			password = kubernetesData.KubernetesCredentials.Password
+			credentials = kubernetesData.KubernetesCredentials
 		}
 	} else {
 		project, err := GetProject(projectId)
@@ -64,21 +74,19 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 		if err != nil {
 			return kubeClient, err
 		}
-		userName, password, err = GetKubernetesCredentials(*projectId)
+		credentials, err = GetKubernetesCredentials(*projectId)
+
 		if err != nil {
 			return kubeClient, err
 		}
 		data := types.CacheObjectData{
 			ProjectId:                 *projectId,
 			KubernetesClusterMasterIp: kubernetesClusterIp,
-			KubernetesCredentials: struct {
-				UserName string
-				Password string
-			}{UserName: userName, Password: password},
+			KubernetesCredentials:     credentials,
 		}
 		constants.CacheObj.Set(*projectId, data, cache.DefaultExpiration)
 	}
-	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + constants.KUBERNETES_MASTER_PORT + "/", Username: userName, Password: password}
+	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + constants.KUBERNETES_MASTER_PORT + "/", ClusterCredentials: credentials}
 	config, client, err := createKubernetesClient(&kubernetesClusterObj)
 	if err != nil {
 		return kubeClient, err

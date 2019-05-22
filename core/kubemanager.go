@@ -1528,6 +1528,23 @@ func (c *KubernetesClient) GetKubernetesService(namespace, name string) (*v12.Se
 	serviceObj := appKubernetes.NewServicesLauncher(c.Client)
 	return serviceObj.GetService(name, namespace)
 }
+func (c *KubernetesClient) GetKubernetesServiceExternalIp(namespace, name string) (string, error) {
+	serviceObj := appKubernetes.NewServicesLauncher(c.Client)
+	svc, err := serviceObj.GetService(name, namespace)
+	if err != nil {
+		utils.Error.Println(err)
+		return "", err
+	}
+	externalIp := ""
+	for _, ingress := range svc.Status.LoadBalancer.Ingress {
+		if ingress.IP == "" {
+			externalIp = ingress.Hostname
+		} else {
+			externalIp = ingress.IP
+		}
+	}
+	return externalIp, nil
+}
 func (c *KubernetesClient) DeleteKubernetesService(name, namespace string) error {
 
 	serviceObj := appKubernetes.NewServicesLauncher(c.Client)

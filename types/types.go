@@ -54,8 +54,22 @@ type SolutionResp struct {
 type CacheObjectData struct {
 	ProjectId                 string
 	KubernetesClusterMasterIp string
-	KubernetesCredentials     struct {
-		UserName string
-		Password string
-	}
+	KubernetesCredentials     Credentials
 }
+
+type Credentials struct {
+	Type              string `json:"type"`
+	UserName          string `json:"user_name"`
+	Password          string `json:"password"`
+	BearerToken       string `json:"bearer_token"`
+	KubeConfig        string `json:"kube_config"`
+	ClientCertificate string `json:"client_certificate"`
+	ClientKey         string `json:"client_key"`
+}
+
+const (
+	KubeconfigCredentialsType        = "kubeconfig"
+	BasicCredentialsType             = "basic"
+	BearerCredentialsType            = "bearer"
+	ClientCeritficateCredentialsType = "client_certificate"
+)

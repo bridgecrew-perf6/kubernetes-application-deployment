@@ -24,7 +24,7 @@ func NewController() (*KubeController, error) {
 // @Accept  json
 // @Produce  json
 // @router /api/v1/solution [post]
-func (c *KubeController) DeployService(g *gin.Context) {
+func (c *KubeController) DeploySolution(g *gin.Context) {
 	req := types.ServiceRequest{}
 	err := g.ShouldBind(&req)
 	if err != nil {
@@ -48,7 +48,7 @@ func (c *KubeController) DeployService(g *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @router /api/v1/solution [get]
-func (c *KubeController) GetService(g *gin.Context) {
+func (c *KubeController) GetSolution(g *gin.Context) {
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -82,7 +82,7 @@ func (c *KubeController) GetService(g *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @router /api/v1/solution [delete]
-func (c *KubeController) DeleteService(g *gin.Context) {
+func (c *KubeController) DeleteSolution(g *gin.Context) {
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -114,7 +114,7 @@ func (c *KubeController) DeleteService(g *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @router /api/v1/solution [patch]
-func (c *KubeController) PatchService(g *gin.Context) {
+func (c *KubeController) PatchSolution(g *gin.Context) {
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -146,7 +146,7 @@ func (c *KubeController) PatchService(g *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @router /api/v1/solution [put]
-func (c *KubeController) PutService(g *gin.Context) {
+func (c *KubeController) PutSolution(g *gin.Context) {
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {

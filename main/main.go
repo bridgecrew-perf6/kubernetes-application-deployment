@@ -31,7 +31,7 @@ func init() {
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host petstore.swagger.io
-// @BasePath /v2
+// @BasePath /ksd/api/v1
 
 func main() {
 
@@ -48,11 +48,11 @@ func main() {
 		{
 			dag.POST("deploy", c.DeployService)
 		}*/
-		v1.POST("/solution", c.DeployService)
-		v1.GET("/solution", c.GetService)
-		v1.DELETE("/solution", c.DeleteService)
-		v1.PATCH("/solution", c.PatchService)
-		v1.PUT("/solution", c.PutService)
+		v1.POST("/solution", c.DeploySolution)
+		v1.GET("/solution", c.GetSolution)
+		v1.DELETE("/solution", c.DeleteSolution)
+		v1.PATCH("/solution", c.PatchSolution)
+		v1.PUT("/solution", c.PutSolution)
 		///statefulsets APIs
 		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
 		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)
@@ -66,6 +66,12 @@ func main() {
 		v1.GET("/deployment/:namespace", c.ListDeploymentStatus)
 		v1.GET("/deployment/:namespace/:name", c.GetDeploymentStatus)
 		v1.DELETE("/deployment/:namespace/:name", c.DeleteDeployment)
+
+		v1.GET("/kubeservice/:namespace", c.ListKubernetesServices)
+		v1.GET("/kubeservice/:namespace/:name", c.GetKubernetesService)
+		v1.DELETE("/kubeservice/:namespace/:name", c.DeleteKubernetesService)
+
+		v1.GET("/kubeservice/:namespace/:name/endpoint", c.GetKubernetesServiceExternalIp)
 
 	}
 

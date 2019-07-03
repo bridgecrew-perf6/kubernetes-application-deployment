@@ -7,6 +7,7 @@ import (
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
@@ -1612,7 +1613,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	utils.Info.Println(crdPlural, namespace)
 	c.Namespaces[namespace] = true
 	_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-	if err != nil {
+	if err != nil && !errors2.IsAlreadyExists(err) {
 		utils.Error.Println(err)
 		responseObj.Error = err.Error()
 		return responseObj, err

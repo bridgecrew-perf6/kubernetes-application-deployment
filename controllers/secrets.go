@@ -26,7 +26,15 @@ func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(req.ProjectId)
+	cpContext := new(core.Context)
+	err = cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return
@@ -70,7 +78,15 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return
@@ -110,7 +126,15 @@ func (c *KubeController) DeleteRegistrySecret(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "project_id is missing in request"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return

@@ -34,7 +34,8 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 	utils.Info.Println("kubernetes api authentication mechanism:", req.ClusterCredentials.Type)
 	switch strings.ToLower(req.ClusterCredentials.Type) {
 	case types.BasicCredentialsType:
-		config = &rest.Config{Host: req.URL,
+		config = &rest.Config{
+			Host:            req.URL,
 			Username:        req.ClusterCredentials.UserName,
 			Password:        req.ClusterCredentials.Password,
 			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
@@ -45,7 +46,41 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 			utils.Info.Println(err)
 			return nil, nil, err
 		}
+
+	case types.BearerCredentialsType:
+		if req.ClusterCredentials.BearerToken != "" {
+			config = &rest.Config{
+				Host:            req.URL,
+				BearerToken:     req.ClusterCredentials.BearerToken,
+				TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+			}
+		} else {
+			errorStr := "no bearer token found in cluster credentials"
+			utils.Info.Println(errorStr)
+			return nil, nil, errors.New(errorStr)
+		}
+
+	case types.ClientCeritficateCredentialsType:
+
+		if req.ClusterCredentials.ClientCertificate != "" && req.ClusterCredentials.ClientKey != "" {
+			config = &rest.Config{
+				Host:            req.URL,
+				TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+			}
+			config.TLSClientConfig.CertData = []byte(req.ClusterCredentials.ClientCertificate)
+			config.TLSClientConfig.KeyData = []byte(req.ClusterCredentials.ClientKey)
+		} else {
+			errorStr := "no client cert/key found in cluster credentials"
+			utils.Info.Println(errorStr)
+			return nil, nil, errors.New(errorStr)
+		}
 	}
+
+	if req.ClusterCredentials.CaCertificate != "" {
+		config.TLSClientConfig.Insecure = false
+		config.TLSClientConfig.CAData = []byte(req.ClusterCredentials.CaCertificate)
+	}
+
 	client, err = kubernetes.NewForConfig(config)
 	return config, client, err
 }

@@ -7,6 +7,7 @@ import (
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
@@ -34,7 +35,8 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 	utils.Info.Println("kubernetes api authentication mechanism:", req.ClusterCredentials.Type)
 	switch strings.ToLower(req.ClusterCredentials.Type) {
 	case types.BasicCredentialsType:
-		config = &rest.Config{Host: req.URL,
+		config = &rest.Config{
+			Host:            req.URL,
 			Username:        req.ClusterCredentials.UserName,
 			Password:        req.ClusterCredentials.Password,
 			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
@@ -45,12 +47,47 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 			utils.Info.Println(err)
 			return nil, nil, err
 		}
+
+	case types.BearerCredentialsType:
+		if req.ClusterCredentials.BearerToken != "" {
+			config = &rest.Config{
+				Host:            req.URL,
+				BearerToken:     req.ClusterCredentials.BearerToken,
+				TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+			}
+		} else {
+			errorStr := "no bearer token found in cluster credentials"
+			utils.Info.Println(errorStr)
+			return nil, nil, errors.New(errorStr)
+		}
+
+	case types.ClientCeritficateCredentialsType:
+
+		if req.ClusterCredentials.ClientCertificate != "" && req.ClusterCredentials.ClientKey != "" {
+			config = &rest.Config{
+				Host:            req.URL,
+				TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+			}
+			config.TLSClientConfig.CertData = []byte(req.ClusterCredentials.ClientCertificate)
+			config.TLSClientConfig.KeyData = []byte(req.ClusterCredentials.ClientKey)
+		} else {
+			errorStr := "no client cert/key found in cluster credentials"
+			utils.Info.Println(errorStr)
+			return nil, nil, errors.New(errorStr)
+		}
 	}
+
+	if req.ClusterCredentials.CaCertificate != "" {
+		config.TLSClientConfig.Insecure = false
+		config.TLSClientConfig.CAData = []byte(req.ClusterCredentials.CaCertificate)
+	}
+
 	client, err = kubernetes.NewForConfig(config)
 	return config, client, err
 }
 func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesClient, err error) {
 	kubernetesClusterIp := ""
+	kubernetesClusterPort := constants.KUBERNETES_MASTER_PORT
 	credentials := types.Credentials{}
 	data, ok := constants.CacheObj.Get(*projectId)
 	if ok {
@@ -77,6 +114,11 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 		}
 		credentials, err = GetKubernetesCredentials(c, *projectId)
 
+		if kubernetesClusterIp == "" {
+			kubernetesClusterIp = credentials.ClusterURL
+			kubernetesClusterPort = credentials.ClusterPort
+		}
+
 		if err != nil {
 			return kubeClient, err
 		}
@@ -87,7 +129,7 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 		}
 		constants.CacheObj.Set(*projectId, data, cache.DefaultExpiration)
 	}
-	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + constants.KUBERNETES_MASTER_PORT + "/", ClusterCredentials: credentials}
+	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + kubernetesClusterPort + "/", ClusterCredentials: credentials}
 	config, client, err := createKubernetesClient(&kubernetesClusterObj)
 	if err != nil {
 		return kubeClient, err
@@ -1647,7 +1689,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	utils.Info.Println(crdPlural, namespace)
 	c.Namespaces[namespace] = true
 	_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-	if err != nil {
+	if err != nil && !errors2.IsAlreadyExists(err) {
 		utils.Error.Println(err)
 		responseObj.Error = err.Error()
 		return responseObj, err

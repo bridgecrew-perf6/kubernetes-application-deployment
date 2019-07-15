@@ -64,6 +64,9 @@ type Credentials struct {
 	KubeConfig        string `json:"kube_config"`
 	ClientCertificate string `json:"client_certificate"`
 	ClientKey         string `json:"client_key"`
+	CaCertificate     string `json:"ca_certificate"`
+	ClusterURL        string `json:"cluster_url" bson:"cluster_url"`
+	ClusterPort       string `json:"cluster_port" bson:"cluster_port"`
 }
 
 const (

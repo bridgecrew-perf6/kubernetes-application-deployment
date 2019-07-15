@@ -86,6 +86,7 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 }
 func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err error) {
 	kubernetesClusterIp := ""
+	kubernetesClusterPort := constants.KUBERNETES_MASTER_PORT
 	credentials := types.Credentials{}
 	data, ok := constants.CacheObj.Get(*projectId)
 	if ok {
@@ -112,6 +113,11 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 		}
 		credentials, err = GetKubernetesCredentials(*projectId)
 
+		if kubernetesClusterIp == "" {
+			kubernetesClusterIp = credentials.ClusterURL
+			kubernetesClusterPort = credentials.ClusterPort
+		}
+
 		if err != nil {
 			return kubeClient, err
 		}
@@ -122,7 +128,7 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 		}
 		constants.CacheObj.Set(*projectId, data, cache.DefaultExpiration)
 	}
-	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + constants.KUBERNETES_MASTER_PORT + "/", ClusterCredentials: credentials}
+	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + kubernetesClusterPort + "/", ClusterCredentials: credentials}
 	config, client, err := createKubernetesClient(&kubernetesClusterObj)
 	if err != nil {
 		return kubeClient, err

@@ -124,7 +124,7 @@ func GetKubernetesCredentials(c *Context, envId string) (types.Credentials, erro
 	var body types.Credentials
 	err = json.Unmarshal(data.Body(), &body)
 
-	c.SendBackendLogs(body, constants.LOGGING_LEVEL_DEBUG)
+	//c.SendBackendLogs(body, constants.LOGGING_LEVEL_DEBUG)
 	if err != nil {
 		utils.Error.Println(err)
 		return types.Credentials{}, err

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
@@ -77,15 +78,17 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return
 	}
 
 	data, err := kubeClient.GetDockerRegistryCredentials(name, namespace)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return
 	}
-
+	cpContext.SendBackendLogs(data, constants.LOGGING_LEVEL_DEBUG)
 	g.JSON(http.StatusOK, data)
 }
 

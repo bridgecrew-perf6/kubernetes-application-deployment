@@ -1,16 +1,12 @@
 package controllers
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"kubernetes-services-deployment/core"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
 	"net/http"
 )
-
-// @host engine.swagger.io
-// @BasePath /api/v1/
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
@@ -44,18 +40,10 @@ func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"status": "service secrets credentials creation failed.", "Error": err.Error()})
 		return
 	}
-	d, err := json.Marshal(data)
-	if err != nil {
-		utils.Error.Println(err)
-		g.JSON(http.StatusOK, gin.H{"status": "service secrets created successfully", "error": nil, "data": ""})
-		return
-	}
-	g.JSON(http.StatusOK, gin.H{"status": "service secrets created successfully", "error": nil, "data": string(d)})
+
+	g.JSON(http.StatusOK, gin.H{"status": "service secrets created successfully", "error": nil, "data": data})
 
 }
-
-// @host engine.swagger.io
-// @BasePath /api/v1/
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
@@ -71,11 +59,11 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 	projectId := g.GetHeader("project_id")
 
 	if projectId == "" {
-		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "project_id is missing in request"})
+		g.JSON(http.StatusInternalServerError, gin.H{"error": "project_id is missing in request"})
 		return
 	}
 	if name == "" {
-		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
+		g.JSON(http.StatusInternalServerError, gin.H{"error": "service name is not invalid"})
 		return
 	}
 	cpContext := new(core.Context)
@@ -88,22 +76,17 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
 	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	data, err := kubeClient.GetDockerRegistryCredentials(name, namespace)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	d, err := json.Marshal(data)
-	if err != nil {
-		utils.Error.Println(err)
-		g.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error", "data": ""})
-		return
-	}
-	g.JSON(http.StatusOK, gin.H{"error": nil, "data": string(d)})
+
+	g.JSON(http.StatusOK, data)
 }
 
 // @host engine.swagger.io

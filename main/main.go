@@ -69,6 +69,9 @@ func main() {
 
 		v1.GET("/kubeservice/:namespace/:name/endpoint", c.GetKubernetesServiceExternalIp)
 
+		v1.GET("/secret/:namespace/:name", c.GetRegistrySecret)
+		v1.POST("/secret/:namespace/:name", c.CreateRegistrySecret)
+		v1.DELETE("/secret/:namespace/:name", c.DeleteRegistrySecret)
 	}
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

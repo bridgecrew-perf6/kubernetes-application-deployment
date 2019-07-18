@@ -28,6 +28,7 @@ type KubernetesClient struct {
 	Config     *rest.Config
 	Client     *kubernetes.Clientset
 	Namespaces map[string]bool
+	context    *Context
 }
 
 func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Config, client *kubernetes.Clientset, err error) {
@@ -84,7 +85,7 @@ func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Conf
 	client, err = kubernetes.NewForConfig(config)
 	return config, client, err
 }
-func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err error) {
+func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesClient, err error) {
 	kubernetesClusterIp := ""
 	kubernetesClusterPort := constants.KUBERNETES_MASTER_PORT
 	credentials := types.Credentials{}
@@ -98,11 +99,11 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 			credentials = kubernetesData.KubernetesCredentials
 		}
 	} else {
-		project, err := GetProject(projectId)
+		project, err := GetProject(c, projectId)
 		if err != nil {
 			return kubeClient, err
 		}
-		publicIp, privateIp, err := GetClusterMaster(*projectId, project.Data.Cloud, project.Data.Credentials, project.Data.Region)
+		publicIp, privateIp, err := GetClusterMaster(c, *projectId, project.Data.Cloud, project.Data.Credentials, project.Data.Region)
 		if publicIp == "" {
 			kubernetesClusterIp = privateIp
 		} else {
@@ -111,7 +112,7 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 		if err != nil {
 			return kubeClient, err
 		}
-		credentials, err = GetKubernetesCredentials(*projectId)
+		credentials, err = GetKubernetesCredentials(c, *projectId)
 
 		if kubernetesClusterIp == "" {
 			kubernetesClusterIp = credentials.ClusterURL
@@ -135,17 +136,18 @@ func GetKubernetesClient(projectId *string) (kubeClient KubernetesClient, err er
 	}
 	return KubernetesClient{Config: config, Client: client, Namespaces: make(map[string]bool)}, nil
 }
-func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(req.ProjectId)
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
 	var errs []string
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
 		if len(data) == 0 {
@@ -174,19 +176,21 @@ func StartServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 		responses[kubeType] = respTemp
 	}
 	r, _ := json.Marshal(responses)
+	cpContext.SendBackendLogs(string(r), constants.LOGGING_LEVEL_DEBUG)
 	utils.Info.Println(string(r))
 	return responses, nil
 }
-func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(req.ProjectId)
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
@@ -218,19 +222,21 @@ func GetServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 
 	}
 	r, _ := json.Marshal(responses)
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	utils.Info.Println(string(r))
 	return responses, nil
 }
-func DeleteServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(req.ProjectId)
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
 	for kubeType, data := range req.ServiceData {
 
@@ -262,19 +268,21 @@ func DeleteServiceDeployment(req *types.ServiceRequest) (responses map[string]in
 		return nil, errors.New(finalErr)
 
 	}
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	return responses, nil
 }
-func PatchServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 
 	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(req.ProjectId)
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
@@ -303,19 +311,20 @@ func PatchServiceDeployment(req *types.ServiceRequest) (responses map[string]int
 		responses[kubeType] = respTemp
 
 	}
-
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	return responses, nil
 }
-func PutServiceDeployment(req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(req.ProjectId)
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
@@ -345,6 +354,7 @@ func PutServiceDeployment(req *types.ServiceRequest) (responses map[string]inter
 			responses[kubeType] = respTemp
 		}
 	}
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	return responses, nil
 }
 

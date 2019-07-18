@@ -23,7 +23,15 @@ func (c *KubeController) ListKubernetesServices(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": "project_id is missing in request"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": err.Error()})
 		return
@@ -63,7 +71,15 @@ func (c *KubeController) GetKubernetesService(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": err.Error()})
 		return
@@ -104,7 +120,15 @@ func (c *KubeController) DeleteKubernetesService(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "error": err.Error()})
 		return
@@ -143,7 +167,15 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return

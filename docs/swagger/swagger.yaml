@@ -1,0 +1,465 @@
+basePath: /ksd/api/v1
+definitions:
+  types.ServiceRequest:
+    properties:
+      project_id:
+        type: string
+      service:
+        required:
+        - service
+        type: object
+    required:
+    - project_id
+    type: object
+  v1.StatefulSet:
+    properties:
+      spec:
+        type: StatefulSetSpec
+      status:
+        type: StatefulSetStatus
+    type: object
+host: '{{.Host}}'
+info:
+  contact:
+    email: haseeb@cloudplex.io
+    name: Cloudplex Support
+    url: http://www.cloudplex.io/support
+  description: save microservices and deploy services on kubernetes cluster
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Kubernetes Manifest Deployment Engine
+  version: "1.0"
+paths:
+  /api/v1/registry:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+  /api/v1/registry/{namespace}/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster
+    get:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: deploy services on kubernetes cluster
+  /api/v1/statefulsets/{name}/{namespace}:
+    delete:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.StatefulSet'
+            type: object
+      summary: get status of kubernetes services deployment
+  /api/v1/statefulsets/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of all kubernetes services deployment on a Kubernetes
+        Cluster. If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Namespace of kubernetes cluster
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of  all kubernetes services deployment
+  /deployment/{name}/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+      tags:
+      - deployment
+  /deployment/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of all kubernetes services deployment on a Kubernetes
+        Cluster. If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Namespace of kubernetes cluster
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of  all kubernetes services deployment
+      tags:
+      - deployment
+  /kubeservice/{name}/{namespace}:
+    delete:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+  /kubeservice/{name}/{namespace}/endpoint:
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: project_id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"error": "", "external_ip": ""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: get status of kubernetes services deployment
+  /kubeservice/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of all kubernetes services deployment on a Kubernetes
+        Cluster. If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Namespace of kubernetes cluster
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of  all kubernetes services deployment
+  /solution:
+    delete:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: body for services deployment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ServiceRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"service": map[string]interface{},"project_id":""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: deploy services on kubernetes cluster
+      tags:
+      - solutions
+    get:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: body for services deployment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ServiceRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"service": map[string]interface{},"project_id":""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: deploy services on kubernetes cluster
+      tags:
+      - solutions
+    patch:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: body for services deployment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ServiceRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"service": map[string]interface{},"project_id":""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: deploy services on kubernetes cluster
+      tags:
+      - solutions
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: body for services deployment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ServiceRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"service": map[string]interface{},"project_id":""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: deploy services on kubernetes cluster
+      tags:
+      - solutions
+    put:
+      consumes:
+      - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: body for services deployment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ServiceRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"service": map[string]interface{},"project_id":""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      summary: deploy services on kubernetes cluster
+      tags:
+      - solutions
+  /statefulsets/{name}/{namespace}:
+    delete:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: get status of kubernetes services deployment
+      tags:
+      - deployment
+swagger: "2.0"

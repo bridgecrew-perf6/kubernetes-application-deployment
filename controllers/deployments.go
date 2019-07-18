@@ -8,16 +8,14 @@ import (
 	"net/http"
 )
 
-// @host engine.swagger.io
-// @BasePath /api/v1/
-
+// @Tags deployment
 // @Summary get status of  all kubernetes services deployment
 // @Description get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param project_id header string	true "project id"
 // @Param namespace path string true "Namespace of kubernetes cluster"
 // @Accept  json
 // @Produce  json
-// @Router /api/v1/deployment/{namespace} [get]
+// @Router /deployment/{namespace} [get]
 func (c *KubeController) ListDeploymentStatus(g *gin.Context) {
 	namespace := g.Param("namespace")
 	projectId := g.GetHeader("project_id")
@@ -26,7 +24,15 @@ func (c *KubeController) ListDeploymentStatus(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "project_id is missing in request"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return
@@ -45,6 +51,7 @@ func (c *KubeController) ListDeploymentStatus(g *gin.Context) {
 	g.JSON(http.StatusOK, gin.H{"error": nil, "data": string(d)})
 }
 
+// @Tags deployment
 // @Summary get status of kubernetes services deployment
 // @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param project_id header string	true "project id"
@@ -52,7 +59,7 @@ func (c *KubeController) ListDeploymentStatus(g *gin.Context) {
 // @Param namespace path string true "Namespace of the kubernetes service"
 // @Accept  json
 // @Produce  json
-// @Router /api/v1/deployment/{name}/{namespace} [get]
+// @Router /deployment/{name}/{namespace} [get]
 func (c *KubeController) GetDeploymentStatus(g *gin.Context) {
 	namespace := g.Param("namespace")
 	name := g.Param("name")
@@ -66,7 +73,15 @@ func (c *KubeController) GetDeploymentStatus(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return
@@ -86,6 +101,7 @@ func (c *KubeController) GetDeploymentStatus(g *gin.Context) {
 	g.JSON(http.StatusOK, gin.H{"error": nil, "data": string(d)})
 }
 
+// @Tags deployment
 // @Summary get status of kubernetes services deployment
 // @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param project_id header string	true "project id"
@@ -93,7 +109,7 @@ func (c *KubeController) GetDeploymentStatus(g *gin.Context) {
 // @Param namespace path string true "Namespace of the kubernetes service"
 // @Accept  json
 // @Produce  json
-// @Router /api/v1/statefulsets/{name}/{namespace} [delete]
+// @Router /statefulsets/{name}/{namespace} [delete]
 func (c *KubeController) DeleteDeployment(g *gin.Context) {
 	namespace := g.Param("namespace")
 	name := g.Param("name")
@@ -107,7 +123,15 @@ func (c *KubeController) DeleteDeployment(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": "service name is not invalid"})
 		return
 	}
-	kubeClient, err := core.GetKubernetesClient(&projectId)
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"data": "", "Error": err.Error()})
 		return

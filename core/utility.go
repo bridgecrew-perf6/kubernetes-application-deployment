@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, region string) (string, string, error) {
+func GetClusterMaster(c *Context, projectId, cloudProvider string, credentials interface{}, region string) (string, string, error) {
 	authorization := ""
 	switch strings.ToLower(cloudProvider) {
 	case "aws":
@@ -31,6 +31,9 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 	notification := strings.Replace(constants.CLUSTER_GET_ENDPOINT, "{cloud_provider}", strings.ToLower(cloudProvider), -1)
 	clusterEndpoint := constants.ClusterAPI + notification + projectId
 	utils.Info.Println("endpoint:", clusterEndpoint, "authorization:", authorization)
+	c.SendBackendLogs(struct {
+		Endpoint string
+	}{}, constants.LOGGING_LEVEL_DEBUG)
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
 		R().
@@ -52,6 +55,14 @@ func GetClusterMaster(projectId, cloudProvider string, credentials interface{}, 
 	//utils.Info.Println(clusterObj)
 	publicIp, PrivateIp := GetMasterIP(clusterObj)
 	utils.Info.Println(publicIp, PrivateIp)
+
+	c.SendBackendLogs(struct {
+		PublicIp  string
+		PrivateIp string
+	}{
+		PublicIp:  publicIp,
+		PrivateIp: PrivateIp,
+	}, constants.LOGGING_LEVEL_DEBUG)
 	return publicIp, PrivateIp, nil
 
 }
@@ -96,8 +107,9 @@ func GetMasterIP(cluster types.Cluster) (string, string) {
 	}
 	return "", ""
 }
-func GetKubernetesCredentials(envId string) (types.Credentials, error) {
+func GetKubernetesCredentials(c *Context, envId string) (types.Credentials, error) {
 	endpoint := constants.KubernetesEngineURL + strings.Replace(constants.KUBERNETES_GET_CREDENTIALS_ENDPOINT, "{envId}", envId, -1)
+	c.SendBackendLogs(endpoint, constants.LOGGING_LEVEL_DEBUG)
 	client := resty.New()
 	data, err := client.R().Get(endpoint)
 	if err != nil {
@@ -106,37 +118,21 @@ func GetKubernetesCredentials(envId string) (types.Credentials, error) {
 	}
 	if data.StatusCode() >= 400 {
 		utils.Error.Println("Error in Kubernetes get endpoint", data.StatusCode(), data.Status(), string(data.Body()))
-		return types.Credentials{}, errors.New("Error in Kubernetes get endpoint" + strconv.Itoa(data.StatusCode()) + data.Status() + string(data.Body()))
+		return types.Credentials{}, errors.New("Error in Kubernetes get endpoint. StatusCode: " + strconv.Itoa(data.StatusCode()) + ";Status: " + data.Status() + ";Body: " + string(data.Body()))
 	}
 
 	var body types.Credentials
 	err = json.Unmarshal(data.Body(), &body)
 
-	utils.Info.Println(string(data.Body()))
-	utils.Info.Println(body)
-
-	//var body map[string]string
-	//err = json.Unmarshal(data.Body(), &body)
+	//c.SendBackendLogs(body, constants.LOGGING_LEVEL_DEBUG)
 	if err != nil {
 		utils.Error.Println(err)
 		return types.Credentials{}, err
 	}
-	//username, ok := body["user_name"]
-	//if !ok || username == "" {
-	//	utils.Error.Println("user_name not found in Kubernetes get endpoint response")
-	//	return "", "", errors.New("user_name not found in response")
-	//}
-	//password, ok := body["password"]
-	//if !ok || password == "" {
-	//	utils.Error.Println("password not found in Kubernetes get endpoint response")
-	//	return "", "", errors.New("password not found in response")
-	//}
-	//return username, password, nil
-
 	return body, nil
 }
 
-func GetProject(projectId *string) (project *types.Project, err error) {
+func GetProject(c *Context, projectId *string) (project *types.Project, err error) {
 	if projectId == nil {
 		utils.Error.Println("project id is null. send valid project id in request")
 		return project, errors.New("project id is null. send valid project id in request")
@@ -144,6 +140,7 @@ func GetProject(projectId *string) (project *types.Project, err error) {
 	notification := strings.Replace(constants.ProjectEngineEndpoint, "{project_id}", *projectId, -1)
 	enviornmentEndpoint := constants.EnvironmentEngineURL + notification
 	utils.Info.Println(enviornmentEndpoint)
+	c.SendBackendLogs(enviornmentEndpoint, constants.LOGGING_LEVEL_DEBUG)
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
 		R().
@@ -163,13 +160,14 @@ func GetProject(projectId *string) (project *types.Project, err error) {
 		return project, err
 	}
 	if !p.Status {
+		c.SendBackendLogs(p, constants.LOGGING_LEVEL_ERROR)
 		return project, errors.New("internal server error while fetching environment")
 	}
-	p.Data.Credentials, err = getCredentials(projectId, &p.Data.CredentialsProfileId, &p.Data.Cloud)
+	p.Data.Credentials, err = getCredentials(c, projectId, &p.Data.CredentialsProfileId, &p.Data.Cloud)
 	return &p, nil
 }
 
-func getCredentials(projectId, profileId, cloud_provider *string) (interface{}, error) {
+func getCredentials(c *Context, projectId, profileId, cloud_provider *string) (interface{}, error) {
 	if projectId == nil || profileId == nil {
 		utils.Error.Println("project_id/profile_id is null. send valid project_id in request")
 		return nil, errors.New("project id is null. send valid project id in request")
@@ -179,6 +177,7 @@ func getCredentials(projectId, profileId, cloud_provider *string) (interface{}, 
 	notification = strings.Replace(notification, "{profile_id}", *profileId, -1)
 	vaultEndpoint := constants.VaultURL + notification
 	utils.Info.Println(vaultEndpoint)
+	c.SendBackendLogs(vaultEndpoint, constants.LOGGING_LEVEL_DEBUG)
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
 		R().
@@ -199,8 +198,5 @@ func getCredentials(projectId, profileId, cloud_provider *string) (interface{}, 
 		utils.Info.Println(err)
 		return nil, err
 	}
-	utils.Info.Println(string(resp.Body()))
-	utils.Info.Println(p.Credentials)
-
 	return &p.Credentials, nil
 }

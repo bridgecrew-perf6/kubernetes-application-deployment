@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
@@ -17,38 +18,60 @@ func NewController() (*KubeController, error) {
 	return &KubeController{}, nil
 }
 
-// @Title Get
+// @Tags solutions
 // @Summary deploy services on kubernetes cluster
-// @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/solution [post]
+// @router /solution [post]
+// @Success 200 "{"service": map[string]interface{},"project_id":""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
 func (c *KubeController) DeploySolution(g *gin.Context) {
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	req := types.ServiceRequest{}
-	err := g.ShouldBind(&req)
+	err = g.ShouldBind(&req)
 	if err != nil {
 		utils.Error.Println(err)
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
 
-	responses, err := core.StartServiceDeployment(&req)
+	responses, err := core.StartServiceDeployment(&req, cpContext)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 	} else {
 		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	}
 }
 
-// @Title Get
+// @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/solution [get]
+// @router /solution [get]
+// @Success 200 "{"service": map[string]interface{},"project_id":""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
 func (c *KubeController) GetSolution(g *gin.Context) {
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -63,26 +86,38 @@ func (c *KubeController) GetSolution(g *gin.Context) {
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
-
-	responses, err := core.GetServiceDeployment(&req)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
+	responses, err := core.GetServiceDeployment(cpContext, &req)
 
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 	} else {
 		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
 		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	}
 
 }
 
-// @Title Get
+// @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/solution [delete]
+// @router /solution [delete]
+// @Success 200 "{"service": map[string]interface{},"project_id":""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
 func (c *KubeController) DeleteSolution(g *gin.Context) {
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -97,24 +132,36 @@ func (c *KubeController) DeleteSolution(g *gin.Context) {
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
-
-	responses, err := core.DeleteServiceDeployment(&req)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
+	responses, err := core.DeleteServiceDeployment(cpContext, &req)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 	} else {
 		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
 		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	}
 }
 
-// @Title Get
+// @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/solution [patch]
+// @router /solution [patch]
+// @Success 200 "{"service": map[string]interface{},"project_id":""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
 func (c *KubeController) PatchSolution(g *gin.Context) {
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -129,24 +176,36 @@ func (c *KubeController) PatchSolution(g *gin.Context) {
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
-
-	responses, err := core.PatchServiceDeployment(&req)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
+	responses, err := core.PatchServiceDeployment(cpContext, &req)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 	} else {
 		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
 		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	}
 }
 
-// @Title Get
+// @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
 // @Accept  json
 // @Produce  json
-// @router /api/v1/solution [put]
+// @router /solution [put]
+// @Success 200 "{"service": map[string]interface{},"project_id":""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
 func (c *KubeController) PutSolution(g *gin.Context) {
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	req := types.ServiceRequest{}
 	b, err := ioutil.ReadAll(g.Request.Body)
 	if err != nil {
@@ -161,12 +220,14 @@ func (c *KubeController) PutSolution(g *gin.Context) {
 		utils.NewError(g, http.StatusBadRequest, err)
 		return
 	}
-
-	responses, err := core.PutServiceDeployment(&req)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
+	responses, err := core.PutServiceDeployment(cpContext, &req)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"project_id": req.ProjectId, "error": err.Error()})
+		cpContext.SendBackendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 	} else {
 		//g.JSON(http.StatusOK, gin.H{"status": "service deployed successfully", "service":responses})
 		g.JSON(http.StatusOK, gin.H{"service": responses, "project_id": req.ProjectId})
+		cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	}
 }

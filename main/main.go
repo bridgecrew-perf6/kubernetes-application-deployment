@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/controllers"
-	_ "kubernetes-services-deployment/controllers/docs"
+	_ "kubernetes-services-deployment/docs"
 	"kubernetes-services-deployment/utils"
 	"os"
 	"time"
@@ -18,19 +18,15 @@ func init() {
 	utils.LoggerInit(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 }
 
-// @title Swagger Example API
+// @title Kubernetes Manifest Deployment Engine
 // @version 1.0
-// @description This is a sample server Petstore server.
+// @description save microservices and deploy services on kubernetes cluster
 // @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
+// @contact.name Cloudplex Support
+// @contact.url http://www.cloudplex.io/support
+// @contact.email haseeb@cloudplex.io
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host petstore.swagger.io
 // @BasePath /ksd/api/v1
 
 func main() {
@@ -73,6 +69,9 @@ func main() {
 
 		v1.GET("/kubeservice/:namespace/:name/endpoint", c.GetKubernetesServiceExternalIp)
 
+		v1.GET("/secret/:namespace/:name", c.GetRegistrySecret)
+		v1.POST("/secret/:namespace/:name", c.CreateRegistrySecret)
+		v1.DELETE("/secret/:namespace/:name", c.DeleteRegistrySecret)
 	}
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

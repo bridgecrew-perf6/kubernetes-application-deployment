@@ -287,6 +287,12 @@
 			"revisionTime": "2017-06-12T17:47:53Z"
 		},
 		{
+			"checksumSHA1": "fYBKex3hNG/Fu/qaJQEab2nZQN4=",
+			"path": "github.com/google/uuid",
+			"revision": "c2e93f3ae59f2904160ceaab466009f965df46d6",
+			"revisionTime": "2019-04-16T17:24:45Z"
+		},
+		{
 			"checksumSHA1": "q5m8YMtU1jhCTHhL/ceeS8nU7XA=",
 			"path": "github.com/googleapis/gnostic/OpenAPIv2",
 			"revision": "d48bb9075efa9b6e46ab34aad173dff4040d3387",

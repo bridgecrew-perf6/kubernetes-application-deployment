@@ -270,6 +270,27 @@
                 ]
             }
         },
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "alive!"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"\"}"
+                    }
+                }
+            }
+        },
         "/kubeservice/{namespace}": {
             "get": {
                 "description": "get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",

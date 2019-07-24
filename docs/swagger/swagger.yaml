@@ -209,6 +209,19 @@ paths:
       summary: get status of  all kubernetes services deployment
       tags:
       - deployment
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: alive!
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      tags:
+      - health
   /kubeservice/{name}/{namespace}:
     delete:
       consumes:

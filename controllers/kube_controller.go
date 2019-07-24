@@ -18,6 +18,16 @@ func NewController() (*KubeController, error) {
 	return &KubeController{}, nil
 }
 
+// @Tags health
+// @Produce  json
+// @router /health [get]
+// @Success 200 "alive!"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
+func Health(context *gin.Context) {
+	context.JSON(http.StatusOK, "alive!")
+}
+
 // @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"

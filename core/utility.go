@@ -11,22 +11,8 @@ import (
 	"strings"
 )
 
-func GetClusterMaster(c *Context, projectId, cloudProvider string, credentials interface{}, region string) (string, string, error) {
+func GetClusterMaster(c *Context, projectId, cloudProvider, profileId string) (string, string, error) {
 	authorization := ""
-	switch strings.ToLower(cloudProvider) {
-	case "aws":
-		cred, err := GetAWSCredentials(credentials)
-		if err != nil {
-			return "", "", err
-		}
-		authorization = cred.AccessKey + ":" + cred.SecretKey + ":" + region
-	case "azure":
-		cred, err := GetAzureCredentials(credentials)
-		if err != nil {
-			return "", "", err
-		}
-		authorization = cred.ClientID + ":" + cred.ClientSecret + ":" + cred.TenantID + ":" + cred.SubscriptionID + ":" + region
-	}
 
 	notification := strings.Replace(constants.CLUSTER_GET_ENDPOINT, "{cloud_provider}", strings.ToLower(cloudProvider), -1)
 	clusterEndpoint := constants.ClusterAPI + notification + projectId
@@ -37,7 +23,8 @@ func GetClusterMaster(c *Context, projectId, cloudProvider string, credentials i
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
 		R().
-		SetHeader("Authorization", authorization).
+		SetHeader("X-Profile-Id", profileId).
+		SetHeader("projectId", projectId).
 		Get(clusterEndpoint)
 	//utils.Info.Println(string(resp.Body()))
 	if err != nil {
@@ -163,7 +150,7 @@ func GetProject(c *Context, projectId *string) (project *types.Project, err erro
 		c.SendBackendLogs(p, constants.LOGGING_LEVEL_ERROR)
 		return project, errors.New("internal server error while fetching environment")
 	}
-	p.Data.Credentials, err = getCredentials(c, projectId, &p.Data.CredentialsProfileId, &p.Data.Cloud)
+	//p.Data.Credentials, err = getCredentials(c, projectId, &p.Data.CredentialsProfileId, &p.Data.Cloud)
 	return &p, nil
 }
 

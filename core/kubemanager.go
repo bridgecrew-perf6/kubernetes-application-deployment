@@ -103,7 +103,7 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 		if err != nil {
 			return kubeClient, err
 		}
-		publicIp, privateIp, err := GetClusterMaster(c, *projectId, project.Data.Cloud, project.Data.Credentials, project.Data.Region)
+		publicIp, privateIp, err := GetClusterMaster(c, *projectId, project.Data.Cloud, project.Data.CredentialsProfileId)
 		if publicIp == "" {
 			kubernetesClusterIp = privateIp
 		} else {

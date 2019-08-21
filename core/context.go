@@ -171,7 +171,7 @@ func (c *Context) GetStringMapStringSlice(key string) (smss map[string][]string)
 }
 
 func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
-	company := ginContext.GetHeader("company")
+	company := ginContext.GetHeader("company_id")
 	if company == "" {
 
 		return nil //errors.New("company info not found in request")
@@ -182,8 +182,8 @@ func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
 		return nil //errors.New("user info not found in request")
 	}
 	utils.Info.Println("JWT token", ginContext.GetHeader("token"))
-	c.Set("company", company)
-	c.Set("user_id", user)
+	c.Set("company_id", company)
+	c.Set("user", user)
 	c.Set("token", ginContext.GetHeader("token"))
 	return nil
 }

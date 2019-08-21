@@ -31,6 +31,7 @@ func Health(context *gin.Context) {
 // @Tags solutions
 // @Summary deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @router /solution [post]
@@ -68,6 +69,7 @@ func (c *KubeController) DeploySolution(g *gin.Context) {
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Param token  header  string  false    "token"
 // @Accept  json
 // @Produce  json
 // @router /solution [get]
@@ -114,6 +116,7 @@ func (c *KubeController) GetSolution(g *gin.Context) {
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Param token  header  string  false    "token"
 // @Accept  json
 // @Produce  json
 // @router /solution [delete]
@@ -158,6 +161,7 @@ func (c *KubeController) DeleteSolution(g *gin.Context) {
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Param token  header  string  false    "token"
 // @Accept  json
 // @Produce  json
 // @router /solution [patch]
@@ -202,6 +206,7 @@ func (c *KubeController) PatchSolution(g *gin.Context) {
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
 // @Param	body	body 	types.ServiceRequest	true	"body for services deployment"
+// @Param token  header  string  false    "token"
 // @Accept  json
 // @Produce  json
 // @router /solution [put]

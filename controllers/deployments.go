@@ -13,6 +13,7 @@ import (
 // @Description get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param project_id header string	true "project id"
 // @Param namespace path string true "Namespace of kubernetes cluster"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @Router /deployment/{namespace} [get]
@@ -57,6 +58,7 @@ func (c *KubeController) ListDeploymentStatus(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @Router /deployment/{name}/{namespace} [get]
@@ -107,6 +109,7 @@ func (c *KubeController) GetDeploymentStatus(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @Router /statefulsets/{name}/{namespace} [delete]

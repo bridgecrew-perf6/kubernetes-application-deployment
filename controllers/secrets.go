@@ -11,7 +11,7 @@ import (
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
-
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry [post]
@@ -51,6 +51,7 @@ func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry/{namespace}/{name} [get]
@@ -100,6 +101,7 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
+// @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry/{namespace}/{name} [delete]

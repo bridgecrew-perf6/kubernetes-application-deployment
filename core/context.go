@@ -181,8 +181,10 @@ func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
 		utils.Error.Println("user info not found in request")
 		return nil //errors.New("user info not found in request")
 	}
+	utils.Info.Println("JWT token", ginContext.GetHeader("token"))
 	c.Set("company", company)
 	c.Set("user_id", user)
+	c.Set("token", ginContext.GetHeader("token"))
 	return nil
 }
 func (c *Context) InitializeLogger(requestURL, method, path, body, projectId string) {

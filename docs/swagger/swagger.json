@@ -20,11 +20,21 @@
     "paths": {
         "/api/v1/registry": {
             "post": {
+                "description": "deploy services on kubernetes cluster",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "summary": "deploy services on kubernetes cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
+                    }
                 ]
             }
         },
@@ -59,6 +69,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             },
@@ -92,6 +108,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -120,6 +142,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -155,6 +183,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -197,6 +231,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -228,6 +268,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -266,6 +312,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -315,6 +367,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -350,6 +408,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             },
@@ -383,6 +447,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }
@@ -425,6 +495,12 @@
                         "name": "project_id",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -463,6 +539,12 @@
                             "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -499,6 +581,12 @@
                             "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -534,6 +622,12 @@
                             "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -570,6 +664,12 @@
                             "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -606,6 +706,12 @@
                             "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -655,6 +761,12 @@
                         "name": "namespace",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "token",
+                        "in": "header"
                     }
                 ]
             }

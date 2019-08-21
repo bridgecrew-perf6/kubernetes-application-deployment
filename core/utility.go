@@ -25,6 +25,7 @@ func GetClusterMaster(c *Context, projectId, cloudProvider, profileId string) (s
 		R().
 		SetHeader("X-Profile-Id", profileId).
 		SetHeader("projectId", projectId).
+		SetHeader("token", c.GetString("token")).
 		Get(clusterEndpoint)
 	//utils.Info.Println(string(resp.Body()))
 	if err != nil {
@@ -98,7 +99,7 @@ func GetKubernetesCredentials(c *Context, envId string) (types.Credentials, erro
 	endpoint := constants.KubernetesEngineURL + strings.Replace(constants.KUBERNETES_GET_CREDENTIALS_ENDPOINT, "{envId}", envId, -1)
 	c.SendBackendLogs(endpoint, constants.LOGGING_LEVEL_DEBUG)
 	client := resty.New()
-	data, err := client.R().Get(endpoint)
+	data, err := client.SetHeader("token", c.GetString("token")).R().Get(endpoint)
 	if err != nil {
 		utils.Error.Println(err)
 		return types.Credentials{}, err
@@ -130,6 +131,7 @@ func GetProject(c *Context, projectId *string) (project *types.Project, err erro
 	c.SendBackendLogs(enviornmentEndpoint, constants.LOGGING_LEVEL_DEBUG)
 	clusterApiClient := resty.New()
 	resp, err := clusterApiClient.
+		SetHeader("token", c.GetString("token")).
 		R().
 		Get(enviornmentEndpoint)
 	if err != nil {

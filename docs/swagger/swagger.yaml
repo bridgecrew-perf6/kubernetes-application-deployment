@@ -36,8 +36,15 @@ paths:
     post:
       consumes:
       - application/json
+      description: deploy services on kubernetes cluster
+      parameters:
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
+      summary: deploy services on kubernetes cluster
   /api/v1/registry/{namespace}/{name}:
     delete:
       consumes:
@@ -58,6 +65,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json
@@ -81,6 +92,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json
@@ -107,6 +122,10 @@ paths:
         name: namespace
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       summary: get status of kubernetes services deployment
@@ -130,6 +149,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json
@@ -157,6 +180,10 @@ paths:
         name: namespace
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       summary: get status of  all kubernetes services deployment
@@ -182,6 +209,10 @@ paths:
         name: namespace
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       summary: get status of kubernetes services deployment
@@ -203,6 +234,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json
@@ -244,6 +279,10 @@ paths:
         name: namespace
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       summary: get status of kubernetes services deployment
@@ -267,6 +306,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json
@@ -298,6 +341,10 @@ paths:
         name: project_id
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -325,6 +372,10 @@ paths:
         name: namespace
         required: true
         type: string
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       summary: get status of  all kubernetes services deployment
@@ -341,6 +392,10 @@ paths:
         schema:
           $ref: '#/definitions/types.ServiceRequest'
           type: object
+      - description: token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -365,6 +420,10 @@ paths:
         schema:
           $ref: '#/definitions/types.ServiceRequest'
           type: object
+      - description: token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -389,6 +448,10 @@ paths:
         schema:
           $ref: '#/definitions/types.ServiceRequest'
           type: object
+      - description: token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -412,6 +475,10 @@ paths:
         schema:
           $ref: '#/definitions/types.ServiceRequest'
           type: object
+      - description: jwt token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -436,6 +503,10 @@ paths:
         schema:
           $ref: '#/definitions/types.ServiceRequest'
           type: object
+      - description: token
+        in: header
+        name: token
+        type: string
       produces:
       - application/json
       responses:
@@ -469,6 +540,10 @@ paths:
         in: path
         name: namespace
         required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: token
         type: string
       produces:
       - application/json

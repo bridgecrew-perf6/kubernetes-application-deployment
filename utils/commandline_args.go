@@ -47,6 +47,11 @@ func InitFlags() error {
 			Destination: &constants.VaultURL,
 			EnvVar:      "ROBIN_URL",
 		},
+		cli.StringFlag{
+			Name:        "rbac_url",
+			EnvVar:      "RBAC_URL",
+			Destination: &constants.RbacURL,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil

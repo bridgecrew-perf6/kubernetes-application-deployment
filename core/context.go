@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"kubernetes-services-deployment/constants"
@@ -171,20 +172,17 @@ func (c *Context) GetStringMapStringSlice(key string) (smss map[string][]string)
 }
 
 func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
-	company := ginContext.GetHeader("company_id")
-	if company == "" {
-
-		return nil //errors.New("company info not found in request")
+	token := ginContext.Request.Header.Get("token")
+	if len(token) <= 0 {
+		return errors.New("invalid token")
 	}
-	user := ginContext.GetHeader("user")
-	if user == "" {
-		utils.Error.Println("user info not found in request")
-		return nil //errors.New("user info not found in request")
+	tokenInfo, err := utils.TokenInfo(token)
+	if err != nil {
+		return err
 	}
-	utils.Info.Println("JWT token", ginContext.GetHeader("token"))
-	c.Set("company_id", company)
-	c.Set("user", user)
-	c.Set("token", ginContext.GetHeader("token"))
+	c.Set("company_id", tokenInfo["companyId"])
+	c.Set("user", tokenInfo["username"])
+	c.Set("token", token)
 	return nil
 }
 func (c *Context) InitializeLogger(requestURL, method, path, body, projectId string) {

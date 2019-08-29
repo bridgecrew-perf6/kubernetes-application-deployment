@@ -20,15 +20,19 @@ type RuntimeConfigInterface interface {
 	Update(obj interface{}) (interface{}, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
 	Get(name string) (interface{}, error)
-	List(opts meta_v1.ListOptions) ([]interface{}, error)
+	List(opts meta_v1.ListOptions) (interface{}, error)
 	Patch(name string, pt kubernetesTypes.PatchType, data []byte, subresources ...string) (interface{}, error)
 }
 
 func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	resultTemp := c.client.Post().
-		Namespace(c.ns).Resource(c.resourceName).
-		Body(obj).Do()
+	request := c.client.Post().
+		Resource(c.resourceName).
+		Body(obj)
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {
 		return nil, resultTemp.Error()
@@ -42,11 +46,14 @@ func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 
 func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
-	resultTemp := c.client.Put().
+	request := c.client.Put().
 		Namespace(c.ns).
 		Resource(c.resourceName).
-		Body(obj).
-		Do()
+		Body(obj)
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {
 		return nil, resultTemp.Error()
@@ -59,14 +66,17 @@ func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 }
 func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, data []byte, subresources ...string) (interface{}, error) {
 	result := &RuntimeConfig{}
-	resultTemp := c.client.Patch(pt).
+	request := c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource(c.resourceName).
 		SubResource(subresources...).
 		Name(name).
-		Body(data).
-		Do()
+		Body(data)
 
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {
 		return nil, resultTemp.Error()
@@ -78,10 +88,13 @@ func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, d
 	return result, err
 }
 func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions) error {
-	return c.client.Delete().
+	request := c.client.Delete().
 		Namespace(c.ns).Resource(c.resourceName).
-		Name(name).Body(options).Do().
-		Error()
+		Name(name).Body(options)
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	return request.Do().Error()
 }
 
 func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
@@ -104,18 +117,20 @@ func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	return result, err
 }
 
-func (c *runtimeConfigclient) List(opts meta_v1.ListOptions) ([]interface{}, error) {
+func (c *runtimeConfigclient) List(opts meta_v1.ListOptions) (interface{}, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	var result []interface{}
-	resultTemp := c.client.Get().
-		Namespace(c.ns).
+	var result interface{}
+	request := c.client.Get().
 		Resource(c.resourceName).
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do()
+		Timeout(timeout)
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {
 		return nil, resultTemp.Error()

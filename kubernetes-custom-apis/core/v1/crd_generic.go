@@ -86,9 +86,13 @@ func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions
 
 func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	result := &RuntimeConfig{}
-	resultTemp := c.client.Get().
-		Namespace(c.ns).Resource(c.resourceName).
-		Name(name).Do()
+	request := c.client.Get().
+		Resource(c.resourceName).
+		Name(name)
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
+	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {
 		return nil, resultTemp.Error()

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"time"
 )
 
 type runtimeConfigclient struct {
@@ -18,6 +20,7 @@ type RuntimeConfigInterface interface {
 	Update(obj interface{}) (interface{}, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
 	Get(name string) (interface{}, error)
+	List(opts meta_v1.ListOptions) ([]interface{}, error)
 	Patch(name string, pt kubernetesTypes.PatchType, data []byte, subresources ...string) (interface{}, error)
 }
 
@@ -95,4 +98,27 @@ func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 		return nil, err
 	}
 	return result, err
+}
+
+func (c *runtimeConfigclient) List(opts meta_v1.ListOptions) ([]interface{}, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	var result []interface{}
+	resultTemp := c.client.Get().
+		Namespace(c.ns).
+		Resource(c.resourceName).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
+		Do()
+	raw_data, err := resultTemp.Raw()
+	if err != nil {
+		return nil, resultTemp.Error()
+	}
+	err = json.Unmarshal(raw_data, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

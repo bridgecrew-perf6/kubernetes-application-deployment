@@ -46,6 +46,7 @@ func main() {
 		}*/
 		v1.POST("/solution", c.DeploySolution)
 		v1.GET("/solution", c.GetSolution)
+		v1.GET("/solution/all", c.ListSolution)
 		v1.DELETE("/solution", c.DeleteSolution)
 		v1.PATCH("/solution", c.PatchSolution)
 		v1.PUT("/solution", c.PutSolution)

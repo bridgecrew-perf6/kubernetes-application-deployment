@@ -226,6 +226,35 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	utils.Info.Println(string(r))
 	return responses, nil
 }
+func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
+	responses = make(map[string]interface{})
+	if req == nil {
+		return responses, errors.New("invalid request while starting deployment")
+	}
+	c, err := GetKubernetesClient(cpContext, req.ProjectId)
+	if err != nil {
+		utils.Error.Println(err)
+		return responses, err
+	}
+	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
+	var errs []string
+	for kubeType, data := range req.ServiceData {
+		var respTemp interface{}
+		if len(data) == 0 {
+			continue
+		}
+		//for now default case is for istio and knative
+		respTemp, err = c.listCRDS(kubeType, data)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+		responses[kubeType] = respTemp
+	}
+	r, _ := json.Marshal(responses)
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
+	utils.Info.Println(string(r))
+	return responses, nil
+}
 func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
@@ -885,6 +914,56 @@ func (c *KubernetesClient) getCRDS(key string, data []interface{}) (resp []inter
 	for i := range runtimeConfig {
 		rest.InClusterConfig()
 		responseObj, _ := c.crdManager(runtimeConfig[i], "get")
+
+		/*
+			//kind to crdplural  for example kind=VirtualService and plural=virtualservices
+			crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
+			namespace := ""
+			if runtimeConfig[i].Namespace == "" {
+				namespace = "default"
+			} else {
+				namespace = runtimeConfig[i].Namespace
+			}
+			alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
+			if err != nil {
+
+			}
+			var responseObj types.SolutionResp
+			data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig[i].Name)
+			if err != nil {
+				errs = append(errs, err.Error())
+				responseObj.Error = err.Error()
+				utils.Error.Println("failed to fetch data. Error: ", err)
+			} else {
+				dd, _ := json.Marshal(data)
+				responseObj.Data = data
+				utils.Info.Println(string(dd))
+			}*/
+
+		resp = append(resp, responseObj)
+	}
+	if len(errs) >= 1 {
+		finalErr := strings.Join(errs, ",")
+		err = errors.New(finalErr)
+	}
+	return resp, err
+}
+func (c *KubernetesClient) listCRDS(key string, data []interface{}) (resp []interface{}, err error) {
+	var errs []string
+	raw, err := json.Marshal(data)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	var runtimeConfig []v1alpha.RuntimeConfig
+	err = json.Unmarshal(raw, &runtimeConfig)
+	if err != nil {
+		utils.Error.Println(err)
+		return resp, err
+	}
+	for i := range runtimeConfig {
+		rest.InClusterConfig()
+		responseObj, _ := c.crdManager(runtimeConfig[i], "list")
 
 		/*
 			//kind to crdplural  for example kind=VirtualService and plural=virtualservices
@@ -1713,6 +1792,8 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
 			case "delete":
 				err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
+			case "list":
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
 			}
 			if err != nil {
 				responseObj.Error = err.Error()

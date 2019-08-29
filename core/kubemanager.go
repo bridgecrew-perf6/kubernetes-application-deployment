@@ -1759,12 +1759,8 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	//kind to crdplural  for example kind=VirtualService and plural=virtualservices
 	crdPlural := inflector.Pluralize(strings.ToLower(runtimeObj.Kind))
 
-	namespace := ""
-	if runtimeObj.Namespace == "" {
-		namespace = "default"
-	} else {
-		namespace = runtimeObj.Namespace
-	}
+	namespace := runtimeObj.Namespace
+
 	utils.Info.Println(crdPlural, namespace)
 	c.Namespaces[namespace] = true
 	_, err = appKubernetes.CreateNameSpace(c.Client, namespace)

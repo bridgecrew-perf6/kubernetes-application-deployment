@@ -41,5 +41,5 @@ const (
 	AZURE                 = "AZURE"
 
 	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
-	Rbac_Token_Info          = "security/api/rbac/token/info"
+	Rbac_Token_Info          = "/security/api/rbac/token/info"
 )

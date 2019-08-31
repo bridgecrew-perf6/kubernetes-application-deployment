@@ -1770,41 +1770,41 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 			responseObj.Error = err.Error()
 			return responseObj, err
 		}
+	}
+	alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
+	if err != nil {
+		responseObj.Error = err.Error()
+		utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+		return responseObj, err
 	} else {
-		alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
+		var data interface{}
+		var err error
+		switch method {
+		case "post":
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
+		case "get":
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+		case "put":
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
+		case "patch":
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+		case "delete":
+			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
+		case "list":
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
+		}
 		if err != nil {
 			responseObj.Error = err.Error()
-			utils.Error.Println("kubernetes crd deployed failed. Error: ", err)
+
 			return responseObj, err
 		} else {
-			var data interface{}
-			var err error
-			switch method {
-			case "post":
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
-			case "get":
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
-			case "put":
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
-			case "patch":
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
-			case "delete":
-				err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
-			case "list":
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
-			}
-			if err != nil {
-				responseObj.Error = err.Error()
+			responseObj.Data = data
 
-				return responseObj, err
-			} else {
-				responseObj.Data = data
-
-				dd, _ := json.Marshal(data)
-				utils.Info.Println(string(dd))
-			}
+			dd, _ := json.Marshal(data)
+			utils.Info.Println(string(dd))
 		}
 	}
+
 	raw, _ = json.Marshal(responseObj)
 	utils.Info.Println("response payload", string(raw))
 	return responseObj, nil

@@ -5,7 +5,7 @@ type Project struct {
 	Data   struct {
 		Cloud                string      `json:"cloud"`
 		Region               string      `json:"region"`
-		CredentialsProfileId string      `json:"credentials_profile_id"`
+		CredentialsProfileId string      `json:"profile_id"`
 		Credentials          interface{} `json:"credentials"`
 		/*ID            string `json:"_id"`
 		EnvironmentID string `json:"environment_id"`

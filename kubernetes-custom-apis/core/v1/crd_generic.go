@@ -29,9 +29,9 @@ func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 	request := c.client.Post().
 		Resource(c.resourceName).
 		Body(obj)
-	//if c.ns != "" {
-	//	request.Namespace(c.ns)
-	//}
+	if c.ns != "" {
+		request.Namespace(c.ns)
+	}
 	resultTemp := request.Do()
 	raw_data, err := resultTemp.Raw()
 	if err != nil {

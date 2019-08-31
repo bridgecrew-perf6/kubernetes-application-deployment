@@ -1762,13 +1762,15 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	namespace := runtimeObj.Namespace
 
 	utils.Info.Println(crdPlural, namespace)
-	c.Namespaces[namespace] = true
-	if namespace != "" {
-		_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-		if err != nil && !errors2.IsAlreadyExists(err) {
-			utils.Error.Println(err)
-			responseObj.Error = err.Error()
-			return responseObj, err
+	if method == "put" || method == "put" {
+		c.Namespaces[namespace] = true
+		if namespace != "" {
+			_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
+			if err != nil && !errors2.IsAlreadyExists(err) {
+				utils.Error.Println(err)
+				responseObj.Error = err.Error()
+				return responseObj, err
+			}
 		}
 	}
 	alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)

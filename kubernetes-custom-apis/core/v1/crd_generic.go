@@ -47,7 +47,6 @@ func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 	result := &RuntimeConfig{}
 	request := c.client.Put().
-		Namespace(c.ns).
 		Resource(c.resourceName).
 		Body(obj)
 	if c.ns != "" {
@@ -67,7 +66,6 @@ func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, data []byte, subresources ...string) (interface{}, error) {
 	result := &RuntimeConfig{}
 	request := c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource(c.resourceName).
 		SubResource(subresources...).
 		Name(name).
@@ -89,7 +87,7 @@ func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, d
 }
 func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions) error {
 	request := c.client.Delete().
-		Namespace(c.ns).Resource(c.resourceName).
+		Resource(c.resourceName).
 		Name(name).Body(options)
 	if c.ns != "" {
 		request.Namespace(c.ns)

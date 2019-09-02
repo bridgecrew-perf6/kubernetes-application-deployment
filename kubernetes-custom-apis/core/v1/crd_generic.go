@@ -50,7 +50,7 @@ func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 		Namespace(c.ns).
 		Resource(c.resourceName).
 		Body(obj)
-	if c.ns != "" {
+	if c.ns != "" && c.ns != "default" {
 		request.Namespace(c.ns)
 	}
 	resultTemp := request.Do()
@@ -73,7 +73,7 @@ func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, d
 		Name(name).
 		Body(data)
 
-	if c.ns != "" {
+	if c.ns != "" && c.ns != "default" {
 		request.Namespace(c.ns)
 	}
 	resultTemp := request.Do()
@@ -91,7 +91,7 @@ func (c *runtimeConfigclient) Delete(name string, options *meta_v1.DeleteOptions
 	request := c.client.Delete().
 		Namespace(c.ns).Resource(c.resourceName).
 		Name(name).Body(options)
-	if c.ns != "" {
+	if c.ns != "" && c.ns != "default" {
 		request.Namespace(c.ns)
 	}
 	return request.Do().Error()
@@ -102,7 +102,7 @@ func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	request := c.client.Get().
 		Resource(c.resourceName).
 		Name(name)
-	if c.ns != "" {
+	if c.ns != "" && c.ns != "default" {
 		request.Namespace(c.ns)
 	}
 	resultTemp := request.Do()
@@ -127,7 +127,7 @@ func (c *runtimeConfigclient) List(opts meta_v1.ListOptions) (interface{}, error
 		Resource(c.resourceName).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout)
-	if c.ns != "" {
+	if c.ns != "" && c.ns != "default" {
 		request.Namespace(c.ns)
 	}
 	resultTemp := request.Do()

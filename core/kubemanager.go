@@ -1762,6 +1762,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	namespace := runtimeObj.Namespace
 
 	utils.Info.Println(crdPlural, namespace)
+
 	c.Namespaces[namespace] = true
 	if namespace != "" {
 		_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
@@ -1795,7 +1796,6 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 		}
 		if err != nil {
 			responseObj.Error = err.Error()
-
 			return responseObj, err
 		} else {
 			responseObj.Data = data

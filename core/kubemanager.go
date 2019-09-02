@@ -7,6 +7,7 @@ import (
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
@@ -1761,17 +1762,16 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 	namespace := runtimeObj.Namespace
 
 	utils.Info.Println(crdPlural, namespace)
-	/*	if method == "put" || method == "put" {
-		c.Namespaces[namespace] = true
-		if namespace != "" {
-			_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-			if err != nil && !errors2.IsAlreadyExists(err) {
-				utils.Error.Println(err)
-				responseObj.Error = err.Error()
-				return responseObj, err
-			}
+
+	c.Namespaces[namespace] = true
+	if namespace != "" {
+		_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
+		if err != nil && !errors2.IsAlreadyExists(err) {
+			utils.Error.Println(err)
+			responseObj.Error = err.Error()
+			return responseObj, err
 		}
-	}*/
+	}
 	alphaClient, err := c.getCRDClient(runtimeObj.APIVersion)
 	if err != nil {
 		responseObj.Error = err.Error()
@@ -1796,7 +1796,6 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 		}
 		if err != nil {
 			responseObj.Error = err.Error()
-
 			return responseObj, err
 		} else {
 			responseObj.Data = data

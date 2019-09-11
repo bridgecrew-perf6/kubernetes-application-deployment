@@ -89,3 +89,36 @@ type LoggingHttpRequest struct {
 	//status code of service
 	Status int `json:"status"`
 }
+type Backendlogging struct {
+	//project Id of the project
+	ProjectId string `json:"project_id"`
+	//resource name like project,network,cluster
+	ResourceName string `json:"resource_name"`
+	// requester's service name (antelope, msme,raccoon)
+	ServiceName string `json:"service_name" binding:"required"`
+	//log severity (info,warn,debug,error)
+	Severity string `json:"severity" binding:"required"`
+	//requested user of platform (haseeb@cloudplex.io)
+	UserId string `json:"user_id" binding:"required"`
+	//company of the requested user (cloudplex.io)
+	Company string `json:"company_id" binding:"required"`
+	//message type (stdout,stderr)
+	MessageType string `json:"message_type"`
+	//Response from actual service when/where log was generated
+	Response interface{} `json:"response"`
+	//actual message
+	Message      interface{} `json:"message" binding:"required" `
+	Http_Request struct {
+		Request_Id string `json:"request_id"`
+		//url of the cloudplex server (e.g. apis.cloudplex.cf)
+		Url string `json:"url"`
+		//request method (GET/POST/PUT/PATCH/DELETE)
+		Method string `json:"method" `
+		//request path of backend service
+		Path string `json:"path"`
+		//request body
+		Body string `json:"body"`
+		//status code of service
+		Status int `json:"status"`
+	} `json:"http_request"  binding:"required"`
+}

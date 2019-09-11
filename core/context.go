@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -201,12 +202,28 @@ func (c *Context) AddProjectId(projectId string) {
 	c.Set("project_id", projectId)
 }
 func (c *Context) SendBackendLogs(message interface{}, severity string) {
-	url := constants.LoggingURL + constants.BACKEND_LOGGING_ENDPOINT
-	c.Set("severity", severity)
-	c.Set("message", message)
-
-	_, err := utils.Post(url, c.Keys, map[string]string{"Content-Type": "application/json"})
-	if err != nil {
-		utils.Error.Println(err)
+	if message != nil {
+		url := constants.LoggingURL + constants.BACKEND_LOGGING_ENDPOINT
+		var data types.Backendlogging
+		data.ProjectId = c.GetString("project_id")
+		data.ServiceName = constants.SERVICE_NAME
+		data.Severity = severity
+		data.ResourceName = "solution"
+		data.UserId = c.GetString("user")
+		data.Company = c.GetString("company_id")
+		//data.MessageType = ""
+		//data.Response = ""
+		data.Message = message
+		temp, ok := c.Get("http_request")
+		if ok {
+			bytedata, err := json.Marshal(temp)
+			if err == nil {
+				err = json.Unmarshal(bytedata, &data.Http_Request)
+			}
+		}
+		_, err := utils.Post(url, data, map[string]string{"Content-Type": "application/json"})
+		if err != nil {
+			utils.Error.Println(err)
+		}
 	}
 }

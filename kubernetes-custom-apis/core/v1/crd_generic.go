@@ -37,7 +37,7 @@ func (c *runtimeConfigclient) Create(obj interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, resultTemp.Error()
 	}
-	err = json.Unmarshal(raw_data, &result)
+	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *runtimeConfigclient) Update(obj interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, resultTemp.Error()
 	}
-	err = json.Unmarshal(raw_data, &result)
+	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (c *runtimeConfigclient) Patch(name string, pt kubernetesTypes.PatchType, d
 	if err != nil {
 		return nil, resultTemp.Error()
 	}
-	err = json.Unmarshal(raw_data, &result)
+	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (c *runtimeConfigclient) Get(name string) (interface{}, error) {
 	if err != nil {
 		return nil, resultTemp.Error()
 	}
-	err = json.Unmarshal(raw_data, &result)
+	err = json.Unmarshal(raw_data, result)
 	if err != nil {
 		return nil, err
 	}

@@ -28,19 +28,31 @@ func TokenInfo(token string) (map[string]string, error) {
 		return nil, err
 	}
 	if resp != nil && resp.StatusCode != 200 {
-		if len(rabc_resp["reason"].(string)) > 0 {
-			return nil, errors.New(rabc_resp["reason"].(string))
+		val, ok := rabc_resp["reason"].(string)
+		if ok {
+			if len(val) > 0 {
+				return nil, errors.New(rabc_resp["reason"].(string))
+			}
+			return nil, errors.New("can not connect to rbac")
 		}
-		return nil, errors.New("can not connect to rbac")
 	}
-
-	if len(rabc_resp["companyId"].(string)) > 0 && len(rabc_resp["company"].(string)) > 0 && len(rabc_resp["username"].(string)) > 0 {
-		temp := make(map[string]string)
-		temp["companyId"] = rabc_resp["companyId"].(string)
-		temp["company"] = rabc_resp["company"].(string)
-		temp["username"] = rabc_resp["username"].(string)
+	val, ok := rabc_resp["companyId"].(string)
+	temp := make(map[string]string)
+	if ok {
+		temp["companyId"] = val
+	} else {
+		return nil, errors.New("can not get data from token")
+	}
+	val, ok = rabc_resp["company"].(string)
+	if ok {
+		temp["company"] = val
+	} else {
+		return nil, errors.New("can not get data from token")
+	}
+	val, ok = rabc_resp["username"].(string)
+	if ok {
+		temp["username"] = val
 		return temp, nil
 	}
-
 	return nil, errors.New("can not get data from token")
 }

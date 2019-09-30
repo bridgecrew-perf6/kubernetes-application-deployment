@@ -22,6 +22,7 @@ import (
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
 	"strings"
+	"time"
 )
 
 type KubernetesClient struct {
@@ -1782,17 +1783,32 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 		var err error
 		switch method {
 		case "post":
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
+			for data == nil && err == nil {
+				time.Sleep(1 * time.Second)
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
+			}
 		case "get":
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+			for data == nil && err == nil {
+				time.Sleep(1 * time.Second)
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+			}
 		case "put":
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
+			for data == nil && err == nil {
+				time.Sleep(1 * time.Second)
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
+			}
 		case "patch":
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+			for data == nil && err == nil {
+				time.Sleep(1 * time.Second)
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+			}
 		case "delete":
 			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
 		case "list":
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
+			for data == nil && err == nil {
+				time.Sleep(1 * time.Second)
+				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
+			}
 		}
 		if err != nil {
 			responseObj.Error = err.Error()

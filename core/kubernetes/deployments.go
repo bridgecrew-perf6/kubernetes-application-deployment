@@ -7,6 +7,7 @@ import (
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"kubernetes-services-deployment/utils"
+	"time"
 )
 
 type Deployments struct {
@@ -28,24 +29,37 @@ func (p *Deployments) CreateDeployments(req v1.Deployment) (dep *v1.Deployment, 
 		utils.Error.Println(err)
 		return nil, err
 	}
-	return p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
+	for dep == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
+	}
+	return dep, err
 }
-func (p *Deployments) PatchDeployments(req v1.Deployment) (*v1.Deployment, error) {
+func (p *Deployments) PatchDeployments(req v1.Deployment) (dep *v1.Deployment, err error) {
 	r, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	return p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for dep == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	}
+	return dep, err
 }
 func (p *Deployments) UpdateDeployments(req *v1.Deployment) (*v1.Deployment, error) {
 
 	return p.kubeClient.AppsV1().Deployments(req.Namespace).Update(req)
 }
 func (p *Deployments) DeleteDeployments(name, namespace string) error {
+
 	return p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
 }
-func (p *Deployments) GetDeployments(name, namespace string) (*v1.Deployment, error) {
-	return p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+func (p *Deployments) GetDeployments(name, namespace string) (dep *v1.Deployment, err error) {
+	for dep == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		dep, err = p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+	}
+	return dep, err
 }
 func (p *Deployments) GetAllDeployments(namespace string) (set *v1.DeploymentList, err error) {
 	return p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})

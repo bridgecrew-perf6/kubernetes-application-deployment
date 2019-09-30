@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"kubernetes-services-deployment/types"
 	"kubernetes-services-deployment/utils"
+	"time"
 )
 
 type StorageClass struct {
@@ -81,22 +82,33 @@ func (p *StorageClass) createAZUREStorageClass(serviceName string, volume types.
 	return sClass
 
 }
-func (p *StorageClass) LaunchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+func (p *StorageClass) LaunchStorageClass(storageClass v1.StorageClass) (ss *v1.StorageClass, err error) {
 	utils.Info.Println("creating storage-class with name: '" + storageClass.Name + "'")
-	return p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+	for ss == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		ss, err = p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+	}
+	return ss, err
 }
 
-func (p *StorageClass) GetStorageClass(name string) (*v1.StorageClass, error) {
-	return p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+func (p *StorageClass) GetStorageClass(name string) (ss *v1.StorageClass, err error) {
+	for ss == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		ss, err = p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+	}
+	return ss, err
 }
 
-func (p *StorageClass) PatchStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
+func (p *StorageClass) PatchStorageClass(storageClass v1.StorageClass) (ss *v1.StorageClass, err error) {
 	r, err := json.Marshal(storageClass)
 	if err != nil {
 		return nil, err
 	}
-
-	return p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for ss == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		ss, err = p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+	}
+	return ss, err
 }
 
 func (p *StorageClass) UpdateStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {

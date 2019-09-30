@@ -6,6 +6,7 @@ import (
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"time"
 )
 
 type ConfigMap struct {
@@ -20,16 +21,23 @@ func NewConfigLauncher(c *kubernetes.Clientset) *ConfigMap {
 func (cm *ConfigMap) LaunchSideCarConfigMap() {
 
 }
-func (cm *ConfigMap) CreateConfigMap(configMap v1.ConfigMap) (*v1.ConfigMap, error) {
-
-	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
+func (cm *ConfigMap) CreateConfigMap(configMap v1.ConfigMap) (cmp *v1.ConfigMap, err error) {
+	for cmp == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
+	}
+	return cmp, err
 }
-func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (*v1.ConfigMap, error) {
+func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (cmp *v1.ConfigMap, err error) {
 	r, err := json.Marshal(configMap)
 	if err != nil {
 		return nil, err
 	}
-	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for cmp == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+	}
+	return
 }
 func (cm *ConfigMap) UpdateConfigMap(configMap *v1.ConfigMap) (*v1.ConfigMap, error) {
 
@@ -38,8 +46,12 @@ func (cm *ConfigMap) UpdateConfigMap(configMap *v1.ConfigMap) (*v1.ConfigMap, er
 func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {
 	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})
 }
-func (cm *ConfigMap) GetConfigMap(name, namespace string) (*v1.ConfigMap, error) {
-	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
+func (cm *ConfigMap) GetConfigMap(name, namespace string) (cmp *v1.ConfigMap, err error) {
+	for cmp == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
+	}
+	return cmp, err
 }
 func (cm *ConfigMap) GetAllConfigMap(namespace string) (*v1.ConfigMapList, error) {
 	return cm.kubeClient.CoreV1().ConfigMaps(namespace).List(v12.ListOptions{})

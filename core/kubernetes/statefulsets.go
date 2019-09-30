@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"kubernetes-services-deployment/utils"
+	"time"
 )
 
 //used
@@ -40,8 +41,12 @@ func (p *StatefulsetLauncher) LaunchStatefulSet(req v1.StatefulSet) (set *v1.Sta
 		utils.Error.Println(err)
 		return nil, err
 	}
+	for set == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		set, err = p.kubeClient.AppsV1().StatefulSets(req.Namespace).Create(&req)
+	}
+	return set, err
 
-	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Create(&req)
 }
 
 func (p *StatefulsetLauncher) PatchStatefulSets(req v1.StatefulSet) (set *v1.StatefulSet, err error) {
@@ -49,8 +54,11 @@ func (p *StatefulsetLauncher) PatchStatefulSets(req v1.StatefulSet) (set *v1.Sta
 	if err != nil {
 		return nil, err
 	}
-	return p.kubeClient.AppsV1().StatefulSets(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
-
+	for set == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		set, err = p.kubeClient.AppsV1().StatefulSets(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	}
+	return set, err
 }
 func (p *StatefulsetLauncher) UpdateStatefulSets(req *v1.StatefulSet) (set *v1.StatefulSet, err error) {
 
@@ -58,12 +66,21 @@ func (p *StatefulsetLauncher) UpdateStatefulSets(req *v1.StatefulSet) (set *v1.S
 
 }
 func (p *StatefulsetLauncher) GetStatefulSet(name, namespace string) (set *v1.StatefulSet, err error) {
-	return p.kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
+	for set == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		set, err = p.kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
+	}
+	return set, err
 }
 func (p *StatefulsetLauncher) GetAllStatefulSet(namespace string) (set *v1.StatefulSetList, err error) {
-	return p.kubeClient.AppsV1().StatefulSets(namespace).List(metav1.ListOptions{})
+	for set == nil && err == nil {
+		time.Sleep(1 * time.Second)
+		set, err = p.kubeClient.AppsV1().StatefulSets(namespace).List(metav1.ListOptions{})
+	}
+	return set, err
 }
 func (p *StatefulsetLauncher) DeleteStatefulSet(serviceName, namespace string) error {
+
 	return p.kubeClient.AppsV1().StatefulSets(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 	//p.DeletePV(namespace,serviceName)
 }

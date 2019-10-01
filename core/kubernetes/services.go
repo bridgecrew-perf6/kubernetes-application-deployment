@@ -22,9 +22,14 @@ func (p *ServicesLauncher) LaunchService(req *v1.Service) (svc *v1.Service, err 
 	if req.Namespace == "" {
 		req.Namespace = "default"
 	}
-	for svc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Create(req)
+	svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Create(req)
+	for svc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Create(req)
+		} else {
+			break
+		}
 	}
 	return svc, err
 }
@@ -34,9 +39,14 @@ func (p *ServicesLauncher) PatchService(req *v1.Service) (svc *v1.Service, err e
 	if err != nil {
 		return nil, err
 	}
-	for svc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for svc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			svc, err = p.kubeClient.CoreV1().Services(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+		} else {
+			break
+		}
 	}
 	return svc, err
 }
@@ -47,9 +57,14 @@ func (p *ServicesLauncher) DeleteServices(serviceName, namespace string) error {
 	return p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 }
 func (p *ServicesLauncher) GetService(name, namespace string) (svc *v1.Service, err error) {
-	for svc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		svc, err = p.kubeClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	svc, err = p.kubeClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	for svc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			svc, err = p.kubeClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+		} else {
+			break
+		}
 	}
 	return svc, err
 }

@@ -21,17 +21,27 @@ func (p *StatefulsetLauncher) CreatePersistentVolumeClaim(volumeClaim v12.Persis
 	}
 
 	utils.Info.Println("creating pvc with name: '" + volumeClaim.Name + "' in namespace: '" + volumeClaim.Namespace + "'")
-	for pvc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Create(&volumeClaim)
+	pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Create(&volumeClaim)
+	for pvc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Create(&volumeClaim)
+		} else {
+			break
+		}
 	}
 	return pvc, err
 }
 
 func (p *StatefulsetLauncher) GetPersistentVolumeClaim(name, namespace string) (pvc *v12.PersistentVolumeClaim, err error) {
-	for pvc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Get(name, metav1.GetOptions{})
+	pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Get(name, metav1.GetOptions{})
+	for pvc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Get(name, metav1.GetOptions{})
+		} else {
+			break
+		}
 	}
 	return pvc, err
 }
@@ -41,9 +51,14 @@ func (p *StatefulsetLauncher) PatchPersistentVolumeClaim(volumeClaim v12.Persist
 	if err != nil {
 		return nil, err
 	}
-	for pvc == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Patch(volumeClaim.Name, kubernetesTypes.StrategicMergePatchType, r)
+	pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Patch(volumeClaim.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for pvc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Patch(volumeClaim.Name, kubernetesTypes.StrategicMergePatchType, r)
+		} else {
+			break
+		}
 	}
 	return pvc, err
 }

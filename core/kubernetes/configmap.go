@@ -22,9 +22,14 @@ func (cm *ConfigMap) LaunchSideCarConfigMap() {
 
 }
 func (cm *ConfigMap) CreateConfigMap(configMap v1.ConfigMap) (cmp *v1.ConfigMap, err error) {
-	for cmp == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
+	cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
+	for cmp == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Create(&configMap)
+		} else {
+			break
+		}
 	}
 	return cmp, err
 }
@@ -33,9 +38,14 @@ func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (cmp *v1.ConfigMap, 
 	if err != nil {
 		return nil, err
 	}
-	for cmp == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+	cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for cmp == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Patch(configMap.Name, kubernetesTypes.StrategicMergePatchType, r)
+		} else {
+			break
+		}
 	}
 	return
 }
@@ -47,9 +57,14 @@ func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {
 	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})
 }
 func (cm *ConfigMap) GetConfigMap(name, namespace string) (cmp *v1.ConfigMap, err error) {
-	for cmp == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		cmp, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
+	cmp, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
+	for cmp == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			cmp, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
+		} else {
+			break
+		}
 	}
 	return cmp, err
 }

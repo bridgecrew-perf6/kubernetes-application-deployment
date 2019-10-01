@@ -84,18 +84,29 @@ func (p *StorageClass) createAZUREStorageClass(serviceName string, volume types.
 }
 func (p *StorageClass) LaunchStorageClass(storageClass v1.StorageClass) (ss *v1.StorageClass, err error) {
 	utils.Info.Println("creating storage-class with name: '" + storageClass.Name + "'")
-	for ss == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		ss, err = p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+	ss, err = p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+	for ss == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			ss, err = p.kubeClient.StorageV1().StorageClasses().Create(&storageClass)
+		} else {
+			break
+		}
 	}
 	return ss, err
 }
 
 func (p *StorageClass) GetStorageClass(name string) (ss *v1.StorageClass, err error) {
-	for ss == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		ss, err = p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+	ss, err = p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+	for ss == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			ss, err = p.kubeClient.StorageV1().StorageClasses().Get(name, metav1.GetOptions{})
+		} else {
+			break
+		}
 	}
+
 	return ss, err
 }
 
@@ -104,9 +115,14 @@ func (p *StorageClass) PatchStorageClass(storageClass v1.StorageClass) (ss *v1.S
 	if err != nil {
 		return nil, err
 	}
-	for ss == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		ss, err = p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+	ss, err = p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for ss == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			ss, err = p.kubeClient.StorageV1().StorageClasses().Patch(storageClass.Name, kubernetesTypes.StrategicMergePatchType, r)
+		} else {
+			break
+		}
 	}
 	return ss, err
 }

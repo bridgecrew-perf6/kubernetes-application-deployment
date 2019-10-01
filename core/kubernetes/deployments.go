@@ -29,9 +29,14 @@ func (p *Deployments) CreateDeployments(req v1.Deployment) (dep *v1.Deployment, 
 		utils.Error.Println(err)
 		return nil, err
 	}
-	for dep == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
+	dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
+	for dep == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Create(&req)
+		} else {
+			break
+		}
 	}
 	return dep, err
 }
@@ -40,9 +45,14 @@ func (p *Deployments) PatchDeployments(req v1.Deployment) (dep *v1.Deployment, e
 	if err != nil {
 		return nil, err
 	}
-	for dep == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+	for dep == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Patch(req.Name, kubernetesTypes.StrategicMergePatchType, r)
+		} else {
+			break
+		}
 	}
 	return dep, err
 }
@@ -55,9 +65,14 @@ func (p *Deployments) DeleteDeployments(name, namespace string) error {
 	return p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
 }
 func (p *Deployments) GetDeployments(name, namespace string) (dep *v1.Deployment, err error) {
-	for dep == nil && err == nil {
-		time.Sleep(1 * time.Second)
-		dep, err = p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+	dep, err = p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+	for dep == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			dep, err = p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
+		} else {
+			break
+		}
 	}
 	return dep, err
 }

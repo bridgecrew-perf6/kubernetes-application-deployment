@@ -90,7 +90,14 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 	kubernetesClusterIp := ""
 	kubernetesClusterPort := constants.KUBERNETES_MASTER_PORT
 	credentials := types.Credentials{}
-	data, ok := constants.CacheObj.Get(*projectId)
+	companyId, isCompayId := c.Keys["companyId"].(string)
+	cacheId := *projectId
+	ok := false
+	var data interface{}
+	if isCompayId {
+		cacheId = cacheId + companyId
+		data, ok = constants.CacheObj.Get(cacheId)
+	}
 	if ok {
 		kubernetesData, ok1 := data.(types.CacheObjectData)
 		if !ok1 {
@@ -123,12 +130,15 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 		if err != nil {
 			return kubeClient, err
 		}
-		data := types.CacheObjectData{
-			ProjectId:                 *projectId,
-			KubernetesClusterMasterIp: kubernetesClusterIp,
-			KubernetesCredentials:     credentials,
+		if isCompayId {
+			data := types.CacheObjectData{
+				ProjectId:                 cacheId,
+				KubernetesClusterMasterIp: kubernetesClusterIp,
+				KubernetesCredentials:     credentials,
+			}
+			constants.CacheObj.Set(cacheId, data, cache.DefaultExpiration)
+
 		}
-		constants.CacheObj.Set(*projectId, data, cache.DefaultExpiration)
 	}
 	kubernetesClusterObj := types.KubernetesClusterInfo{URL: kubernetesClusterIp + ":" + kubernetesClusterPort + "/", ClusterCredentials: credentials}
 	config, client, err := createKubernetesClient(&kubernetesClusterObj)

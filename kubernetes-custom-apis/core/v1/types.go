@@ -12,6 +12,7 @@ type RuntimeConfig struct {
 	Rules             interface{} `json:"rules,omitempty"`
 	RoleRef           interface{} `json:"roleRef,omitempty"`
 	Subjects          interface{} `json:"subjects,omitempty"`
+	StringData        interface{} `json:"stringData,omitempty"`
 }
 type RuntimeConfigList struct {
 	metav1.TypeMeta `json:",inline"`

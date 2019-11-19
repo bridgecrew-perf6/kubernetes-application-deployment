@@ -64,13 +64,44 @@ func (p *StatefulsetLauncher) PatchPersistentVolumeClaim(volumeClaim v12.Persist
 }
 
 func (p *StatefulsetLauncher) UpdatePersistentVolumeClaim(volumeClaim v12.PersistentVolumeClaim) (*v12.PersistentVolumeClaim, error) {
-	return p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Update(&volumeClaim)
+
+	pvc, err := p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Update(&volumeClaim)
+	for pvc == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			pvc, err = p.kubeClient.CoreV1().PersistentVolumeClaims(volumeClaim.Namespace).Update(&volumeClaim)
+		} else {
+			break
+		}
+	}
+	return pvc, err
 }
 
 func (p *StatefulsetLauncher) ListPersistentVolumeClaim(namespace string) (*v12.PersistentVolumeClaimList, error) {
-	return p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{})
+
+	set, err := p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{})
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{})
+		} else {
+			break
+		}
+	}
+	return set, err
+
 }
 
 func (p *StatefulsetLauncher) DeletePersistentVolumeClaim(name, namespace string) error {
-	return p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Delete(name, &metav1.DeleteOptions{})
+
+	err := p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Delete(name, &metav1.DeleteOptions{})
+	for err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			err = p.kubeClient.CoreV1().PersistentVolumeClaims(namespace).Delete(name, &metav1.DeleteOptions{})
+		} else {
+			break
+		}
+	}
+	return err
 }

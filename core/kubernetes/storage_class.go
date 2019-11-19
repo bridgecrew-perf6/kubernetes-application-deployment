@@ -128,13 +128,41 @@ func (p *StorageClass) PatchStorageClass(storageClass v1.StorageClass) (ss *v1.S
 }
 
 func (p *StorageClass) UpdateStorageClass(storageClass v1.StorageClass) (*v1.StorageClass, error) {
-	return p.kubeClient.StorageV1().StorageClasses().Update(&storageClass)
+
+	set, err := p.kubeClient.StorageV1().StorageClasses().Update(&storageClass)
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = p.kubeClient.StorageV1().StorageClasses().Update(&storageClass)
+		} else {
+			break
+		}
+	}
+	return set, err
 }
 
 func (p *StorageClass) ListStorageClass() (*v1.StorageClassList, error) {
-	return p.kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
+	set, err := p.kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = p.kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
+		} else {
+			break
+		}
+	}
+	return set, err
 }
 
 func (p *StorageClass) DeleteStorageClass(name string) error {
-	return p.kubeClient.StorageV1().StorageClasses().Delete(name, &metav1.DeleteOptions{})
+	err := p.kubeClient.StorageV1().StorageClasses().Delete(name, &metav1.DeleteOptions{})
+	for err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			err = p.kubeClient.StorageV1().StorageClasses().Delete(name, &metav1.DeleteOptions{})
+		} else {
+			break
+		}
+	}
+	return err
 }

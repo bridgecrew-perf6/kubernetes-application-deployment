@@ -58,11 +58,30 @@ func (p *Deployments) PatchDeployments(req v1.Deployment) (dep *v1.Deployment, e
 }
 func (p *Deployments) UpdateDeployments(req *v1.Deployment) (*v1.Deployment, error) {
 
-	return p.kubeClient.AppsV1().Deployments(req.Namespace).Update(req)
+	dep, err := p.kubeClient.AppsV1().Deployments(req.Namespace).Update(req)
+	for dep == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			dep, err = p.kubeClient.AppsV1().Deployments(req.Namespace).Update(req)
+		} else {
+			break
+		}
+	}
+	return dep, err
+
 }
 func (p *Deployments) DeleteDeployments(name, namespace string) error {
 
-	return p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
+	err := p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
+	for err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			err = p.kubeClient.AppsV1().Deployments(namespace).Delete(name, &v12.DeleteOptions{})
+		} else {
+			break
+		}
+	}
+	return err
 }
 func (p *Deployments) GetDeployments(name, namespace string) (dep *v1.Deployment, err error) {
 	dep, err = p.kubeClient.AppsV1().Deployments(namespace).Get(name, v12.GetOptions{})
@@ -77,5 +96,15 @@ func (p *Deployments) GetDeployments(name, namespace string) (dep *v1.Deployment
 	return dep, err
 }
 func (p *Deployments) GetAllDeployments(namespace string) (set *v1.DeploymentList, err error) {
-	return p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})
+
+	set, err = p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = p.kubeClient.AppsV1().Deployments(namespace).List(v12.ListOptions{})
+		} else {
+			break
+		}
+	}
+	return set, err
 }

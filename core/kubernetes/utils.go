@@ -4,6 +4,7 @@ import (
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"strings"
 	"time"
 )
 
@@ -26,6 +27,9 @@ func CreateNameSpace(client *kubernetes.Clientset, namespace string) (*v1.Namesp
 		} else {
 			break
 		}
+	}
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		return ns, nil
 	}
 	return ns, err
 }

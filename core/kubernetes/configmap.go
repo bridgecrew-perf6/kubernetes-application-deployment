@@ -51,10 +51,29 @@ func (cm *ConfigMap) PatchConfigMap(configMap v1.ConfigMap) (cmp *v1.ConfigMap, 
 }
 func (cm *ConfigMap) UpdateConfigMap(configMap *v1.ConfigMap) (*v1.ConfigMap, error) {
 
-	return cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Update(configMap)
+	cmp, err := cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Update(configMap)
+	for cmp == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			cmp, err = cm.kubeClient.CoreV1().ConfigMaps(configMap.ObjectMeta.Namespace).Update(configMap)
+		} else {
+			break
+		}
+	}
+	return cmp, err
 }
 func (cm *ConfigMap) DeleteConfigMap(name, namespace string) error {
-	return cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})
+
+	err := cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})
+	for err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Delete(name, &v12.DeleteOptions{})
+		} else {
+			break
+		}
+	}
+	return err
 }
 func (cm *ConfigMap) GetConfigMap(name, namespace string) (cmp *v1.ConfigMap, err error) {
 	cmp, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).Get(name, v12.GetOptions{})
@@ -69,5 +88,15 @@ func (cm *ConfigMap) GetConfigMap(name, namespace string) (cmp *v1.ConfigMap, er
 	return cmp, err
 }
 func (cm *ConfigMap) GetAllConfigMap(namespace string) (*v1.ConfigMapList, error) {
-	return cm.kubeClient.CoreV1().ConfigMaps(namespace).List(v12.ListOptions{})
+
+	set, err := cm.kubeClient.CoreV1().ConfigMaps(namespace).List(v12.ListOptions{})
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = cm.kubeClient.CoreV1().ConfigMaps(namespace).List(v12.ListOptions{})
+		} else {
+			break
+		}
+	}
+	return set, err
 }

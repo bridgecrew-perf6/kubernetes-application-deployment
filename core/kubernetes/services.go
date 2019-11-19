@@ -51,10 +51,31 @@ func (p *ServicesLauncher) PatchService(req *v1.Service) (svc *v1.Service, err e
 	return svc, err
 }
 func (p *ServicesLauncher) UpdateService(req *v1.Service) (*v1.Service, error) {
-	return p.kubeClient.CoreV1().Services(req.Namespace).Update(req)
+
+	dep, err := p.kubeClient.CoreV1().Services(req.Namespace).Update(req)
+	for dep == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			dep, err = p.kubeClient.CoreV1().Services(req.Namespace).Update(req)
+		} else {
+			break
+		}
+	}
+	return dep, err
+
 }
 func (p *ServicesLauncher) DeleteServices(serviceName, namespace string) error {
-	return p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
+
+	err := p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
+	for err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			err = p.kubeClient.CoreV1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
+		} else {
+			break
+		}
+	}
+	return err
 }
 func (p *ServicesLauncher) GetService(name, namespace string) (svc *v1.Service, err error) {
 	svc, err = p.kubeClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
@@ -69,5 +90,14 @@ func (p *ServicesLauncher) GetService(name, namespace string) (svc *v1.Service, 
 	return svc, err
 }
 func (p *ServicesLauncher) GetAllServices(namespace string) (*v1.ServiceList, error) {
-	return p.kubeClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+	set, err := p.kubeClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+	for set == nil && err != nil {
+		if err.Error() == "" {
+			time.Sleep(1 * time.Second)
+			set, err = p.kubeClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+		} else {
+			break
+		}
+	}
+	return set, err
 }

@@ -42,9 +42,6 @@ func GetClusterMaster(c *Context, projectId, cloudProvider, profileId string) (s
 	}
 	//utils.Info.Println(clusterObj)
 	publicIp, PrivateIp := GetMasterIP(clusterObj)
-	if publicIp == "" && PrivateIp == "" {
-		return publicIp, PrivateIp, errors.New("unable to find Master ip")
-	}
 	utils.Info.Println(publicIp, PrivateIp)
 
 	c.SendBackendLogs(struct {

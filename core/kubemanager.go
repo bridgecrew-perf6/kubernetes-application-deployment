@@ -639,11 +639,11 @@ func (c *KubernetesClient) deployKubernetesStorageClasses(data []interface{}) (r
 		raw, _ := json.Marshal(req[i])
 		utils.Info.Println("request payload", string(raw))
 		c.Namespaces[req[i].Namespace] = true
-		_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
+		/*_, err := appKubernetes.CreateNameSpace(c.Client, req[i].Namespace)
 		if err != nil {
 			utils.Error.Println(err)
 			errs = append(errs, err.Error())
-		} else {
+		} else */{
 			tempResp, err := depObj.LaunchStorageClass(req[i])
 			if err != nil {
 				errs = append(errs, err.Error())

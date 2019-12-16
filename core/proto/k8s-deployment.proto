@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+service Service {
+    rpc CreateService (ServiceRequest) returns (SerivceFResponse) {}
+    rpc GetService (ServiceRequest) returns (SerivceFResponse) {}
+    rpc DeleteService (ServiceRequest) returns (SerivceFResponse) {}
+    rpc PatchService (ServiceRequest) returns (SerivceFResponse) {}
+    rpc PutService (ServiceRequest) returns (SerivceFResponse) {}
+}
+message ServiceRequest {
+    string projectId = 1;
+    bytes service = 2;
+}
+message SerivceFResponse{
+    bytes service = 1;
+}

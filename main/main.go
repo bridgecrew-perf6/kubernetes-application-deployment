@@ -50,6 +50,7 @@ func main() {
 		v1.DELETE("/solution", c.DeleteSolution)
 		v1.PATCH("/solution", c.PatchSolution)
 		v1.PUT("/solution", c.PutSolution)
+
 		///statefulsets APIs
 		v1.GET("/statefulsets/:namespace", c.ListStatefulSetsStatus)
 		v1.GET("/statefulsets/:namespace/:name", c.GetStatefulSetsStatus)

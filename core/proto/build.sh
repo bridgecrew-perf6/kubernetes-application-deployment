@@ -1,0 +1,1 @@
+protoc -I . k8s-deployment.proto --go_out=plugins=grpc:. -I=..\..\..\github.com\gogo\protobuf\protobuf

@@ -1745,7 +1745,7 @@ func findKey(istiojsonData map[string]interface{}, key string) (string, error) {
 	return data, nil
 }
 
-func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) (responseObj types.SolutionResp, err error) {
+func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method constants.RequestType) (responseObj types.SolutionResp, err error) {
 
 	raw, err := json.Marshal(runtimeConfig)
 	utils.Info.Println(string(raw))
@@ -1792,7 +1792,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 		var data interface{}
 		var err error
 		switch method {
-		case "post":
+		case constants.POST:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
 			for data == nil && err != nil {
 				if err.Error() == "" {
@@ -1802,7 +1802,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 					break
 				}
 			}
-		case "get":
+		case constants.GET:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
 			for data == nil && err != nil {
 				if err.Error() == "" {
@@ -1812,7 +1812,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 					break
 				}
 			}
-		case "put":
+		case constants.PUT:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
 			for data == nil && err != nil {
 				if err.Error() == "" {
@@ -1822,7 +1822,7 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 					break
 				}
 			}
-		case "patch":
+		case constants.PATCH:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
 			for data == nil && err != nil {
 				if err.Error() == "" {
@@ -1832,9 +1832,9 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method string) 
 					break
 				}
 			}
-		case "delete":
+		case constants.DELETE:
 			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
-		case "list":
+		case constants.LIST:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
 			for data == nil && err != nil {
 				if err.Error() == "" {

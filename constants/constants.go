@@ -12,7 +12,7 @@ var (
 	CacheObj             *cache.Cache
 	RbacURL              string
 )
-
+type RequestType string
 const (
 	IstioServicePostEndpoint            = "/istio-mesh/deploy"
 	IstioServicePutEndpoint             = ""
@@ -42,4 +42,11 @@ const (
 
 	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
 	Rbac_Token_Info          = "/security/api/rbac/token/info"
+
+	POST RequestType = "post"
+	GET RequestType = "get"
+	PATCH RequestType = "patch"
+	PUT RequestType = "put"
+	DELETE RequestType = "delete"
+	LIST RequestType = "list"
 )

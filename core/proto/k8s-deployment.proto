@@ -10,8 +10,11 @@ service Service {
     rpc PutService (ServiceRequest) returns (SerivceFResponse) {}
 }
 message ServiceRequest {
-    string projectId = 1;
-    bytes service = 2;
+    string project_id = 1;
+    string company_id = 2;
+    string token = 3;
+    bytes service = 4;
+
 }
 message SerivceFResponse{
     bytes service = 1;

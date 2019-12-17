@@ -5,6 +5,7 @@ import "github.com/patrickmn/go-cache"
 var (
 	LoggingURL           string
 	ServicePort          string
+	ServiceGRPCPort      string = "8094"
 	ClusterAPI           string
 	KubernetesEngineURL  string
 	EnvironmentEngineURL string
@@ -12,7 +13,9 @@ var (
 	CacheObj             *cache.Cache
 	RbacURL              string
 )
+
 type RequestType string
+
 const (
 	IstioServicePostEndpoint            = "/istio-mesh/deploy"
 	IstioServicePutEndpoint             = ""
@@ -43,10 +46,10 @@ const (
 	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
 	Rbac_Token_Info          = "/security/api/rbac/token/info"
 
-	POST RequestType = "post"
-	GET RequestType = "get"
-	PATCH RequestType = "patch"
-	PUT RequestType = "put"
+	POST   RequestType = "post"
+	GET    RequestType = "get"
+	PATCH  RequestType = "patch"
+	PUT    RequestType = "put"
 	DELETE RequestType = "delete"
-	LIST RequestType = "list"
+	LIST   RequestType = "list"
 )

@@ -1,15 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"go.opencensus.io/plugin/ocgrpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"io/ioutil"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/controllers"
+	"kubernetes-services-deployment/core"
+	pb "kubernetes-services-deployment/core/proto"
 	_ "kubernetes-services-deployment/docs"
 	"kubernetes-services-deployment/utils"
+	"log"
+	"net"
 	"os"
 	"time"
 )
@@ -78,9 +86,27 @@ func main() {
 	}
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	go grpcMain()
 	e.Run(":" + constants.ServicePort)
 	//e.Logger.Fatal(e.Start(":" + constants.ServicePort))
 
+}
+
+func grpcMain() {
+	port := fmt.Sprintf(":%s", constants.ServiceGRPCPort)
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+	svc := &core.Server{}
+	pb.RegisterServiceServer(srv, svc)
+
+	// Register reflection service on gRPC server.
+	reflection.Register(srv)
+	if err := srv.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
 
 /*func main_X() {

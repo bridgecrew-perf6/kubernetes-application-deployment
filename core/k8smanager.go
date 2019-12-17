@@ -2,88 +2,150 @@ package core
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"kubernetes-services-deployment/constants"
 	pb "kubernetes-services-deployment/core/proto"
 	"kubernetes-services-deployment/utils"
-	"kubernetes-services-deployment/constants"
+	"reflect"
 )
 
-type server struct {
-	
+type Server struct {
 }
 
-func (s *server) CreateService (ctx context.Context,request *pb.ServiceRequest)  (response *pb.ServiceResponse,err error) {
-	response = new(pb.ServiceResponse)
-	c, err := GetKubernetesClient(nil,&request.ProjectId)
+func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
+	response = new(pb.SerivceFResponse)
+	utils.Info.Println(reflect.TypeOf(ctx))
+	cpCtx := &Context{}
+	cpCtx.Keys = make(map[string]interface{})
+	cpCtx.Keys["token"]= request.Token
+	cpCtx.Keys["companyId"] = request.CompanyId
+	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	responseObj, _ := c.crdManager(request.Service, constants.POST)
-	if responseObj.Error != ""{
+	var req interface{}
+	err =json.Unmarshal(request.Service, &req)
+	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	response.Service = &responseObj.Data
-	return response,nil
+	responseObj, _ := c.crdManager(req, constants.POST)
+	if responseObj.Error != "" {
+		utils.Error.Println(responseObj.Error)
+		return response, errors.New(responseObj.Error)
+	}
+	raw, err := json.Marshal(responseObj.Data)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	response.Service = raw
+	return response, nil
 
 }
-func (s *server)GetService (ctx context.Context,request *pb.ServiceRequest)   (response *pb.ServiceResponse,err error)  {
-	response = new(pb.ServiceResponse)
-	c, err := GetKubernetesClient(nil,&request.ProjectId)
+func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
+	response = new(pb.SerivceFResponse)
+	c, err := GetKubernetesClient(nil, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	responseObj, _ := c.crdManager(request.Service, constants.GET)
-	if responseObj.Error != ""{
+	var req interface{}
+	err =json.Unmarshal(request.Service, &req)
+	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	response.Service = &responseObj.Data
-	return response,nil
+	responseObj, _ := c.crdManager(req, constants.GET)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	raw, err := json.Marshal(responseObj.Data)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	response.Service = raw
+	return response, nil
 }
-func (s *server)DeleteService (ctx context.Context,request *pb.ServiceRequest)  (response *pb.ServiceResponse,err error) {
-	response = new(pb.ServiceResponse)
-	c, err := GetKubernetesClient(nil,&request.ProjectId)
+func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
+	response = new(pb.SerivceFResponse)
+	c, err := GetKubernetesClient(nil, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	responseObj, _ := c.crdManager(request.Service, constants.DELETE)
-	if responseObj.Error != ""{
+	var req interface{}
+	err =json.Unmarshal(request.Service, &req)
+	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	response.Service = &responseObj.Data
-	return response,nil
+	responseObj, _ := c.crdManager(req, constants.DELETE)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	raw, err := json.Marshal(responseObj.Data)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	response.Service = raw
+	return response, nil
 }
-func (s *server)PatchService (ctx context.Context,request *pb.ServiceRequest)  (response *pb.ServiceResponse,err error) {
-	response = new(pb.ServiceResponse)
-	c, err := GetKubernetesClient(nil,&request.ProjectId)
+func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
+	response = new(pb.SerivceFResponse)
+	c, err := GetKubernetesClient(nil, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	responseObj, _ := c.crdManager(request.Service, constants.PATCH)
-	if responseObj.Error != ""{
+	var req interface{}
+	err =json.Unmarshal(request.Service, &req)
+	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	response.Service = &responseObj.Data
-	return response,nil
+	responseObj, _ := c.crdManager(req, constants.PATCH)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	raw, err := json.Marshal(responseObj.Data)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	response.Service = raw
+	return response, nil
 }
-func (s *server) PutService (ctx context.Context,request *pb.ServiceRequest)   (response *pb.ServiceResponse,err error) {
-	response = new(pb.ServiceResponse)
-	c, err := GetKubernetesClient(nil,&request.ProjectId)
+func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
+	response = new(pb.SerivceFResponse)
+	c, err := GetKubernetesClient(nil, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	responseObj, _ := c.crdManager(request.Service, constants.PUT)
-	if responseObj.Error != ""{
+	var req interface{}
+	err =json.Unmarshal(request.Service, &req)
+	if err != nil {
 		utils.Error.Println(err)
-		return response,err
+		return response, err
 	}
-	response.Service = &responseObj.Data
-	return response,nil
+	responseObj, _ := c.crdManager(req, constants.PUT)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	raw, err := json.Marshal(responseObj.Data)
+	if responseObj.Error != "" {
+		utils.Error.Println(err)
+		return response, err
+	}
+	response.Service = raw
+	return response, nil
 }

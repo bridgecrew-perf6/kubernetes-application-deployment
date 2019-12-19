@@ -34,7 +34,7 @@ func NewClient(cfg *rest.Config, schemeGroupVersion schema.GroupVersion, APIPath
 	config.ContentConfig.GroupVersion = &schemeGroupVersion
 	config.APIPath = APIPath
 	//config.ContentType = runtime.ContentTypeJSON
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: serializer.NewCodecFactory(scheme)}
+	config.NegotiatedSerializer =  serializer.NewCodecFactory(scheme)
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
 	client, err := rest.RESTClientFor(&config)
 	if err != nil {

@@ -18,7 +18,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"]= request.Token
+	cpCtx.Keys["token"] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
 	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 		return response, err
 	}
 	var req interface{}
-	err =json.Unmarshal(request.Service, &req)
+	err = json.Unmarshal(request.Service, &req)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
@@ -47,13 +47,18 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 }
 func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
 	response = new(pb.SerivceFResponse)
-	c, err := GetKubernetesClient(nil, &request.ProjectId)
+	utils.Info.Println(reflect.TypeOf(ctx))
+	cpCtx := &Context{}
+	cpCtx.Keys = make(map[string]interface{})
+	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys["companyId"] = request.CompanyId
+	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
 	}
 	var req interface{}
-	err =json.Unmarshal(request.Service, &req)
+	err = json.Unmarshal(request.Service, &req)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
@@ -73,13 +78,18 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 }
 func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
 	response = new(pb.SerivceFResponse)
-	c, err := GetKubernetesClient(nil, &request.ProjectId)
+	utils.Info.Println(reflect.TypeOf(ctx))
+	cpCtx := &Context{}
+	cpCtx.Keys = make(map[string]interface{})
+	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys["companyId"] = request.CompanyId
+	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
 	}
 	var req interface{}
-	err =json.Unmarshal(request.Service, &req)
+	err = json.Unmarshal(request.Service, &req)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
@@ -99,13 +109,18 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 }
 func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
 	response = new(pb.SerivceFResponse)
-	c, err := GetKubernetesClient(nil, &request.ProjectId)
+	utils.Info.Println(reflect.TypeOf(ctx))
+	cpCtx := &Context{}
+	cpCtx.Keys = make(map[string]interface{})
+	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys["companyId"] = request.CompanyId
+	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
 	}
 	var req interface{}
-	err =json.Unmarshal(request.Service, &req)
+	err = json.Unmarshal(request.Service, &req)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
@@ -125,13 +140,18 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 }
 func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (response *pb.SerivceFResponse, err error) {
 	response = new(pb.SerivceFResponse)
-	c, err := GetKubernetesClient(nil, &request.ProjectId)
+	utils.Info.Println(reflect.TypeOf(ctx))
+	cpCtx := &Context{}
+	cpCtx.Keys = make(map[string]interface{})
+	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys["companyId"] = request.CompanyId
+	c, err := GetKubernetesClient(cpCtx, &request.ProjectId)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err
 	}
 	var req interface{}
-	err =json.Unmarshal(request.Service, &req)
+	err = json.Unmarshal(request.Service, &req)
 	if err != nil {
 		utils.Error.Println(err)
 		return response, err

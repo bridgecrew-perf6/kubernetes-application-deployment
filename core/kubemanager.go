@@ -1803,17 +1803,17 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method constant
 				}
 			}
 		case constants.GET:
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string))
 			for data == nil && err != nil {
 				if err.Error() == "" {
 					time.Sleep(1 * time.Second)
-					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string))
 				} else {
 					break
 				}
 			}
 		case constants.PUT:
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string))
 			for data == nil && err != nil {
 				if err.Error() == "" {
 					time.Sleep(1 * time.Second)
@@ -1823,17 +1823,21 @@ func (c *KubernetesClient) crdManager(runtimeConfig interface{}, method constant
 				}
 			}
 		case constants.PATCH:
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), kubernetesTypes.MergePatchType, raw)
 			for data == nil && err != nil {
 				if err.Error() == "" {
 					time.Sleep(1 * time.Second)
-					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
+					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), kubernetesTypes.MergePatchType, raw)
 				} else {
 					break
 				}
 			}
 		case constants.DELETE:
-			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(v1alpha.RuntimeConfig).Name, &v13.DeleteOptions{})
+			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), &v13.DeleteOptions{})
+			if err != nil {
+				responseObj.Error = err.Error()
+				return responseObj, err
+			}
 		case constants.LIST:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
 			for data == nil && err != nil {

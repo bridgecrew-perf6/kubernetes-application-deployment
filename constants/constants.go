@@ -12,6 +12,7 @@ var (
 	VaultURL             string
 	CacheObj             *cache.Cache
 	RbacURL              string
+	WoodpeckerURL        string
 )
 
 type RequestType string

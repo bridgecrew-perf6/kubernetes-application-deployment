@@ -3,6 +3,7 @@ module kubernetes-services-deployment
 go 1.12
 
 require (
+	bitbucket.org/cloudplex-devs/woodpecker v0.0.0-20191217140035-e9c3629fe038
 	cloud.google.com/go v0.40.0 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
@@ -12,10 +13,12 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1
 	github.com/googleapis/gnostic v0.0.0-20190111052518-d48bb9075efa // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/patrickmn/go-cache v0.0.0-20180815053127-5633e0862627
 	github.com/pkg/errors v0.8.1
 	github.com/swaggo/gin-swagger v0.0.0-20190110070702-0c6fcfd3c7f3
 	github.com/swaggo/swag v1.4.0
+	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef // indirect
 	github.com/urfave/cli/v2 v2.0.0
 	go.opencensus.io v0.22.2
 	google.golang.org/appengine v1.6.1 // indirect
@@ -24,6 +27,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
 	gopkg.in/resty.v1 v1.11.0
+	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 	k8s.io/api v0.16.4
 	k8s.io/apiextensions-apiserver v0.0.0-20190116054503-cf30b7cf64c2
 	k8s.io/apimachinery v0.16.4

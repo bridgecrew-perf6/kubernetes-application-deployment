@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"io"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core/proto"
 	"kubernetes-services-deployment/utils"
@@ -79,7 +80,16 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 			utils.Error.Println(err)
 			return data, err
 		}
-		utils.Info.Println(kubectlStreamResp)
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				utils.Error.Println(err)
+			}
+			utils.Info.Println(feature.Stdout)
+		}
 
 		_, err = agent.DeleteFile(name, string(request.Service))
 		if err != nil {
@@ -138,7 +148,16 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 			utils.Error.Println(err)
 			return data, err
 		}
-		utils.Info.Println(kubectlStreamResp)
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				utils.Error.Println(err)
+			}
+			utils.Info.Println(feature.Stdout)
+		}
 
 		_, err = agent.DeleteFile(name, string(request.Service))
 		if err != nil {
@@ -173,7 +192,7 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 			return data, err
 		}
 
-		kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
 			Args:    []string{"create", "-f", "~/" + name + ".json"},
 		})
@@ -181,7 +200,16 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 			utils.Error.Println(err)
 			return data, err
 		}
-		utils.Info.Println(kubectlResp)
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				utils.Error.Println(err)
+			}
+			utils.Info.Println(feature.Stdout)
+		}
 
 		_, err = agent.DeleteFile(name, string(request.Service))
 		if err != nil {

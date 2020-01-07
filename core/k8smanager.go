@@ -27,7 +27,6 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 
 	service, err := conn.AgentCrdManager(constants.POST, request)
 	if err != nil {
-		utils.Error.Println(err)
 		return response, err
 	}
 

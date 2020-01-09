@@ -60,10 +60,23 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 
 	switch method {
 	case constants.POST:
-		_, err = agent.CreateNamespace(namespace)
-		if err != nil {
-			utils.Error.Println(err)
-			return data, err
+		if namespace != "" {
+			_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", "ns", namespace},
+			})
+			if err != nil {
+				utils.Error.Println(err)
+				response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+					Command: "kubectl",
+					Args:    []string{"create", "ns", namespace},
+				})
+				if err != nil {
+					utils.Error.Println(err)
+					return data, err
+				}
+				utils.Info.Println(response.Stdout)
+			}
 		}
 
 		_, err = agent.CreateFile(name, string(request.Service))
@@ -233,27 +246,27 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 	return data, nil
 }
 
-func (agent *AgentConnection) CreateNamespace(namespace string) (response *agent_api.ExecKubectlResponse, err error) {
-	if namespace != "" {
-		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-			Command: "kubectl",
-			Args:    []string{"get", "ns", namespace},
-		})
-		if err != nil {
-			utils.Error.Println(err)
-			response, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-				Command: "kubectl",
-				Args:    []string{"create", "ns", namespace},
-			})
-			if err != nil {
-				utils.Error.Println(err)
-				return response, err
-			}
-		}
-	}
-
-	return response, err
-}
+//func (agent *AgentConnection) CreateNamespace(namespace string) (response *agent_api.ExecKubectlResponse, err error) {
+//	if namespace != "" {
+//		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"get", "ns", namespace},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			response, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//				Command: "kubectl",
+//				Args:    []string{"create", "ns", namespace},
+//			})
+//			if err != nil {
+//				utils.Error.Println(err)
+//				return response, err
+//			}
+//		}
+//	}
+//
+//	return response, err
+//}
 
 func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api.FileResponse, err error) {
 	response, err = agent.agentClient.CreateFile(agent.agentCtx, &agent_api.CreateFileRequest{

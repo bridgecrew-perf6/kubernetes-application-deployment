@@ -66,7 +66,6 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 				Args:    []string{"get", "ns", namespace},
 			})
 			if err != nil {
-				utils.Error.Println(err)
 				response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 					Command: "kubectl",
 					Args:    []string{"create", "ns", namespace},

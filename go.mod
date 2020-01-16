@@ -27,7 +27,7 @@ require (
 	github.com/swaggo/gin-swagger v0.0.0-20190110070702-0c6fcfd3c7f3
 	github.com/swaggo/swag v1.4.0
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef // indirect
-	github.com/ugorji/go v1.1.1 // indirect
+	github.com/ugorji/go v1.1.7 // indirect
 	github.com/urfave/cli v0.0.0-20181029213200-b67dcf995b6a
 	golang.org/x/net v0.0.0-20190607181551-461777fb6f67 // indirect
 	google.golang.org/appengine v1.6.1 // indirect

@@ -45,7 +45,6 @@ import (
 	"google.golang.org/grpc/resolver"
 	_ "google.golang.org/grpc/resolver/dns"         // To register dns resolver.
 	_ "google.golang.org/grpc/resolver/passthrough" // To register passthrough resolver.
-	"google.golang.org/grpc/serviceconfig"
 	"google.golang.org/grpc/status"
 )
 
@@ -533,6 +532,24 @@ func (cc *ClientConn) waitForResolvedAddrs(ctx context.Context) error {
 	}
 }
 
+// gRPC should resort to default service config when:
+// * resolver service config is disabled
+// * or, resolver does not return a service config or returns an invalid one.
+func (cc *ClientConn) fallbackToDefaultServiceConfig(sc string) bool {
+	if cc.dopts.disableServiceConfig {
+		return true
+	}
+	// The logic below is temporary, will be removed once we change the resolver.State ServiceConfig field type.
+	// Right now, we assume that empty service config string means resolver does not return a config.
+	if sc == "" {
+		return true
+	}
+	// TODO: the logic below is temporary. Once we finish the logic to validate service config
+	// in resolver, we will replace the logic below.
+	_, err := parseServiceConfig(sc)
+	return err != nil
+}
+
 func (cc *ClientConn) updateResolverState(s resolver.State) error {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
@@ -543,37 +560,44 @@ func (cc *ClientConn) updateResolverState(s resolver.State) error {
 		return nil
 	}
 
-	if cc.dopts.disableServiceConfig || s.ServiceConfig == nil {
+	if cc.fallbackToDefaultServiceConfig(s.ServiceConfig) {
 		if cc.dopts.defaultServiceConfig != nil && cc.sc == nil {
 			cc.applyServiceConfig(cc.dopts.defaultServiceConfig)
 		}
-	} else if sc, ok := s.ServiceConfig.(*ServiceConfig); ok {
-		cc.applyServiceConfig(sc)
+	} else {
+		// TODO: the parsing logic below will be moved inside resolver.
+		sc, err := parseServiceConfig(s.ServiceConfig)
+		if err != nil {
+			return err
+		}
+		if cc.sc == nil || cc.sc.rawJSONString != s.ServiceConfig {
+			cc.applyServiceConfig(sc)
+		}
 	}
 
-	var balCfg serviceconfig.LoadBalancingConfig
+	// update the service config that will be sent to balancer.
+	if cc.sc != nil {
+		s.ServiceConfig = cc.sc.rawJSONString
+	}
+
 	if cc.dopts.balancerBuilder == nil {
 		// Only look at balancer types and switch balancer if balancer dial
 		// option is not set.
+		var isGRPCLB bool
+		for _, a := range s.Addresses {
+			if a.Type == resolver.GRPCLB {
+				isGRPCLB = true
+				break
+			}
+		}
 		var newBalancerName string
-		if cc.sc != nil && cc.sc.lbConfig != nil {
-			newBalancerName = cc.sc.lbConfig.name
-			balCfg = cc.sc.lbConfig.cfg
+		// TODO: use new loadBalancerConfig field with appropriate priority.
+		if isGRPCLB {
+			newBalancerName = grpclbName
+		} else if cc.sc != nil && cc.sc.LB != nil {
+			newBalancerName = *cc.sc.LB
 		} else {
-			var isGRPCLB bool
-			for _, a := range s.Addresses {
-				if a.Type == resolver.GRPCLB {
-					isGRPCLB = true
-					break
-				}
-			}
-			if isGRPCLB {
-				newBalancerName = grpclbName
-			} else if cc.sc != nil && cc.sc.LB != nil {
-				newBalancerName = *cc.sc.LB
-			} else {
-				newBalancerName = PickFirstBalancerName
-			}
+			newBalancerName = PickFirstBalancerName
 		}
 		cc.switchBalancer(newBalancerName)
 	} else if cc.balancerWrapper == nil {
@@ -583,7 +607,8 @@ func (cc *ClientConn) updateResolverState(s resolver.State) error {
 		cc.balancerWrapper = newCCBalancerWrapper(cc, cc.dopts.balancerBuilder, cc.balancerBuildOpts)
 	}
 
-	cc.balancerWrapper.updateClientConnState(&balancer.ClientConnState{ResolverState: s, BalancerConfig: balCfg})
+	cc.balancerWrapper.updateResolverState(s)
+	cc.firstResolveEvent.Fire()
 	return nil
 }
 
@@ -596,7 +621,7 @@ func (cc *ClientConn) updateResolverState(s resolver.State) error {
 //
 // Caller must hold cc.mu.
 func (cc *ClientConn) switchBalancer(name string) {
-	if strings.EqualFold(cc.curBalancerName, name) {
+	if strings.ToLower(cc.curBalancerName) == strings.ToLower(name) {
 		return
 	}
 
@@ -735,6 +760,7 @@ func (ac *addrConn) connect() error {
 		ac.mu.Unlock()
 		return nil
 	}
+	ac.updateConnectivityState(connectivity.Connecting)
 	ac.mu.Unlock()
 
 	// Start a goroutine connecting to the server asynchronously.
@@ -744,16 +770,7 @@ func (ac *addrConn) connect() error {
 
 // tryUpdateAddrs tries to update ac.addrs with the new addresses list.
 //
-// If ac is Connecting, it returns false. The caller should tear down the ac and
-// create a new one. Note that the backoff will be reset when this happens.
-//
-// If ac is TransientFailure, it updates ac.addrs and returns true. The updated
-// addresses will be picked up by retry in the next iteration after backoff.
-//
-// If ac is Shutdown or Idle, it updates ac.addrs and returns true.
-//
-// If ac is Ready, it checks whether current connected address of ac is in the
-// new addrs list.
+// It checks whether current connected address of ac is in the new addrs list.
 //  - If true, it updates ac.addrs and returns true. The ac will keep using
 //    the existing connection.
 //  - If false, it does nothing and returns false.
@@ -761,18 +778,17 @@ func (ac *addrConn) tryUpdateAddrs(addrs []resolver.Address) bool {
 	ac.mu.Lock()
 	defer ac.mu.Unlock()
 	grpclog.Infof("addrConn: tryUpdateAddrs curAddr: %v, addrs: %v", ac.curAddr, addrs)
-	if ac.state == connectivity.Shutdown ||
-		ac.state == connectivity.TransientFailure ||
-		ac.state == connectivity.Idle {
+	if ac.state == connectivity.Shutdown {
 		ac.addrs = addrs
 		return true
 	}
 
-	if ac.state == connectivity.Connecting {
+	// Unless we're busy reconnecting already, let's reconnect from the top of
+	// the list.
+	if ac.state != connectivity.Ready {
 		return false
 	}
 
-	// ac.state is Ready, try to find the connected address.
 	var curAddrFound bool
 	for _, a := range addrs {
 		if reflect.DeepEqual(ac.curAddr, a) {
@@ -1021,9 +1037,6 @@ func (ac *addrConn) resetTransport() {
 		// The spec doesn't mention what should be done for multiple addresses.
 		// https://github.com/grpc/grpc/blob/master/doc/connection-backoff.md#proposed-backoff-algorithm
 		connectDeadline := time.Now().Add(dialDuration)
-
-		ac.updateConnectivityState(connectivity.Connecting)
-		ac.transport = nil
 		ac.mu.Unlock()
 
 		newTr, addr, reconnect, err := ac.tryAllAddrs(addrs, connectDeadline)
@@ -1120,6 +1133,8 @@ func (ac *addrConn) tryAllAddrs(addrs []resolver.Address, connectDeadline time.T
 			ac.mu.Unlock()
 			return nil, resolver.Address{}, nil, errConnClosing
 		}
+		ac.updateConnectivityState(connectivity.Connecting)
+		ac.transport = nil
 
 		ac.cc.mu.RLock()
 		ac.dopts.copts.KeepaliveParams = ac.cc.mkp

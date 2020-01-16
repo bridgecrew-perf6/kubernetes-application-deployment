@@ -11,14 +11,12 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode"
 
 	"github.com/go-openapi/jsonreference"
 	"github.com/go-openapi/spec"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -50,9 +48,6 @@ type Parser struct {
 	registerTypes map[string]*ast.TypeSpec
 
 	PropNamingStrategy string
-
-	// structStack stores full names of the structures that were already parsed or are being parsed now
-	structStack []string
 }
 
 // New creates a new Parser with default properties.
@@ -81,43 +76,33 @@ func New() *Parser {
 }
 
 // ParseAPI parses general api info for gived searchDir and mainAPIFile
-func (parser *Parser) ParseAPI(searchDir string, mainAPIFile string) error {
+func (parser *Parser) ParseAPI(searchDir string, mainAPIFile string) {
 	log.Println("Generate general API Info")
-	if err := parser.getAllGoFileInfo(searchDir); err != nil {
-		return err
-	}
+	parser.getAllGoFileInfo(searchDir)
 	parser.ParseGeneralAPIInfo(path.Join(searchDir, mainAPIFile))
 
 	for _, astFile := range parser.files {
 		parser.ParseType(astFile)
 	}
 
-	for fileName, astFile := range parser.files {
-		parser.ParseRouterAPIInfo(fileName, astFile)
+	for _, astFile := range parser.files {
+		parser.ParseRouterAPIInfo(astFile)
 	}
 
 	parser.ParseDefinitions()
-
-	return nil
 }
 
 // ParseGeneralAPIInfo parses general api info for gived mainAPIFile path
-func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) error {
+func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) {
 	fileSet := token.NewFileSet()
 	fileTree, err := goparser.ParseFile(fileSet, mainAPIFile, nil, goparser.ParseComments)
+
 	if err != nil {
-		return errors.Wrap(err, "cannot parse soure files")
+		log.Panicf("ParseGeneralApiInfo occur error:%+v", err)
 	}
 
 	parser.swagger.Swagger = "2.0"
 	securityMap := map[string]*spec.SecurityScheme{}
-
-	// templated defaults
-	parser.swagger.Info.Version = "{{.Version}}"
-	parser.swagger.Info.Title = "{{.Title}}"
-	parser.swagger.Info.Description = "{{.Description}}"
-	parser.swagger.Host = "{{.Host}}"
-	parser.swagger.BasePath = "{{.BasePath}}"
 
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
@@ -130,11 +115,7 @@ func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) error {
 				case "@title":
 					parser.swagger.Info.Title = strings.TrimSpace(commentLine[len(attribute):])
 				case "@description":
-					if parser.swagger.Info.Description == "{{.Description}}" {
-						parser.swagger.Info.Description = strings.TrimSpace(commentLine[len(attribute):])
-					} else {
-						parser.swagger.Info.Description += "\n" + strings.TrimSpace(commentLine[len(attribute):])
-					}
+					parser.swagger.Info.Description = strings.TrimSpace(commentLine[len(attribute):])
 				case "@termsofservice":
 					parser.swagger.Info.TermsOfService = strings.TrimSpace(commentLine[len(attribute):])
 				case "@contact.name":
@@ -153,34 +134,6 @@ func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) error {
 					parser.swagger.BasePath = strings.TrimSpace(commentLine[len(attribute):])
 				case "@schemes":
 					parser.swagger.Schemes = GetSchemes(commentLine)
-				case "@tag.name":
-					commentInfo := strings.TrimSpace(commentLine[len(attribute):])
-					parser.swagger.Tags = append(parser.swagger.Tags, spec.Tag{
-						TagProps: spec.TagProps{
-							Name: strings.TrimSpace(commentInfo),
-						},
-					})
-				case "@tag.description":
-					commentInfo := strings.TrimSpace(commentLine[len(attribute):])
-					tag := parser.swagger.Tags[len(parser.swagger.Tags)-1]
-					tag.TagProps.Description = commentInfo
-					replaceLastTag(parser.swagger.Tags, tag)
-				case "@tag.docs.url":
-					commentInfo := strings.TrimSpace(commentLine[len(attribute):])
-					tag := parser.swagger.Tags[len(parser.swagger.Tags)-1]
-					tag.TagProps.ExternalDocs = &spec.ExternalDocumentation{
-						URL: commentInfo,
-					}
-					replaceLastTag(parser.swagger.Tags, tag)
-
-				case "@tag.docs.description":
-					commentInfo := strings.TrimSpace(commentLine[len(attribute):])
-					tag := parser.swagger.Tags[len(parser.swagger.Tags)-1]
-					if tag.TagProps.ExternalDocs == nil {
-						log.Panic("@tag.docs.description needs to come after a @tags.docs.url")
-					}
-					tag.TagProps.ExternalDocs.Description = commentInfo
-					replaceLastTag(parser.swagger.Tags, tag)
 				}
 			}
 
@@ -304,8 +257,6 @@ func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) error {
 	if len(securityMap) > 0 {
 		parser.swagger.SecurityDefinitions = securityMap
 	}
-
-	return nil
 }
 
 func getScopeScheme(scope string) string {
@@ -335,7 +286,7 @@ func GetSchemes(commentLine string) []string {
 }
 
 // ParseRouterAPIInfo parses router api info for given astFile
-func (parser *Parser) ParseRouterAPIInfo(fileName string, astFile *ast.File) {
+func (parser *Parser) ParseRouterAPIInfo(astFile *ast.File) {
 	for _, astDescription := range astFile.Decls {
 		switch astDeclaration := astDescription.(type) {
 		case *ast.FuncDecl:
@@ -344,7 +295,7 @@ func (parser *Parser) ParseRouterAPIInfo(fileName string, astFile *ast.File) {
 				operation.parser = parser
 				for _, comment := range astDeclaration.Doc.List {
 					if err := operation.ParseComment(comment.Text, astFile); err != nil {
-						log.Panicf("ParseComment panic in file %s :%+v", fileName, err)
+						log.Panicf("ParseComment panic:%+v", err)
 					}
 				}
 				var pathItem spec.PathItem
@@ -389,7 +340,7 @@ func (parser *Parser) ParseType(astFile *ast.File) {
 					typeName := fmt.Sprintf("%v", typeSpec.Type)
 					// check if its a custom primitive type
 					if IsGolangPrimitiveType(typeName) {
-						parser.CustomPrimitiveTypes[typeSpec.Name.String()] = TransToValidSchemeType(typeName)
+						parser.CustomPrimitiveTypes[typeSpec.Name.String()] = typeName
 					} else {
 						parser.TypeDefinitions[astFile.Name.String()][typeSpec.Name.String()] = typeSpec
 					}
@@ -400,191 +351,98 @@ func (parser *Parser) ParseType(astFile *ast.File) {
 	}
 }
 
-func (parser *Parser) isInStructStack(refTypeName string) bool {
-	for _, structName := range parser.structStack {
-		if refTypeName == structName {
-			return true
-		}
-	}
-	return false
-}
-
 // ParseDefinitions parses Swagger Api definitions.
 func (parser *Parser) ParseDefinitions() {
-	// sort the typeNames so that parsing definitions is deterministic
-	typeNames := make([]string, 0, len(parser.registerTypes))
-	for refTypeName := range parser.registerTypes {
-		typeNames = append(typeNames, refTypeName)
-	}
-	sort.Strings(typeNames)
-
-	for _, refTypeName := range typeNames {
-		typeSpec := parser.registerTypes[refTypeName]
+	for refTypeName, typeSpec := range parser.registerTypes {
 		ss := strings.Split(refTypeName, ".")
 		pkgName := ss[0]
-		parser.structStack = nil
-		parser.ParseDefinition(pkgName, typeSpec.Name.Name, typeSpec)
+		parser.ParseDefinition(pkgName, typeSpec, typeSpec.Name.Name)
 	}
 }
 
-// ParseDefinition parses given type spec that corresponds to the type under
-// given name and package, and populates swagger schema definitions registry
-// with a schema for the given type
-func (parser *Parser) ParseDefinition(pkgName, typeName string, typeSpec *ast.TypeSpec) {
-	refTypeName := fullTypeName(pkgName, typeName)
-	if _, isParsed := parser.swagger.Definitions[refTypeName]; isParsed {
-		log.Println("Skipping '" + refTypeName + "', already parsed.")
-		return
-	}
+var structStacks []string
 
-	if parser.isInStructStack(refTypeName) {
-		log.Println("Skipping '" + refTypeName + "', recursion detected.")
-		return
+// isNotRecurringNestStruct check if a structure that is not a not repeating
+func isNotRecurringNestStruct(refTypeName string, structStacks []string) bool {
+	if len(structStacks) <= 0 {
+		return true
 	}
-	parser.structStack = append(parser.structStack, refTypeName)
-
-	log.Println("Generating " + refTypeName)
-	parser.swagger.Definitions[refTypeName] = parser.parseTypeExpr(pkgName, typeName, typeSpec.Type)
+	startStruct := structStacks[0]
+	for _, v := range structStacks[1:] {
+		if startStruct == v {
+			return false
+		}
+	}
+	return true
 }
 
-func (parser *Parser) collectRequiredFields(pkgName string, properties map[string]spec.Schema, extraRequired []string) (requiredFields []string) {
-	// created sorted list of properties keys so when we iterate over them it's deterministic
-	ks := make([]string, 0, len(properties))
-	for k := range properties {
-		ks = append(ks, k)
+// ParseDefinition TODO: NEEDS COMMENT INFO
+func (parser *Parser) ParseDefinition(pkgName string, typeSpec *ast.TypeSpec, typeName string) {
+	var refTypeName string
+	if len(pkgName) > 0 {
+		refTypeName = pkgName + "." + typeName
+	} else {
+		refTypeName = typeName
 	}
-	sort.Strings(ks)
+	if _, already := parser.swagger.Definitions[refTypeName]; already {
+		log.Println("Skipping '" + refTypeName + "', already present.")
+		return
+	}
+	properties := make(map[string]spec.Schema)
+	// stop repetitive structural parsing
+	if isNotRecurringNestStruct(refTypeName, structStacks) {
+		structStacks = append(structStacks, refTypeName)
+		parser.parseTypeSpec(pkgName, typeSpec, properties)
+	}
+	structStacks = []string{}
 
-	requiredFields = make([]string, 0)
-
-	// iterate over keys list instead of map to avoid the random shuffle of the order that go does for maps
-	for _, k := range ks {
-		prop := properties[k]
-
+	requiredFields := make([]string, 0)
+	for k, prop := range properties {
 		// todo find the pkgName of the property type
 		tname := prop.SchemaProps.Type[0]
 		if _, ok := parser.TypeDefinitions[pkgName][tname]; ok {
 			tspec := parser.TypeDefinitions[pkgName][tname]
-			parser.ParseDefinition(pkgName, tname, tspec)
+			parser.ParseDefinition(pkgName, tspec, tname)
 		}
 		if tname != "object" {
 			requiredFields = append(requiredFields, prop.SchemaProps.Required...)
+			prop.SchemaProps.Required = make([]string, 0)
 		}
 		properties[k] = prop
 	}
-
-	if extraRequired != nil {
-		requiredFields = append(requiredFields, extraRequired...)
-	}
-
-	sort.Strings(requiredFields)
-
-	return
-}
-
-func fullTypeName(pkgName, typeName string) string {
-	if pkgName != "" {
-		return pkgName + "." + typeName
-	}
-	return typeName
-}
-
-// parseTypeExpr parses given type expression that corresponds to the type under
-// given name and package, and returns swagger schema for it.
-func (parser *Parser) parseTypeExpr(pkgName, typeName string, typeExpr ast.Expr) spec.Schema {
-	switch expr := typeExpr.(type) {
-	// type Foo struct {...}
-	case *ast.StructType:
-		refTypeName := fullTypeName(pkgName, typeName)
-		if schema, isParsed := parser.swagger.Definitions[refTypeName]; isParsed {
-			return schema
-		}
-
-		extraRequired := make([]string, 0)
-		properties := make(map[string]spec.Schema)
-		for _, field := range expr.Fields.List {
-			var fieldProps map[string]spec.Schema
-			var requiredFromAnon []string
-			if field.Names == nil {
-				fieldProps, requiredFromAnon = parser.parseAnonymousField(pkgName, field)
-				extraRequired = append(extraRequired, requiredFromAnon...)
-			} else {
-				fieldProps = parser.parseStruct(pkgName, field)
-			}
-
-			for k, v := range fieldProps {
-				properties[k] = v
-			}
-		}
-
-		// collect requireds from our properties and anonymous fields
-		required := parser.collectRequiredFields(pkgName, properties, extraRequired)
-
-		// unset required from properties because we've collected them
-		for k, prop := range properties {
-			tname := prop.SchemaProps.Type[0]
-			if tname != "object" {
-				prop.SchemaProps.Required = make([]string, 0)
-			}
-			properties[k] = prop
-		}
-
-		return spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type:       []string{"object"},
-				Properties: properties,
-				Required:   required,
-			},
-		}
-
-	// type Foo Baz
-	case *ast.Ident:
-		refTypeName := fullTypeName(pkgName, expr.Name)
-		if _, isParsed := parser.swagger.Definitions[refTypeName]; !isParsed {
-			typedef := parser.TypeDefinitions[pkgName][expr.Name]
-			parser.ParseDefinition(pkgName, expr.Name, typedef)
-		}
-		return parser.swagger.Definitions[refTypeName]
-
-	// type Foo *Baz
-	case *ast.StarExpr:
-		return parser.parseTypeExpr(pkgName, typeName, expr.X)
-
-	// type Foo []Baz
-	case *ast.ArrayType:
-		itemSchema := parser.parseTypeExpr(pkgName, "", expr.Elt)
-		return spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"array"},
-				Items: &spec.SchemaOrArray{
-					Schema: &itemSchema,
-				},
-			},
-		}
-
-	// type Foo pkg.Bar
-	case *ast.SelectorExpr:
-		if xIdent, ok := expr.X.(*ast.Ident); ok {
-			pkgName = xIdent.Name
-			typeName = expr.Sel.Name
-			refTypeName := fullTypeName(pkgName, typeName)
-			if _, isParsed := parser.swagger.Definitions[refTypeName]; !isParsed {
-				typedef := parser.TypeDefinitions[pkgName][typeName]
-				parser.ParseDefinition(pkgName, typeName, typedef)
-			}
-			return parser.swagger.Definitions[refTypeName]
-		}
-
-	// type Foo map[string]Bar
-	// ...
-	default:
-		log.Printf("Type definition of type '%T' is not supported yet. Using 'object' instead.\n", typeExpr)
-	}
-
-	return spec.Schema{
+	log.Println("Generating " + refTypeName)
+	parser.swagger.Definitions[refTypeName] = spec.Schema{
 		SchemaProps: spec.SchemaProps{
-			Type: []string{"object"},
+			Type:       []string{"object"},
+			Properties: properties,
+			Required:   requiredFields,
 		},
+	}
+}
+
+func (parser *Parser) parseTypeSpec(pkgName string, typeSpec *ast.TypeSpec, properties map[string]spec.Schema) {
+	switch typeSpec.Type.(type) {
+	case *ast.StructType:
+		structDecl := typeSpec.Type.(*ast.StructType)
+		fields := structDecl.Fields.List
+
+		for _, field := range fields {
+			if field.Names == nil { //anonymous field
+				parser.parseAnonymousField(pkgName, field, properties)
+			} else {
+				props := parser.parseStruct(pkgName, field)
+				for k, v := range props {
+					properties[k] = v
+				}
+			}
+		}
+
+	case *ast.ArrayType:
+		log.Panic("ParseDefinitions not supported 'Array' yet.")
+	case *ast.InterfaceType:
+		log.Panic("ParseDefinitions not supported 'Interface' yet.")
+	case *ast.MapType:
+		log.Panic("ParseDefinitions not supported 'Map' yet.")
 	}
 }
 
@@ -596,12 +454,6 @@ type structField struct {
 	isRequired   bool
 	crossPkg     string
 	exampleValue interface{}
-	maximum      *float64
-	minimum      *float64
-	maxLength    *int64
-	minLength    *int64
-	enums        []interface{}
-	defaultValue interface{}
 }
 
 func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties map[string]spec.Schema) {
@@ -621,8 +473,7 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 	}
 	if _, ok := parser.TypeDefinitions[pkgName][structField.schemaType]; ok { // user type field
 		// write definition if not yet present
-		parser.ParseDefinition(pkgName, structField.schemaType,
-			parser.TypeDefinitions[pkgName][structField.schemaType])
+		parser.ParseDefinition(pkgName, parser.TypeDefinitions[pkgName][structField.schemaType], structField.schemaType)
 		properties[structField.name] = spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type:        []string{"object"}, // to avoid swagger validation error
@@ -635,8 +486,7 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 	} else if structField.schemaType == "array" { // array field type
 		// if defined -- ref it
 		if _, ok := parser.TypeDefinitions[pkgName][structField.arrayType]; ok { // user type in array
-			parser.ParseDefinition(pkgName, structField.arrayType,
-				parser.TypeDefinitions[pkgName][structField.arrayType])
+			parser.ParseDefinition(pkgName, parser.TypeDefinitions[pkgName][structField.arrayType], structField.arrayType)
 			properties[structField.name] = spec.Schema{
 				SchemaProps: spec.SchemaProps{
 					Type:        []string{structField.schemaType},
@@ -667,13 +517,7 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 					Items: &spec.SchemaOrArray{
 						Schema: &spec.Schema{
 							SchemaProps: spec.SchemaProps{
-								Type:      []string{structField.arrayType},
-								Maximum:   structField.maximum,
-								Minimum:   structField.minimum,
-								MaxLength: structField.maxLength,
-								MinLength: structField.minLength,
-								Enum:      structField.enums,
-								Default:   structField.defaultValue,
+								Type: []string{structField.arrayType},
 							},
 						},
 					},
@@ -694,12 +538,6 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 				Description: desc,
 				Format:      structField.formatType,
 				Required:    required,
-				Maximum:     structField.maximum,
-				Minimum:     structField.minimum,
-				MaxLength:   structField.maxLength,
-				MinLength:   structField.minLength,
-				Enum:        structField.enums,
-				Default:     structField.defaultValue,
 			},
 			SwaggerSchemaProps: spec.SwaggerSchemaProps{
 				Example: structField.exampleValue,
@@ -727,12 +565,6 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 					Format:      structField.formatType,
 					Properties:  props,
 					Required:    nestRequired,
-					Maximum:     structField.maximum,
-					Minimum:     structField.minimum,
-					MaxLength:   structField.maxLength,
-					MinLength:   structField.minLength,
-					Enum:        structField.enums,
-					Default:     structField.defaultValue,
 				},
 				SwaggerSchemaProps: spec.SwaggerSchemaProps{
 					Example: structField.exampleValue,
@@ -743,55 +575,19 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 	return
 }
 
-func (parser *Parser) parseAnonymousField(pkgName string, field *ast.Field) (map[string]spec.Schema, []string) {
-	properties := make(map[string]spec.Schema)
-
-	fullTypeName := ""
-	switch ftype := field.Type.(type) {
-	case *ast.Ident:
-		fullTypeName = ftype.Name
-	case *ast.StarExpr:
-		if ftypeX, ok := ftype.X.(*ast.Ident); ok {
-			fullTypeName = ftypeX.Name
-		} else if ftypeX, ok := ftype.X.(*ast.SelectorExpr); ok {
-			if packageX, ok := ftypeX.X.(*ast.Ident); ok {
-				fullTypeName = fmt.Sprintf("%s.%s", packageX.Name, ftypeX.Sel.Name)
-			}
-		} else {
-			log.Printf("Composite field type of '%T' is unhandle by parser. Skipping", ftype)
-			return properties, []string{}
+func (parser *Parser) parseAnonymousField(pkgName string, field *ast.Field, properties map[string]spec.Schema) {
+	if astTypeIdent, ok := field.Type.(*ast.Ident); ok {
+		findPgkName := pkgName
+		findBaseTypeName := astTypeIdent.Name
+		ss := strings.Split(astTypeIdent.Name, ".")
+		if len(ss) > 1 {
+			findPgkName = ss[0]
+			findBaseTypeName = ss[1]
 		}
-	default:
-		log.Printf("Field type of '%T' is unsupported. Skipping", ftype)
-		return properties, []string{}
+
+		baseTypeSpec := parser.TypeDefinitions[findPgkName][findBaseTypeName]
+		parser.parseTypeSpec(findPgkName, baseTypeSpec, properties)
 	}
-
-	typeName := fullTypeName
-	if splits := strings.Split(fullTypeName, "."); len(splits) > 1 {
-		pkgName = splits[0]
-		typeName = splits[1]
-	}
-
-	typeSpec := parser.TypeDefinitions[pkgName][typeName]
-	schema := parser.parseTypeExpr(pkgName, typeName, typeSpec.Type)
-
-	schemaType := "unknown"
-	if len(schema.SchemaProps.Type) > 0 {
-		schemaType = schema.SchemaProps.Type[0]
-	}
-
-	switch schemaType {
-	case "object":
-		for k, v := range schema.SchemaProps.Properties {
-			properties[k] = v
-		}
-	case "array":
-		properties[typeName] = schema
-	default:
-		log.Printf("Can't extract properties from a schema of type '%s'", schemaType)
-	}
-
-	return properties, schema.SchemaProps.Required
 }
 
 func (parser *Parser) parseField(field *ast.Field) *structField {
@@ -823,8 +619,8 @@ func (parser *Parser) parseField(field *ast.Field) *structField {
 		return structField
 	}
 	// `json:"tag"` -> json:"tag"
-	structTag := reflect.StructTag(strings.Replace(field.Tag.Value, "`", "", -1))
-	jsonTag := structTag.Get("json")
+	structTag := strings.Replace(field.Tag.Value, "`", "", -1)
+	jsonTag := reflect.StructTag(structTag).Get("json")
 	// json:"tag,hoge"
 	if strings.Contains(jsonTag, ",") {
 		// json:",hoge"
@@ -840,28 +636,16 @@ func (parser *Parser) parseField(field *ast.Field) *structField {
 		structField.name = jsonTag
 	}
 
-	if typeTag := structTag.Get("swaggertype"); typeTag != "" {
-		parts := strings.Split(typeTag, ",")
-		if 0 < len(parts) && len(parts) <= 2 {
-			newSchemaType := parts[0]
-			newArrayType := structField.arrayType
-			if len(parts) >= 2 && newSchemaType == "array" {
-				newArrayType = parts[1]
-			}
-
-			CheckSchemaType(newSchemaType)
-			CheckSchemaType(newArrayType)
-			structField.schemaType = newSchemaType
-			structField.arrayType = newArrayType
-		}
+	exampleTag := reflect.StructTag(structTag).Get("example")
+	if exampleTag != "" {
+		structField.exampleValue = defineTypeOfExample(structField.schemaType, exampleTag)
 	}
-	if exampleTag := structTag.Get("example"); exampleTag != "" {
-		structField.exampleValue = defineTypeOfExample(structField.schemaType, structField.arrayType, exampleTag)
-	}
-	if formatTag := structTag.Get("format"); formatTag != "" {
+	formatTag := reflect.StructTag(structTag).Get("format")
+	if formatTag != "" {
 		structField.formatType = formatTag
 	}
-	if bindingTag := structTag.Get("binding"); bindingTag != "" {
+	bindingTag := reflect.StructTag(structTag).Get("binding")
+	if bindingTag != "" {
 		for _, val := range strings.Split(bindingTag, ",") {
 			if val == "required" {
 				structField.isRequired = true
@@ -869,7 +653,8 @@ func (parser *Parser) parseField(field *ast.Field) *structField {
 			}
 		}
 	}
-	if validateTag := structTag.Get("validate"); validateTag != "" {
+	validateTag := reflect.StructTag(structTag).Get("validate")
+	if validateTag != "" {
 		for _, val := range strings.Split(validateTag, ",") {
 			if val == "required" {
 				structField.isRequired = true
@@ -877,63 +662,7 @@ func (parser *Parser) parseField(field *ast.Field) *structField {
 			}
 		}
 	}
-	if enumsTag := structTag.Get("enums"); enumsTag != "" {
-		enumType := structField.schemaType
-		if structField.schemaType == "array" {
-			enumType = structField.arrayType
-		}
-
-		for _, e := range strings.Split(enumsTag, ",") {
-			structField.enums = append(structField.enums, defineType(enumType, e))
-		}
-	}
-	if defaultTag := structTag.Get("default"); defaultTag != "" {
-		structField.defaultValue = defineType(structField.schemaType, defaultTag)
-	}
-
-	if IsNumericType(structField.schemaType) || IsNumericType(structField.arrayType) {
-		structField.maximum = getFloatTag(structTag, "maximum")
-		structField.minimum = getFloatTag(structTag, "minimum")
-	}
-	if structField.schemaType == "string" || structField.arrayType == "string" {
-		structField.maxLength = getIntTag(structTag, "maxLength")
-		structField.minLength = getIntTag(structTag, "minLength")
-	}
-
 	return structField
-}
-
-func replaceLastTag(slice []spec.Tag, element spec.Tag) {
-	slice = slice[:len(slice)-1]
-	slice = append(slice, element)
-}
-
-func getFloatTag(structTag reflect.StructTag, tagName string) *float64 {
-	strValue := structTag.Get(tagName)
-	if strValue == "" {
-		return nil
-	}
-
-	value, err := strconv.ParseFloat(strValue, 64)
-	if err != nil {
-		panic(fmt.Errorf("can't parse numeric value of %q tag: %v", tagName, err))
-	}
-
-	return &value
-}
-
-func getIntTag(structTag reflect.StructTag, tagName string) *int64 {
-	strValue := structTag.Get(tagName)
-	if strValue == "" {
-		return nil
-	}
-
-	value, err := strconv.ParseInt(strValue, 10, 64)
-	if err != nil {
-		panic(fmt.Errorf("can't parse numeric value of %q tag: %v", tagName, err))
-	}
-
-	return &value
 }
 
 func toSnakeCase(in string) string {
@@ -969,7 +698,7 @@ func toLowerCamelCase(in string) string {
 }
 
 // defineTypeOfExample example value define the type (object and array unsupported)
-func defineTypeOfExample(schemaType, arrayType, exampleValue string) interface{} {
+func defineTypeOfExample(schemaType string, exampleValue string) interface{} {
 	switch schemaType {
 	case "string":
 		return exampleValue
@@ -992,20 +721,15 @@ func defineTypeOfExample(schemaType, arrayType, exampleValue string) interface{}
 		}
 		return v
 	case "array":
-		values := strings.Split(exampleValue, ",")
-		result := make([]interface{}, 0)
-		for _, value := range values {
-			result = append(result, defineTypeOfExample(arrayType, "", value))
-		}
-		return result
+		return strings.Split(exampleValue, ",")
 	default:
 		panic(fmt.Errorf("%s is unsupported type in example value", schemaType))
 	}
 }
 
 // GetAllGoFileInfo gets all Go source files information for given searchDir.
-func (parser *Parser) getAllGoFileInfo(searchDir string) error {
-	return filepath.Walk(searchDir, parser.visit)
+func (parser *Parser) getAllGoFileInfo(searchDir string) {
+	filepath.Walk(searchDir, parser.visit)
 }
 
 func (parser *Parser) visit(path string, f os.FileInfo, err error) error {

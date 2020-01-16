@@ -13,11 +13,7 @@ import (
 	"io"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
-	storage "k8s.io/api/storage/v1"
-	errors2 "k8s.io/apimachinery/pkg/api/errors"
-	v13 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	kubernetesTypes "k8s.io/apimachinery/pkg/types"
+
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -193,7 +189,8 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		if len(data) == 0 {
 			continue
 		}
-		switch kubeType {
+		respTemp, err = conn.deployCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
+		/*switch kubeType {
 		case constants.KubernetesStatefulSets:
 			respTemp, err = conn.deployStatefulSets(data, *req.ProjectId, cpContext.GetString("company_id"))
 		case constants.KubernetesService:
@@ -209,7 +206,7 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		default:
 			//for now default case is for istio and knative
 			respTemp, err = conn.deployCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
-		}
+		}*/
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -249,7 +246,8 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		if len(data) == 0 {
 			continue
 		}
-		switch kubeType {
+		respTemp, err = conn.getCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
+		/*switch kubeType {
 		case constants.KubernetesStatefulSets:
 			respTemp, err = conn.getStatefulSets(data, *req.ProjectId, cpContext.GetString("company_id"))
 		case constants.KubernetesService:
@@ -266,7 +264,7 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 			//for now default case is for istio and knative
 			respTemp, err = conn.getCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 
-		}
+		}*/
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -337,7 +335,8 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 		if len(data) == 0 {
 			continue
 		}
-		switch kubeType {
+		err = conn.deleteCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
+		/*switch kubeType {
 		case constants.KubernetesStatefulSets:
 			err = conn.deleteStatefulSets(data, *req.ProjectId, cpContext.GetString("company_id"))
 		case constants.KubernetesService:
@@ -351,7 +350,7 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 			utils.Info.Println(kubeType)
 			err = conn.deleteCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 
-		}
+		}*/
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -389,7 +388,8 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 		if len(data) == 0 {
 			continue
 		}
-		switch kubeType {
+		respTemp, err = conn.patchCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
+		/*switch kubeType {
 		case constants.KubernetesStatefulSets:
 			respTemp, err = conn.patchStatefulSets(data, *req.ProjectId, cpContext.GetString("company_id"))
 		case constants.KubernetesService:
@@ -403,7 +403,7 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 			utils.Info.Println(kubeType)
 			respTemp, err = c.patchCRDS(kubeType, data)
 
-		}
+		}*/
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -418,7 +418,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	c, err := GetKubernetesClient(cpContext, req.ProjectId)
+	conn, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
@@ -431,7 +431,8 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		if len(data) == 0 {
 			continue
 		}
-		switch kubeType {
+		respTemp, err = conn.putCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
+		/*switch kubeType {
 		case constants.KubernetesStatefulSets:
 			respTemp, err = c.putStatefulSets(data)
 		case constants.KubernetesService:
@@ -445,7 +446,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 			utils.Info.Println(kubeType)
 			respTemp, err = c.putCRDS(kubeType, data)
 
-		}
+		}*/
 		if err != nil {
 			errs = append(errs, err.Error())
 		} else {
@@ -457,7 +458,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	return responses, nil
 }
 
-func (agent *AgentConnection) deployStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+/*func (agent *AgentConnection) deployStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	if projectId == "" || companyId == "" {
 		return resp, errors.New("projectId or companyId must not be empty")
 	}
@@ -1112,7 +1113,7 @@ func (agent *AgentConnection) deployKubernetesStorageClasses(data []interface{},
 		return resp, errors.New(finalErr)
 	}
 	return resp, nil
-}
+}*/
 func (agent *AgentConnection) deployCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	if projectId == "" || companyId == "" {
 		return resp, errors.New("projectId or companyId must not be empty")
@@ -1149,7 +1150,7 @@ func (agent *AgentConnection) deployCRDS(key string, data []interface{}, project
 	return resp, nil
 }
 
-func (agent *AgentConnection) getStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+/*func (agent *AgentConnection) getStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	if projectId == "" || companyId == "" {
 		return resp, errors.New("projectId or companyId must not be empty")
 	}
@@ -1406,7 +1407,7 @@ func (agent *AgentConnection) getKubernetesStorageClass(data []interface{}, proj
 		return resp, errors.New(finalErr)
 	}
 	return resp, nil
-}
+}*/
 func (agent *AgentConnection) getCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	if projectId == "" || companyId == "" {
 		return resp, errors.New("projectId or companyId must not be empty")
@@ -1531,7 +1532,7 @@ func (agent *AgentConnection) listCRDS(key string, data []interface{}, projectId
 //	return alphaClient, nil
 //}
 
-func (agent *AgentConnection) deleteStatefulSets(data []interface{}, projectId string, companyId string) error {
+/*func (agent *AgentConnection) deleteStatefulSets(data []interface{}, projectId string, companyId string) error {
 
 	if projectId == "" || companyId == "" {
 		return errors.New("projectId or companyId must not be empty")
@@ -1695,7 +1696,7 @@ func (agent *AgentConnection) deleteKubernetesDeployment(data []interface{}, pro
 		return errors.New(finalErr)
 	}
 	return nil
-}
+}*/
 func (agent *AgentConnection) deleteCRDS(key string, data []interface{}, projectId string, companyId string) (err error) {
 	if projectId == "" || companyId == "" {
 		return errors.New("projectId or companyId must not be empty")
@@ -1753,7 +1754,7 @@ func (agent *AgentConnection) deleteCRDS(key string, data []interface{}, project
 	return err
 }
 
-func (agent *AgentConnection) patchStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+/*func (agent *AgentConnection) patchStatefulSets(data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	if projectId == "" || companyId == "" {
 		return resp, errors.New("projectId or companyId must not be empty")
 	}
@@ -1932,8 +1933,8 @@ func (agent *AgentConnection) patchKubernetesDeployment(data []interface{}, proj
 	}
 
 	return resp, nil
-}
-func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []interface{}, err error) {
+}*/
+func (c *AgentConnection) patchCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -1995,7 +1996,7 @@ func (c *KubernetesClient) patchCRDS(key string, data []interface{}) (resp []int
 	return resp, err
 }
 
-func (c *KubernetesClient) putStatefulSets(data []interface{}) (resp []interface{}, err error) {
+/*func (c *KubernetesClient) putStatefulSets(data []interface{}) (resp []interface{}, err error) {
 	var errs []string
 	statefulset := appKubernetes.NewStatefulsetLauncher(c.Client)
 	raw, err := json.Marshal(data)
@@ -2135,8 +2136,8 @@ func (c *KubernetesClient) putKubernetesDeployment(data []interface{}) (resp []i
 	}
 
 	return resp, nil
-}
-func (c *KubernetesClient) putCRDS(key string, data []interface{}) (resp []interface{}, err error) {
+}*/
+func (c *AgentConnection) putCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -2438,24 +2439,68 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 
 	case "put":
-		data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(v1alpha.RuntimeConfig).Name)
-		for data == nil && err != nil {
-			if err.Error() == "" {
-				time.Sleep(1 * time.Second)
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Update(runtimeConfig)
-			} else {
+		_, err = agent.CreateFile(runtimeObj.Name, string(raw))
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		}
+
+		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"apply", "-f", "~/" + runtimeObj.Name + ".json"},
+		})
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		}
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF {
 				break
 			}
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println(err)
+			}
+			utils.Info.Println(feature.Stdout)
+		}
+
+		_, err = agent.DeleteFile(runtimeObj.Name, string(raw))
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
 		}
 	case "patch":
-		data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
-		for data == nil && err != nil {
-			if err.Error() == "" {
-				time.Sleep(1 * time.Second)
-				data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(v1alpha.RuntimeConfig).Name, kubernetesTypes.MergePatchType, raw)
-			} else {
+		_, err = agent.CreateFile(runtimeObj.Name, string(raw))
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		}
+
+		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"apply", "-f", "~/" + runtimeObj.Name + ".json"},
+		})
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		}
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF {
 				break
 			}
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println(err)
+			}
+			utils.Info.Println(feature.Stdout)
+		}
+
+		_, err = agent.DeleteFile(runtimeObj.Name, string(raw))
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
 		}
 	case "delete":
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{

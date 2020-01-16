@@ -1,6 +1,8 @@
 package constants
 
-import "github.com/patrickmn/go-cache"
+import (
+	"github.com/patrickmn/go-cache"
+)
 
 var (
 	LoggingURL           string
@@ -11,7 +13,10 @@ var (
 	VaultURL             string
 	CacheObj             *cache.Cache
 	RbacURL              string
+	WoodpeckerURL        string
 )
+
+type RequestType string
 
 const (
 	IstioServicePostEndpoint            = "/istio-mesh/deploy"
@@ -42,4 +47,10 @@ const (
 
 	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
 	Rbac_Token_Info          = "/security/api/rbac/token/info"
+
+	POST   RequestType = "post"
+	GET    RequestType = "get"
+	DELETE RequestType = "delete"
+	PUT    RequestType = "put"
+	PATCH  RequestType = "patch"
 )

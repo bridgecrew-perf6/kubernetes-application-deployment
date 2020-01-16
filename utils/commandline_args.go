@@ -52,6 +52,11 @@ func InitFlags() error {
 			EnvVar:      "RBAC_URL",
 			Destination: &constants.RbacURL,
 		},
+		cli.StringFlag{
+			Name:        "woodpecker_url",
+			EnvVar:      "WOODPECKER_URL",
+			Destination: &constants.WoodpeckerURL,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil

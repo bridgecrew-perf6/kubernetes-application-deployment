@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
@@ -102,11 +103,31 @@ func grpcMain() {
 	svc := &core.Server{}
 	pb.RegisterServiceServer(srv, svc)
 
+	pb.RegisterK8SResourceServer(srv, svc)
+	go handleclient()
+
 	// Register reflection service on gRPC server.
 	reflection.Register(srv)
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func handleclient() {
+	conn, err := grpc.Dial("localhost:8094", grpc.WithInsecure())
+	if err != nil {
+		utils.Error.Println(err)
+	}
+
+	_, err = pb.NewK8SResourceClient(conn).GetK8SResource(context.Background(), &pb.K8SResourceRequest{
+		ProjectId: "11",
+		CompanyId: "1111",
+		Token:     "dfsdfsdf",
+	})
+	if err != nil {
+		utils.Error.Println(err)
+	}
+
 }
 
 /*func main_X() {

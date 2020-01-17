@@ -33,6 +33,9 @@ func GetGrpcAgentConnection() (*AgentConnection, error) {
 }
 
 func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, request *proto.ServiceRequest) (data []byte, err error) {
+	//md := metadata.Pairs(
+	//	"name", *GetSha256(&request.ProjectId, &request.CompanyId),
+	//)
 	md := metadata.Pairs(
 		"name", "client2",
 	)
@@ -303,6 +306,57 @@ func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api
 	}
 	utils.Info.Println(response) //status:"successfully deleted all files"
 	return response, err
+}
+
+func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.K8SResourceRequest) (data []byte, err error) {
+	//md := metadata.Pairs(
+	//	"name", *GetSha256(&request.ProjectId, &request.CompanyId),
+	//)
+
+	md := metadata.Pairs(
+		"name", "client2",
+	)
+	ctxWithTimeOut, _ := context.WithTimeout(ctx, 100*time.Second)
+	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+
+	//if request.Name != "" {
+	//	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+	//		Command: "kubectl",
+	//		Args:    []string{"get", request.ResourceKind, request.Name, "-n", request.Namespace, "-o", "json"},
+	//	})
+	//	if err != nil {
+	//		utils.Error.Println(err)
+	//		return data, err
+	//	} else {
+	//        data = []byte(kubectlResp.Stdout[0])
+	//	}
+	//} else {
+	//	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+	//		Command: "kubectl",
+	//		Args:    []string{"get", request.ResourceKind, "-n", request.Namespace, "-o", "json"},
+	//	})
+	//	if err != nil {
+	//		utils.Error.Println(err)
+	//		return data, err
+	//	} else {
+	//		data = []byte(kubectlResp.Stdout[0])
+	//	}
+	//
+	//}
+
+	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: request.Command,
+		Args:    request.Args,
+	})
+	if err != nil {
+		utils.Error.Println(err)
+		return data, err
+	} else {
+		data = []byte(kubectlResp.Stdout[0])
+	}
+
+	return data, err
 }
 
 func GetSha256(projectId, companyId *string) *string {

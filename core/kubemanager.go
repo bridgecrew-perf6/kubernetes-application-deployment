@@ -271,9 +271,9 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		responses[kubeType] = respTemp
 
 	}
-	r, _ := json.Marshal(responses)
+	//r, _ := json.Marshal(responses)
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
-	utils.Info.Println(string(r))
+	utils.Info.Println(responses)
 	return responses, nil
 }
 func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -1722,7 +1722,7 @@ func (agent *AgentConnection) deleteCRDS(key string, data []interface{}, project
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		rest.InClusterConfig()
+		//rest.InClusterConfig()
 		res, _ := agent.crdManager(runtimeConfig[i], "delete")
 		/*//kind to crdplural  for example kind=VirtualService and plural=virtualservices
 		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
@@ -1934,7 +1934,17 @@ func (agent *AgentConnection) patchKubernetesDeployment(data []interface{}, proj
 
 	return resp, nil
 }*/
-func (c *AgentConnection) patchCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+func (agent *AgentConnection) patchCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+	if projectId == "" || companyId == "" {
+		return resp, errors.New("projectId or companyId must not be empty")
+	}
+	md := metadata.Pairs(
+		"name", *GetAgentID(&projectId, &companyId),
+	)
+	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -1949,7 +1959,7 @@ func (c *AgentConnection) patchCRDS(key string, data []interface{}, projectId st
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		responseObj, _ := c.crdManager(runtimeConfig[i], "patch")
+		responseObj, _ := agent.crdManager(runtimeConfig[i], "patch")
 		/*var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
@@ -2137,7 +2147,17 @@ func (c *KubernetesClient) putKubernetesDeployment(data []interface{}) (resp []i
 
 	return resp, nil
 }*/
-func (c *AgentConnection) putCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+func (agent *AgentConnection) putCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
+	if projectId == "" || companyId == "" {
+		return resp, errors.New("projectId or companyId must not be empty")
+	}
+	md := metadata.Pairs(
+		"name", *GetAgentID(&projectId, &companyId),
+	)
+	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -2152,7 +2172,7 @@ func (c *AgentConnection) putCRDS(key string, data []interface{}, projectId stri
 	}
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		responseObj, _ := c.crdManager(runtimeConfig[i], "put")
+		responseObj, _ := agent.crdManager(runtimeConfig[i], "put")
 		/*var responseObj types.SolutionResp
 		raw, err := json.Marshal(runtimeConfig[i])
 		utils.Info.Println(string(raw))
@@ -2426,6 +2446,17 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			utils.Error.Println(err)
 		}
 
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		} else {
+			data = kubectlResp.Stdout
+		}
+
 	case "get":
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
@@ -2470,6 +2501,18 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
 		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		} else {
+			data = kubectlResp.Stdout
+		}
+
 	case "patch":
 		_, err = agent.CreateFile(runtimeObj.Name, string(raw))
 		if err != nil {
@@ -2502,10 +2545,21 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
 		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		} else {
+			data = kubectlResp.Stdout
+		}
 	case "delete":
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},
 		})
 		if err != nil {
 			responseObj.Error = err.Error()
@@ -2529,8 +2583,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	} else {
 		responseObj.Data = data
 
-		dd, _ := json.Marshal(data)
-		utils.Info.Println(string(dd))
+		utils.Info.Println(data)
 	}
 
 	raw, _ = json.Marshal(responseObj)

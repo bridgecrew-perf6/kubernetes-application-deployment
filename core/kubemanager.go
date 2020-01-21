@@ -53,6 +53,19 @@ func GetGrpcAgentConnection() (*AgentConnection, error) {
 	return &AgentConnection{connection: conn}, nil
 }
 
+func (agent *AgentConnection) GetAgentClient(projectId, companyId string) error {
+	if projectId == "" || companyId == "" {
+		return errors.New("projectId or companyId must not be empty")
+	}
+	md := metadata.Pairs(
+		"name", *GetAgentID(&projectId, &companyId),
+	)
+	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+	return nil
+}
+
 func createKubernetesClient(req *types.KubernetesClusterInfo) (config *rest.Config, client *kubernetes.Clientset, err error) {
 	utils.Info.Println("kubernetes api authentication mechanism:", req.ClusterCredentials.Type)
 	switch strings.ToLower(req.ClusterCredentials.Type) {
@@ -220,9 +233,9 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		//}
 
 	}
-	r, _ := json.Marshal(responses)
-	cpContext.SendBackendLogs(string(r), constants.LOGGING_LEVEL_DEBUG)
-	utils.Info.Println(string(r))
+	//r, _ := json.Marshal(responses)
+	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
+	utils.Info.Println(responses)
 	return responses, nil
 }
 func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -2286,21 +2299,32 @@ func (c *KubernetesClient) GetKubernetesService(namespace, name string) (*v12.Se
 	serviceObj := appKubernetes.NewServicesLauncher(c.Client)
 	return serviceObj.GetService(name, namespace)
 }
-func (c *KubernetesClient) GetKubernetesServiceExternalIp(namespace, name string) (string, error) {
-	serviceObj := appKubernetes.NewServicesLauncher(c.Client)
-	svc, err := serviceObj.GetService(name, namespace)
+func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name string) (string, error) {
+
+	resp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubeclt",
+		Args:    []string{"get", "svc", name, "-n", namespace, "-o", "json"},
+	})
 	if err != nil {
-		utils.Error.Println(err)
+		utils.Error.Println("getting ingress external IP", err.Error())
 		return "", err
 	}
+
+	var ingress v12.Service
+	b := []byte(resp.Stdout[0])
+	err = json.Unmarshal(b, &ingress)
+	if err != nil {
+		return "", err
+	}
+
 	externalIp := ""
-	for _, ingress := range svc.Status.LoadBalancer.Ingress {
-		if ingress.IP == "" {
-			externalIp = ingress.Hostname
-		} else {
+	for _, ingress := range ingress.Status.LoadBalancer.Ingress {
+		if ingress.IP != "" {
 			externalIp = ingress.IP
+			break
 		}
 	}
+
 	return externalIp, nil
 }
 func (c *KubernetesClient) DeleteKubernetesService(name, namespace string) error {
@@ -2450,11 +2474,11 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		/*_, err = agent.DeleteFile(name, string(raw))
+		_, err = agent.DeleteFile(name, string(raw))
 		if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
-		}*/
+		}
 
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
@@ -2596,10 +2620,11 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		responseObj.Data = data
 
 		utils.Info.Println(data)
+		utils.Info.Println(responseObj)
 	}
 
-	raw, _ = json.Marshal(responseObj)
-	utils.Info.Println("response payload", string(raw))
+	//raw, _ = json.Marshal(responseObj)
+	utils.Info.Println("response payload", responseObj)
 	return responseObj, nil
 }
 

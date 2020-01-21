@@ -13,6 +13,7 @@ import (
 	"io"
 	"k8s.io/api/apps/v1"
 	v12 "k8s.io/api/core/v1"
+	"sync"
 
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
@@ -39,6 +40,7 @@ type AgentConnection struct {
 	connection  *grpc.ClientConn
 	agentCtx    context.Context
 	agentClient agent_api.AgentServerClient
+	Mux         sync.Mutex
 }
 
 func GetGrpcAgentConnection() (*AgentConnection, error) {
@@ -169,7 +171,7 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
-		return responses, errors.New("invalid request while starting deployment")
+		return responses, errors.New("invalid request while starting depleoyment")
 	}
 	//c, err := GetKubernetesClient(cpContext, req.ProjectId)
 	//if err != nil {
@@ -1137,10 +1139,13 @@ func (agent *AgentConnection) deployCRDS(key string, data []interface{}, project
 		utils.Error.Println(err)
 		return resp, err
 	}
+
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
+		agent.Mux.Lock()
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "post")
 		resp = append(resp, responseObj)
+		agent.Mux.Unlock()
 
 	}
 	if len(errs) >= 1 {
@@ -1433,8 +1438,10 @@ func (agent *AgentConnection) getCRDS(key string, data []interface{}, projectId 
 	}
 	for i := range runtimeConfig {
 		//rest.InClusterConfig()
-		responseObj, _ := agent.crdManager(runtimeConfig[i], "get")
 
+		agent.Mux.Lock()
+		responseObj, _ := agent.crdManager(runtimeConfig[i], "get")
+		agent.Mux.Unlock()
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -1468,6 +1475,7 @@ func (agent *AgentConnection) listCRDS(key string, data []interface{}, projectId
 	}
 	for i := range runtimeConfig {
 		//rest.InClusterConfig()
+
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "list")
 
 		/*
@@ -2367,6 +2375,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		responseObj.Error = "Kind/APIVersion is empty"
 		return responseObj, errors.New("Kind/APIVersion is empty")
 	}
+
 	//kind to crdplural  for example kind=VirtualService and plural=virtualservices
 	crdPlural := inflector.Pluralize(strings.ToLower(runtimeObj.Kind))
 
@@ -2414,7 +2423,8 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		//	}
 		//}
 
-		_, err = agent.CreateFile(runtimeObj.Name, string(raw))
+		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
+		_, err = agent.CreateFile(name, string(raw))
 		if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
@@ -2422,7 +2432,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"create", "-f", "~/" + runtimeObj.Name + ".json"},
+			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil {
 			responseObj.Error = err.Error()
@@ -2437,14 +2447,14 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				responseObj.Error = err.Error()
 				utils.Error.Println(err)
 			}
-			utils.Info.Println(feature.Stdout)
+			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		_, err = agent.DeleteFile(runtimeObj.Name, string(raw))
+		/*_, err = agent.DeleteFile(name, string(raw))
 		if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
-		}
+		}*/
 
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
@@ -2454,6 +2464,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
 		} else {
+			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
 			data = kubectlResp.Stdout
 		}
 
@@ -2577,6 +2588,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			data = kubectlResp.Stdout
 		}
 	}
+
 	if err != nil {
 		responseObj.Error = err.Error()
 		return responseObj, err
@@ -2842,15 +2854,15 @@ func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api
 			{
 				Name: name + ".json",
 				Data: data,
-				Path: "~/",
+				Path: "/tmp/",
 			},
 		},
 	})
 	if err != nil {
-		utils.Error.Println(err)
+		utils.Error.Println(err, " from file")
 		return response, err
 	}
-	utils.Info.Println(response) //status : successfully created all file
+	utils.Info.Println(name, " ", response) //status : successfully created all file
 	return response, err
 }
 
@@ -2861,7 +2873,7 @@ func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api
 			{
 				Name: name + ".json",
 				Data: data,
-				Path: "~/",
+				Path: "/tmp/",
 			},
 		},
 	})

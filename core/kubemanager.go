@@ -2438,6 +2438,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 	//c.Namespaces[namespace] = true
 	if namespace != "" {
+		err = RetryAgentConn(agent)
+		if err != nil {
+			return responseObj, err
+		}
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
 			Args:    []string{"get", "ns", namespace},

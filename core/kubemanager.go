@@ -1187,10 +1187,9 @@ func (agent *AgentConnection) deployCRDS(key string, data []interface{}, project
 
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
-		agent.Mux.Lock()
+
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "post")
 		resp = append(resp, responseObj)
-		agent.Mux.Unlock()
 
 	}
 	if len(errs) >= 1 {
@@ -1484,9 +1483,7 @@ func (agent *AgentConnection) getCRDS(key string, data []interface{}, projectId 
 	for i := range runtimeConfig {
 		//rest.InClusterConfig()
 
-		agent.Mux.Lock()
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "get")
-		agent.Mux.Unlock()
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -2450,7 +2447,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				Command: "kubectl",
 				Args:    []string{"create", "ns", namespace},
 			})
-			if err != nil && strings.Contains(err.Error(), "all SubConns are in TransientFailure") {
+			if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
 				err = RetryAgentConn(agent)
 				if err != nil {
 					return responseObj, err
@@ -2464,7 +2461,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 					responseObj.Error = err.Error()
 					return responseObj, err
 				}
-			} else {
+			} else if err != nil {
 				utils.Error.Println(namespace+"creation failed", err)
 				responseObj.Error = err.Error()
 				return responseObj, err
@@ -2472,30 +2469,15 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			utils.Info.Println(response.Stdout)
 		}
 
-		//_, err = appKubernetes.CreateNameSpace(c.Client, namespace)
-		//if err != nil && !errors2.IsAlreadyExists(err) {
-		//	utils.Error.Println(err)
-		//	responseObj.Error = err.Error()
-		//	return responseObj, err
-		//}
 	}
 
 	var data interface{}
 	switch method {
 	case "post":
-		//data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
-		//for data == nil && err != nil {
-		//	if err.Error() == "" {
-		//		time.Sleep(1 * time.Second)
-		//		data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Create(raw)
-		//	} else {
-		//		break
-		//	}
-		//}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
-		if err != nil && strings.Contains(err.Error(), "all SubConns are in TransientFailure") {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err
@@ -2505,7 +2487,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			if err != nil {
 				responseObj.Error = err.Error()
 			}
-		} else {
+		} else if err != nil {
 			responseObj.Error = err.Error()
 		}
 
@@ -2513,7 +2495,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Command: "kubectl",
 			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
 		})
-		if err != nil && strings.Contains(err.Error(), "all SubConns are in TransientFailure") {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err
@@ -2528,7 +2510,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl stream :", err)
 			}
 
-		} else {
+		} else if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubectl stream :", err)
 		}
@@ -2545,7 +2527,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 
 		_, err = agent.DeleteFile(name, string(raw))
-		if err != nil && strings.Contains(err.Error(), "all SubConns are in TransientFailure") {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err
@@ -2555,7 +2537,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			if err != nil {
 				responseObj.Error = err.Error()
 			}
-		} else {
+		} else if err != nil {
 			responseObj.Error = err.Error()
 		}
 
@@ -2563,7 +2545,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Command: "kubectl",
 			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
-		if err != nil && strings.Contains(err.Error(), "all SubConns are in TransientFailure") {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err

@@ -2345,6 +2345,36 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			}
 		}
 
+		_, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"label", "ns", namespace, "istio-injection=enabled"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || !strings.Contains(err.Error(), "already has a value (enabled)")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			_, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"label", "ns", namespace, "istio-injection=enabled"},
+			})
+			if err != nil && !strings.Contains(err.Error(), "already has a value (enabled)") {
+				utils.Error.Println(namespace+" label attachment failed", err)
+				responseObj.Error = err.Error()
+				return responseObj, err
+			} else if err != nil {
+				utils.Error.Println(namespace+" label attachment failed", err)
+				responseObj.Error = err.Error()
+				return responseObj, err
+			}
+
+		} else if err != nil && !strings.Contains(err.Error(), "already has a value (enabled)") {
+			utils.Error.Println(namespace+" label attachment failed", err)
+			responseObj.Error = err.Error()
+			return responseObj, err
+		}
+
 	}
 
 	//var data interface{}

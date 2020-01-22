@@ -372,15 +372,15 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	//c, err := GetKubernetesClient(cpContext, req.ProjectId)
-	//if err != nil {
-	//	utils.Error.Println(err)
-	//	return responses, err
-	//}
 
-	conn, err := GetGrpcAgentConnection()
+	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
+	}
+
+	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	if err != nil {
+		return responses, err
 	}
 
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
@@ -391,22 +391,7 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 		if len(data) == 0 {
 			continue
 		}
-		respTemp, err = conn.patchCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
-		/*switch kubeType {
-		case constants.KubernetesStatefulSets:
-			respTemp, err = conn.patchStatefulSets(data, *req.ProjectId, cpContext.GetString("company_id"))
-		case constants.KubernetesService:
-			respTemp, err = conn.patchKubernetesService(data, *req.ProjectId, cpContext.GetString("company_id"))
-		case constants.KubernetesConfigMaps:
-			respTemp, err = conn.patchKubernetesConfigMap(data, *req.ProjectId, cpContext.GetString("company_id"))
-		case constants.KubernetesDeployment:
-			respTemp, err = conn.patchKubernetesDeployment(data, *req.ProjectId, cpContext.GetString("company_id"))
-		default:
-			//for now default case is for istio and knative
-			utils.Info.Println(kubeType)
-			respTemp, err = c.patchCRDS(kubeType, data)
-
-		}*/
+		respTemp, err = agent.patchCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -421,11 +406,18 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
-	conn, err := GetGrpcAgentConnection()
+
+	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
+
+	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	if err != nil {
+		return responses, err
+	}
+
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
 	for kubeType, data := range req.ServiceData {
@@ -434,22 +426,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		if len(data) == 0 {
 			continue
 		}
-		respTemp, err = conn.putCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
-		/*switch kubeType {
-		case constants.KubernetesStatefulSets:
-			respTemp, err = c.putStatefulSets(data)
-		case constants.KubernetesService:
-			respTemp, err = c.putKubernetesService(data)
-		case constants.KubernetesConfigMaps:
-			respTemp, err = c.putKubernetesConfigMap(data)
-		case constants.KubernetesDeployment:
-			respTemp, err = c.putKubernetesDeployment(data)
-		default:
-			//for now default case is for istio and knative
-			utils.Info.Println(kubeType)
-			respTemp, err = c.putCRDS(kubeType, data)
-
-		}*/
+		respTemp, err = agent.putCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
 			errs = append(errs, err.Error())
 		} else {
@@ -1118,15 +1095,6 @@ func (agent *AgentConnection) deployKubernetesStorageClasses(data []interface{},
 	return resp, nil
 }*/
 func (agent *AgentConnection) deployCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
-	//if projectId == "" || companyId == "" {
-	//	return resp, errors.New("projectId or companyId must not be empty")
-	//}
-	//md := metadata.Pairs(
-	//	"name", *GetAgentID(&projectId, &companyId),
-	//)
-	//ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
-	//agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
-	//agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
 
 	var errs []string
 	raw, err := json.Marshal(data)
@@ -1932,16 +1900,6 @@ func (agent *AgentConnection) patchKubernetesDeployment(data []interface{}, proj
 	return resp, nil
 }*/
 func (agent *AgentConnection) patchCRDS(key string, data []interface{}, projectId string, companyId string) (resp []interface{}, err error) {
-	if projectId == "" || companyId == "" {
-		return resp, errors.New("projectId or companyId must not be empty")
-	}
-	md := metadata.Pairs(
-		"name", *GetAgentID(&projectId, &companyId),
-	)
-	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
-	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
-	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
-
 	var errs []string
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -1957,43 +1915,6 @@ func (agent *AgentConnection) patchCRDS(key string, data []interface{}, projectI
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "patch")
-		/*var responseObj types.SolutionResp
-		raw, err := json.Marshal(runtimeConfig[i])
-		utils.Info.Println(string(raw))
-		runtimeObj := v1alpha.RuntimeConfig{}
-		if err != nil {
-			utils.Error.Println(err)
-			return resp, err
-		}
-		err = json.Unmarshal(raw, &runtimeObj)
-		if err != nil {
-			utils.Error.Println(err)
-			return resp, err
-		}
-		rest.InClusterConfig()
-		//kind to crdplural  for example kind=VirtualService and plural=virtualservices
-		crdPlural := utils.Pluralize(strings.ToLower(runtimeConfig[i].Kind))
-		namespace := ""
-		if runtimeConfig[i].Namespace == "" {
-			namespace = "default"
-		} else {
-			namespace = runtimeConfig[i].Namespace
-		}
-		alphaClient, err := c.getCRDClient(runtimeConfig[i].APIVersion)
-		if err != nil {
-
-		}
-		data, err := alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig[i].Name, kubernetesTypes.MergePatchType, raw)
-		if err != nil {
-			errs = append(errs, err.Error())
-			responseObj.Error = err.Error()
-			utils.Error.Println("failed to fetch data. Error: ", err)
-		} else {
-			utils.Info.Println("")
-			dd, _ := json.Marshal(data)
-			responseObj.Data = data
-			utils.Info.Println(string(dd))
-		}*/
 		resp = append(resp, responseObj)
 	}
 	if len(errs) >= 1 {
@@ -2298,6 +2219,9 @@ func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name str
 		if ingress.IP != "" {
 			externalIp = ingress.IP
 			break
+		} else if ingress.Hostname != "" {
+			externalIp = ingress.Hostname
+			break
 		}
 	}
 
@@ -2414,8 +2338,8 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				} else {
 					utils.Info.Println(response.Stdout)
 				}
-			} else if err != nil {
-				utils.Error.Println(namespace+"creation failed", err)
+			} else if err != nil && !strings.Contains(err.Error(), "already exists") {
+				utils.Error.Println(namespace+" namespace creation failed", err)
 				responseObj.Error = err.Error()
 				return responseObj, err
 			}
@@ -2423,7 +2347,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 	}
 
-	var data interface{}
+	//var data interface{}
 	var data2 string
 	switch method {
 	case "post":
@@ -2513,14 +2437,14 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl :", err)
 			} else {
 				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-				data = kubectlResp.Stdout
+				data2 = kubectlResp.Stdout[0]
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-			data = kubectlResp.Stdout
+			data2 = kubectlResp.Stdout[0]
 		}
 
 	case "get":
@@ -2542,7 +2466,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl :", err)
 			} else {
 				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-				data = kubectlResp.Stdout
+				data2 = kubectlResp.Stdout[0]
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
@@ -2637,14 +2561,14 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl :", err)
 			} else {
 				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-				data = kubectlResp.Stdout
+				data2 = kubectlResp.Stdout[0]
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-			data = kubectlResp.Stdout
+			data2 = kubectlResp.Stdout[0]
 		}
 
 	case "patch":
@@ -2733,14 +2657,14 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl :", err)
 			} else {
 				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-				data = kubectlResp.Stdout
+				data2 = kubectlResp.Stdout[0]
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-			data = kubectlResp.Stdout
+			data2 = kubectlResp.Stdout[0]
 		}
 	case "delete":
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
@@ -2760,7 +2684,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
 		} else {
-			data = kubectlResp.Stdout
+			data2 = kubectlResp.Stdout[0]
 		}
 	}
 
@@ -2770,7 +2694,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	} else {
 		responseObj.Data = data2
 
-		utils.Info.Println(data)
+		utils.Info.Println(data2)
 		utils.Info.Println(responseObj)
 	}
 

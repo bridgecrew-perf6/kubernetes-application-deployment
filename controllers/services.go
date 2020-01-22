@@ -187,7 +187,7 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 	}
 
 	companyId := cpContext.GetString("company_id")
-	err = agent.GetAgentClient(projectId, companyId)
+	err = agent.InitializeAgentClient(projectId, companyId)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return

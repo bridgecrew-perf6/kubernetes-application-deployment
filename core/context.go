@@ -173,17 +173,14 @@ func (c *Context) GetStringMapStringSlice(key string) (smss map[string][]string)
 }
 
 func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
-	token := ginContext.Request.Header.Get("token")
-	if len(token) <= 0 {
-		return errors.New("invalid token")
+	companyId := ginContext.Request.Header.Get("company_id")
+	user := ginContext.Request.Header.Get("user")
+
+	if companyId == "" || user == "" {
+		return errors.New("user or companyID must not be empty")
 	}
-	tokenInfo, err := utils.TokenInfo(token)
-	if err != nil {
-		return err
-	}
-	c.Set("company_id", tokenInfo["companyId"])
-	c.Set("user", tokenInfo["username"])
-	c.Set("token", token)
+	c.Set("company_id", companyId)
+	c.Set("user", user)
 	return nil
 }
 func (c *Context) InitializeLogger(requestURL, method, path, body, projectId string) {

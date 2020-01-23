@@ -2331,11 +2331,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 					utils.Error.Println(namespace+" namespace creation failed", err)
 					responseObj.Error = err.Error()
 					return responseObj, err
-				} else if err != nil {
-					utils.Error.Println(namespace+" namespace creation failed", err)
-					responseObj.Error = err.Error()
-					return responseObj, err
-				} else {
+				} else if response != nil {
 					utils.Info.Println(response.Stdout)
 				}
 			} else if err != nil && !strings.Contains(err.Error(), "already exists") {
@@ -2360,10 +2356,6 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				Args:    []string{"label", "ns", namespace, "istio-injection=enabled"},
 			})
 			if err != nil && !strings.Contains(err.Error(), "already has a value (enabled)") {
-				utils.Error.Println(namespace+" label attachment failed", err)
-				responseObj.Error = err.Error()
-				return responseObj, err
-			} else if err != nil {
 				utils.Error.Println(namespace+" label attachment failed", err)
 				responseObj.Error = err.Error()
 				return responseObj, err

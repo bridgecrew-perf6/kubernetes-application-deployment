@@ -176,6 +176,8 @@ func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
 	companyId := ginContext.Request.Header.Get("company_id")
 	user := ginContext.Request.Header.Get("user")
 
+	//companyId := "5d945edc2dcc2f00089d8476"
+	//user := "asma.sardar@cloudplex.io"
 	if companyId == "" || user == "" {
 		return errors.New("user or companyID must not be empty")
 	}

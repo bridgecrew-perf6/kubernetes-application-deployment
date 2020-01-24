@@ -2415,14 +2415,16 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 		for {
 			feature, err := kubectlStreamResp.Recv()
-			if err == io.EOF {
+			if err == io.EOF || err == nil {
 				break
 			}
 			if err != nil {
-				responseObj.Error = err.Error()
+				//responseObj.Error = err.Error()
 				utils.Error.Println("kubectl stream reading :", err)
+				break
+			} else {
+				utils.Info.Println(feature.Stdout, feature.Stderr)
 			}
-			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
 		_, err = agent.DeleteFile(name, string(raw))

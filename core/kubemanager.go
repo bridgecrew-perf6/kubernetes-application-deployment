@@ -2376,7 +2376,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err
@@ -2390,6 +2390,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error()
 		}
 
+		flag := true
 		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
 			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
@@ -2400,6 +2401,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				return responseObj, err
 			}
 
+			flag = false
 			kubectlStreamResp, err = agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
 				Command: "kubectl",
 				Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
@@ -2409,36 +2411,52 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println("kubectl stream :", err)
 			}
 
+			for {
+				feature, err := kubectlStreamResp.Recv()
+				if err == io.EOF || err == nil {
+					break
+				}
+				if err != nil {
+					//responseObj.Error = err.Error()
+					utils.Error.Println("kubectl stream reading :", err)
+					break
+				} else {
+					utils.Info.Println(feature.Stdout, feature.Stderr)
+				}
+			}
+
 		} else if err != nil {
 			responseObj.Error = err.Error()
 			utils.Error.Println("kubectl stream :", err)
 		}
-		for {
+		for flag {
 			feature, err := kubectlStreamResp.Recv()
-			if err == io.EOF {
+			if err == io.EOF || err == nil {
 				break
 			}
 			if err != nil {
-				responseObj.Error = err.Error()
+				//responseObj.Error = err.Error()
 				utils.Error.Println("kubectl stream reading :", err)
+				break
+			} else {
+				utils.Info.Println(feature.Stdout, feature.Stderr)
 			}
-			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		_, err = agent.DeleteFile(name, string(raw))
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-			err = RetryAgentConn(agent)
-			if err != nil {
-				return responseObj, err
-			}
-
-			_, err = agent.DeleteFile(name, string(raw))
-			if err != nil {
-				responseObj.Error = err.Error()
-			}
-		} else if err != nil {
-			responseObj.Error = err.Error()
-		}
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
 
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",

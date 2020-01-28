@@ -2415,122 +2415,69 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		//}
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
-			kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-				Command: "kubectl",
-				Args:    []string{"get", "ksvc", runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-			})
-			if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-				err = RetryAgentConn(agent)
-				if err != nil {
-					return responseObj, err
-				}
+			runtimeObj.Kind = "ksvc"
+		}
 
-				kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-					Command: "kubectl",
-					Args:    []string{"get", "ksvc", runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-				})
-				if err != nil {
-					responseObj.Error = err.Error()
-					utils.Error.Println("kubectl :", err)
-				} else {
-					fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-					data2 = kubectlResp.Stdout[0]
-				}
-			} else if err != nil {
-				responseObj.Error = err.Error()
-				utils.Error.Println("kubectl :", err)
-			} else {
-				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-				data2 = kubectlResp.Stdout[0]
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
 			}
-		} else {
-			kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 				Command: "kubectl",
 				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 			})
-			if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-				err = RetryAgentConn(agent)
-				if err != nil {
-					return responseObj, err
-				}
-
-				kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-					Command: "kubectl",
-					Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-				})
-				if err != nil {
-					responseObj.Error = err.Error()
-					utils.Error.Println("kubectl :", err)
-				} else {
-					fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-					data2 = kubectlResp.Stdout[0]
-				}
-			} else if err != nil {
+			if err != nil {
 				responseObj.Error = err.Error()
 				utils.Error.Println("kubectl :", err)
 			} else {
 				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
 				data2 = kubectlResp.Stdout[0]
 			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl :", err)
+		} else {
+			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+			data2 = kubectlResp.Stdout[0]
 		}
 
 	case "get":
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
-			kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-				Command: "kubectl",
-				Args:    []string{"get", "ksvc", runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-			})
-			if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-				err = RetryAgentConn(agent)
-				if err != nil {
-					return responseObj, err
-				}
-				kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-					Command: "kubectl",
-					Args:    []string{"get", "ksvc", runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-				})
-				if err != nil {
-					responseObj.Error = err.Error()
-					utils.Error.Println("kubectl :", err)
-				} else {
-					fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-					data2 = kubectlResp.Stdout[0]
-				}
-			} else if err != nil {
-				responseObj.Error = err.Error()
-				utils.Error.Println(err)
-			} else {
-				data2 = kubectlResp.Stdout[0]
+			runtimeObj.Kind = "ksvc"
+		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
 			}
-		} else {
-			kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 				Command: "kubectl",
 				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 			})
-			if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-				err = RetryAgentConn(agent)
-				if err != nil {
-					return responseObj, err
-				}
-				kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
-					Command: "kubectl",
-					Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
-				})
-				if err != nil {
-					responseObj.Error = err.Error()
-					utils.Error.Println("kubectl :", err)
-				} else {
-					fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
-					data2 = kubectlResp.Stdout[0]
-				}
-			} else if err != nil {
+			if err != nil {
 				responseObj.Error = err.Error()
-				utils.Error.Println(err)
+				utils.Error.Println("kubectl :", err)
 			} else {
+				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
 				data2 = kubectlResp.Stdout[0]
 			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		} else {
+			data2 = kubectlResp.Stdout[0]
 		}
-
 	case "put":
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
@@ -2573,12 +2520,13 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 		for {
 			feature, err := kubectlStreamResp.Recv()
-			if err == io.EOF {
+			if err == io.EOF || err == nil {
 				break
 			}
 			if err != nil {
 				responseObj.Error = err.Error()
 				utils.Error.Println("kubectl stream reading :", err)
+				break
 			}
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
@@ -2596,6 +2544,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
+		}
+
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
 		}
 
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
@@ -2669,12 +2621,13 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 		for {
 			feature, err := kubectlStreamResp.Recv()
-			if err == io.EOF {
+			if err == io.EOF || err == nil {
 				break
 			}
 			if err != nil {
 				responseObj.Error = err.Error()
 				utils.Error.Println("kubectl stream reading :", err)
+				break
 			}
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
@@ -2692,6 +2645,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			}
 		} else if err != nil {
 			responseObj.Error = err.Error()
+		}
+
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
 		}
 
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
@@ -2723,6 +2680,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			data2 = kubectlResp.Stdout[0]
 		}
 	case "delete":
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
+		}
+
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
 			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},

@@ -2351,7 +2351,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Command: "kubectl",
 			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
 		})
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "transport is closing")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err
@@ -2600,7 +2600,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Command: "kubectl",
 			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
 		})
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "transport is closing")) {
 			err = RetryAgentConn(agent)
 			if err != nil {
 				return responseObj, err

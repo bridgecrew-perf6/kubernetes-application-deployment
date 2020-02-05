@@ -4,6 +4,7 @@ import (
 	agent_api "bitbucket.org/cloudplex-devs/woodpecker/agent-api"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core/proto"
 	"kubernetes-services-deployment/utils"
+	"sync"
 	"time"
 )
 
@@ -20,16 +22,62 @@ type AgentConnection struct {
 	connection  *grpc.ClientConn
 	agentCtx    context.Context
 	agentClient agent_api.AgentServerClient
+	projectId   string
+	companyId   string
+	Mux         sync.Mutex
+}
+
+func RetryAgentConn(agent *AgentConnection) error {
+	count := 0
+	flag := true
+	for flag && count < 5 {
+		conn, err := GetGrpcAgentConnection()
+		if err != nil {
+			count++
+		} else {
+			agent.connection = conn.connection
+			agent.InitializeAgentClient(agent.projectId, agent.companyId)
+			flag = false
+		}
+
+		time.Sleep(time.Second * 5)
+	}
+
+	if count == 5 {
+		utils.Error.Println(errors.New("connection cant be established"))
+		return errors.New("connection cant be established")
+	}
+	return nil
 }
 
 func GetGrpcAgentConnection() (*AgentConnection, error) {
 	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure())
 	if err != nil {
-		utils.Error.Println(err)
+		utils.Error.Println("error while connecting with agent :", err)
 		return &AgentConnection{}, err
 	}
 
 	return &AgentConnection{connection: conn}, nil
+}
+
+func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string) error {
+	if projectId == "" || companyId == "" {
+		return errors.New("projectId or companyId must not be empty")
+	}
+	md := metadata.Pairs(
+		"name", *GetAgentID(&projectId, &companyId),
+	)
+	agent.projectId = projectId
+	agent.companyId = companyId
+	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+	return nil
+}
+
+func GetAgentID(projectId, companyId *string) *string {
+	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *projectId, *companyId)))
+	return &base
 }
 
 func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, request *proto.ServiceRequest) (data []byte, err error) {

@@ -104,7 +104,7 @@ func grpcMain() {
 	pb.RegisterServiceServer(srv, svc)
 
 	pb.RegisterK8SResourceServer(srv, svc)
-	go handleclient()
+	//go handleclient()
 
 	// Register reflection service on gRPC server.
 	reflection.Register(srv)

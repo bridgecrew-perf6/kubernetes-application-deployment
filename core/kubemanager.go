@@ -222,6 +222,8 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		return responses, err
 	}
 
+	defer agent.connection.Close()
+
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
 		return responses, err
@@ -254,6 +256,8 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if err != nil {
 		utils.Error.Println(err)
 	}
+
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -290,6 +294,8 @@ func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respo
 		utils.Error.Println(err)
 	}
 
+	defer agent.connection.Close()
+
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
 		return responses, err
@@ -323,6 +329,8 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 	if err != nil {
 		utils.Error.Println(err)
 	}
+
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -363,6 +371,8 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 		utils.Error.Println(err)
 	}
 
+	defer agent.connection.Close()
+
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
 		return responses, err
@@ -397,6 +407,8 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		utils.Error.Println(err)
 		return responses, err
 	}
+
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {

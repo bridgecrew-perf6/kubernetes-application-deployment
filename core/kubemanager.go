@@ -265,7 +265,7 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
-		utils.Error.Println(err)
+		return responses, err
 	}
 
 	defer agent.connection.Close()

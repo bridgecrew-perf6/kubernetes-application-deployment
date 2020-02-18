@@ -9,6 +9,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"io"
 	"k8s.io/api/apps/v1"
@@ -46,6 +47,10 @@ type AgentConnection struct {
 }
 
 func RetryAgentConn(agent *AgentConnection) error {
+	err := agent.connection.Close()
+	if err != nil {
+		utils.Error.Println("error while closing connection :", err.Error())
+	}
 	count := 0
 	flag := true
 	for flag && count < 5 {
@@ -69,7 +74,13 @@ func RetryAgentConn(agent *AgentConnection) error {
 }
 
 func GetGrpcAgentConnection() (*AgentConnection, error) {
-	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure())
+	var kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
+
+	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 	if err != nil {
 		utils.Error.Println("error while connecting with agent :", err)
 		return &AgentConnection{}, err
@@ -222,6 +233,8 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		return responses, err
 	}
 
+	defer agent.connection.Close()
+
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
 		return responses, err
@@ -254,6 +267,8 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if err != nil {
 		utils.Error.Println(err)
 	}
+
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -290,6 +305,8 @@ func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respo
 		utils.Error.Println(err)
 	}
 
+	defer agent.connection.Close()
+
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
 		return responses, err
@@ -323,6 +340,8 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 	if err != nil {
 		utils.Error.Println(err)
 	}
+
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -362,6 +381,7 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 	if err != nil {
 		utils.Error.Println(err)
 	}
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -397,6 +417,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		utils.Error.Println(err)
 		return responses, err
 	}
+	defer agent.connection.Close()
 
 	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
 	if err != nil {
@@ -2163,6 +2184,8 @@ func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name str
 		return "", err
 	}
 
+	defer agent.connection.Close()
+
 	var ingress v12.Service
 	b := []byte(resp.Stdout[0])
 	err = json.Unmarshal(b, &ingress)
@@ -2531,20 +2554,20 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		_, err = agent.DeleteFile(name, string(raw))
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
-			err = RetryAgentConn(agent)
-			if err != nil {
-				return responseObj, err
-			}
-
-			_, err = agent.DeleteFile(name, string(raw))
-			if err != nil {
-				responseObj.Error = err.Error()
-			}
-		} else if err != nil {
-			responseObj.Error = err.Error()
-		}
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"
@@ -2580,6 +2603,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 
 	case "patch":
+
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
@@ -2625,27 +2649,27 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				break
 			}
 			if err != nil {
-				responseObj.Error = err.Error()
+				//responseObj.Error = err.Error()
 				utils.Error.Println("kubectl stream reading :", err)
 				break
 			}
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		_, err = agent.DeleteFile(name, string(raw))
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
-			err = RetryAgentConn(agent)
-			if err != nil {
-				return responseObj, err
-			}
-
-			_, err = agent.DeleteFile(name, string(raw))
-			if err != nil {
-				responseObj.Error = err.Error()
-			}
-		} else if err != nil {
-			responseObj.Error = err.Error()
-		}
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"

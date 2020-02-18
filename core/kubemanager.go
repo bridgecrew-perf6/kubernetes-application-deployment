@@ -49,7 +49,7 @@ func RetryAgentConn(agent *AgentConnection) error {
 	count := 0
 	flag := true
 	for flag && count < 5 {
-		conn, err := GetGrpcAgentConnection()
+		conn, err := GetGrpcAgentConnection(agent.projectId, agent.companyId)
 		if err != nil {
 			count++
 		} else {
@@ -68,14 +68,25 @@ func RetryAgentConn(agent *AgentConnection) error {
 	return nil
 }
 
-func GetGrpcAgentConnection() (*AgentConnection, error) {
-	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure())
-	if err != nil {
-		utils.Error.Println("error while connecting with agent :", err)
-		return &AgentConnection{}, err
+func GetGrpcAgentConnection(projectId string, companyId string) (*AgentConnection, error) {
+
+	if projectId == "" || companyId == "" {
+		return &AgentConnection{}, errors.New("projectId or companyId must not be empty")
 	}
 
-	return &AgentConnection{connection: conn}, nil
+	data, isExist := constants.CacheObj.Get(*GetAgentID(&projectId, &companyId))
+	if isExist {
+		agent := data.(AgentConnection)
+		return &agent, nil
+	} else {
+		conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure())
+		if err != nil {
+			utils.Error.Println("error while connecting with agent :", err)
+			return &AgentConnection{}, err
+		}
+		constants.CacheObj.Set(*GetAgentID(&projectId, &companyId), AgentConnection{connection: conn}, cache.DefaultExpiration)
+		return &AgentConnection{connection: conn}, nil
+	}
 }
 
 func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string) error {
@@ -217,14 +228,13 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 	var errs []string
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -241,9 +251,15 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		responses[kubeType] = respTemp
 
 	}
-	//r, _ := json.Marshal(responses)
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	utils.Info.Println(responses)
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -252,14 +268,13 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		return responses, errors.New("invalid request while starting deployment")
 	}
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
-		utils.Error.Println(err)
+		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -278,9 +293,15 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		responses[kubeType] = respTemp
 
 	}
-	//r, _ := json.Marshal(responses)
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	utils.Info.Println(responses)
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -289,14 +310,13 @@ func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respo
 		return responses, errors.New("invalid request while starting deployment")
 	}
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
-		utils.Error.Println(err)
+		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -317,6 +337,13 @@ func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respo
 	r, _ := json.Marshal(responses)
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
 	utils.Info.Println(string(r))
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -325,14 +352,13 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 		return responses, errors.New("invalid request while starting deployment")
 	}
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
-		utils.Error.Println(err)
+		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -357,6 +383,13 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 
 	}
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -366,14 +399,13 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 		return responses, errors.New("invalid request while starting deployment")
 	}
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
-		utils.Error.Println(err)
+		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -394,6 +426,13 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 
 	}
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (responses map[string]interface{}, err error) {
@@ -402,15 +441,13 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		return responses, errors.New("invalid request while starting deployment")
 	}
 
-	agent, err := GetGrpcAgentConnection()
+	companyId := cpContext.GetString("company_id")
+	agent, err := GetGrpcAgentConnection(*req.ProjectId, companyId)
 	if err != nil {
-		utils.Error.Println(err)
 		return responses, err
 	}
 
-	defer agent.connection.Close()
-
-	err = agent.InitializeAgentClient(*req.ProjectId, cpContext.GetString("company_id"))
+	err = agent.InitializeAgentClient(*req.ProjectId, companyId)
 	if err != nil {
 		return responses, err
 	}
@@ -432,6 +469,13 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		}
 	}
 	cpContext.SendBackendLogs(responses, constants.LOGGING_LEVEL_DEBUG)
+	defer func() {
+		items := constants.CacheObj.Items()
+		if items[*GetAgentID(req.ProjectId, &companyId)].Expired() {
+			items[*GetAgentID(req.ProjectId, &companyId)].Object.(AgentConnection).connection.Close()
+			constants.CacheObj.DeleteExpired()
+		}
+	}()
 	return responses, nil
 }
 
@@ -2175,6 +2219,8 @@ func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name str
 		return "", err
 	}
 
+	defer agent.connection.Close()
+
 	var ingress v12.Service
 	b := []byte(resp.Stdout[0])
 	err = json.Unmarshal(b, &ingress)
@@ -2644,20 +2690,20 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			utils.Info.Println(feature.Stdout, feature.Stderr)
 		}
 
-		_, err = agent.DeleteFile(name, string(raw))
-		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
-			err = RetryAgentConn(agent)
-			if err != nil {
-				return responseObj, err
-			}
-
-			_, err = agent.DeleteFile(name, string(raw))
-			if err != nil {
-				responseObj.Error = err.Error()
-			}
-		} else if err != nil {
-			responseObj.Error = err.Error()
-		}
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"

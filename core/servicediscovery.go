@@ -16,13 +16,21 @@ func (s *Server) GetK8SResource(ctx context.Context, request *pb.K8SResourceRequ
 		return &pb.K8SResourceResponse{}, errors.New("projectId or companyId must not be empty")
 	}
 
-	conn, err := GetGrpcAgentConnection()
+	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 		return &pb.K8SResourceResponse{}, err
 	}
 
-	resp, err := conn.GetK8sResources(ctx, request)
+	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
+	if err != nil {
+		utils.Error.Println(err)
+		return &pb.K8SResourceResponse{}, err
+	}
+
+	defer agent.connection.Close()
+
+	resp, err := agent.GetK8sResources(ctx, request)
 	if err != nil {
 		return &pb.K8SResourceResponse{}, err
 	}

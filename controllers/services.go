@@ -179,13 +179,21 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 		return
 	}
 	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
-	kubeClient, err := core.GetKubernetesClient(cpContext, &projectId)
+
+	companyId := cpContext.GetString("company_id")
+	agent, err := core.GetGrpcAgentConnection()
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return
 	}
 
-	data, err := kubeClient.GetKubernetesServiceExternalIp(namespace, name)
+	err = agent.InitializeAgentClient(projectId, companyId)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		return
+	}
+
+	data, err := agent.GetKubernetesServiceExternalIp(namespace, name)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return

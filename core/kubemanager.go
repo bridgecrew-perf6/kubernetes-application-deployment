@@ -2180,8 +2180,20 @@ func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name str
 		Args:    []string{"get", "svc", name, "-n", namespace, "-o", "json"},
 	})
 	if err != nil {
-		utils.Error.Println("getting ingress external IP", err.Error())
-		return "", err
+		err = RetryAgentConn(agent)
+		if err != nil {
+			utils.Error.Print(err)
+			return "", err
+		}
+
+		resp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubeclt",
+			Args:    []string{"get", "svc", name, "-n", namespace, "-o", "json"},
+		})
+		if err != nil {
+			utils.Error.Println("getting ingress external IP", err.Error())
+			return "", err
+		}
 	}
 
 	defer agent.connection.Close()

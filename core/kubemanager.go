@@ -93,8 +93,12 @@ func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string)
 	if projectId == "" || companyId == "" {
 		return errors.New("projectId or companyId must not be empty")
 	}
+	//md := metadata.Pairs(
+	//	"name", *GetAgentID(&projectId, &companyId),
+	//)
+
 	md := metadata.Pairs(
-		"name", *GetAgentID(&projectId, &companyId),
+		"name", "client2",
 	)
 	agent.projectId = projectId
 	agent.companyId = companyId

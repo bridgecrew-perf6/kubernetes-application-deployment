@@ -2617,6 +2617,14 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	case "patch":
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
+		_, err = agent.DeleteFile(name, string(raw))
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "no registered agent with")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+			_, _ = agent.DeleteFile(name, string(raw))
+		}
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "no registered agent with")) {
 			err = RetryAgentConn(agent)
@@ -2657,7 +2665,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 		for {
 			feature, err := kubectlStreamResp.Recv()
-			if err == io.EOF || err == nil {
+			if err == io.EOF {
 				break
 			}
 			if err != nil {

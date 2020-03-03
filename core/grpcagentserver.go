@@ -7,6 +7,7 @@ import (
 	"errors"
 	"google.golang.org/grpc/metadata"
 	"io"
+	v12 "k8s.io/api/core/v1"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core/proto"
 	"kubernetes-services-deployment/utils"
@@ -263,4 +264,29 @@ func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *prot
 	}
 
 	return data, err
+}
+
+func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
+	response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"get", "ns", "-o", "json"},
+	})
+	if err != nil {
+		utils.Error.Println(err)
+		return []string{}, err
+	}
+
+	var namespaces []v12.Namespace
+	err = json.Unmarshal([]byte(response.Stdout[0]), &namespaces)
+	if err != nil {
+		utils.Error.Println(err)
+		return []string{}, err
+	}
+
+	var namespaceResp []string
+	for _, namespace := range namespaces {
+		namespaceResp = append(namespaceResp, namespace.Name)
+	}
+
+	return namespaceResp, nil
 }

@@ -93,8 +93,8 @@ func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string)
 	if projectId == "" || companyId == "" {
 		return errors.New("projectId or companyId must not be empty")
 	}
-	projectId = "application-serdis1"
-	companyId = "5d945edc2dcc2f00089d8476"
+	//projectId = "ahmadtele"
+	//companyId = "5d945edc2dcc2f00089d8476"
 	md := metadata.Pairs(
 		"name", *GetAgentID(&projectId, &companyId),
 	)

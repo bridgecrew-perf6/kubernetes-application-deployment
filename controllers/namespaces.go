@@ -41,19 +41,19 @@ func (c *KubeController) GetAllNamespaces(g *gin.Context) {
 	companyId := cpContext.GetString("company_id")
 	agent, err := core.GetGrpcAgentConnection()
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"namespaces": "", "error": err.Error()})
 		return
 	}
 
 	err = agent.InitializeAgentClient(projectid, companyId)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"namespaces": "", "error": err.Error()})
 		return
 	}
 
 	namespaces, err := agent.GetAllNameSpaces()
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		g.JSON(http.StatusInternalServerError, gin.H{"namespaces": "", "error": err.Error()})
 		return
 	}
 	g.JSON(http.StatusOK, gin.H{"error": "", "namespaces": namespaces})

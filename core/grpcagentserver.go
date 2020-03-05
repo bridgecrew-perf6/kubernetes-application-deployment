@@ -276,7 +276,7 @@ func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
 		return []string{}, err
 	}
 
-	var namespaces []v12.Namespace
+	var namespaces v12.NamespaceList
 	err = json.Unmarshal([]byte(response.Stdout[0]), &namespaces)
 	if err != nil {
 		utils.Error.Println(err)
@@ -284,7 +284,7 @@ func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
 	}
 
 	var namespaceResp []string
-	for _, namespace := range namespaces {
+	for _, namespace := range namespaces.Items {
 		namespaceResp = append(namespaceResp, namespace.Name)
 	}
 

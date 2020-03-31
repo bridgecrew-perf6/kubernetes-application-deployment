@@ -932,6 +932,30 @@ func (agent *AgentConnection) deployKubernetesPVC(data []interface{}, projectId 
 		raw, err := json.Marshal(req[i])
 		_, err = agent.CreateFile(req[i].Name, string(raw))
 		if err != nil {
+
+		if req[i].Namespace != "" {
+			_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", "ns", req[i].Namespace},
+			})
+			if err != nil {
+				response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+					Command: "kubectl",
+					Args:    []string{"create", "ns", req[i].Namespace},
+				})
+				if err != nil {
+					errs = append(errs, err.Error())
+					responseObj.Error = err.Error()
+					utils.Error.Println(err)
+					return resp, err
+				}
+				utils.Info.Println(response.Stdout)
+			}
+		}
+
+		raw, err := json.Marshal(req[i])
+		_, err = agent.CreateFile(req[i].Name, string(raw))
+		if err != nil {
 			errs = append(errs, err.Error())
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
@@ -2268,7 +2292,7 @@ func findKey(istiojsonData map[string]interface{}, key string) (string, error) {
 	return data, nil
 }
 
-func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method constants.RequestType) (responseObj types.SolutionResp, err error) {
+func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method string) (responseObj types.SolutionResp, err error) {
 
 	raw, err := json.Marshal(runtimeConfig)
 	utils.Info.Println(string(raw))
@@ -2363,7 +2387,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method const
 	//var data interface{}
 	var data2 string
 	switch method {
-	case constants.POST:
+	case "post":
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
@@ -2797,38 +2821,299 @@ case constants.GET:
 					break
 				}
 			}
-		case constants.PATCH:
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), kubernetesTypes.MergePatchType, raw)
-			for data == nil && err != nil {
-				if err.Error() == "" {
-					time.Sleep(1 * time.Second)
-					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Patch(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), kubernetesTypes.MergePatchType, raw)
-				} else {
-					break
-				}
-			}
-		case constants.DELETE:
-			err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Delete(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string), &v13.DeleteOptions{})
+
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+			})
 			if err != nil {
 				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl :", err)
+			} else {
+				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+				data2 = kubectlResp.Stdout[0]
+			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl :", err)
+		} else {
+			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+			data2 = kubectlResp.Stdout[0]
+		}
+
+	case "get":
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
+		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
 				return responseObj, err
 			}
-		case constants.LIST:
-			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
-			for data == nil && err != nil {
-				if err.Error() == "" {
-					time.Sleep(1 * time.Second)
-					data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).List(v13.ListOptions{})
-				} else {
-					break
-				}
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+			})
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl :", err)
+			} else {
+				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+				data2 = kubectlResp.Stdout[0]
 			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		} else {
+			data2 = kubectlResp.Stdout[0]
 		}
+	case "put":
+		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
+		_, err = agent.CreateFile(name, string(raw))
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			_, err = agent.CreateFile(name, string(raw))
+			if err != nil {
+				responseObj.Error = err.Error()
+			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+		}
+
+		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			kubectlStreamResp, err = agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
+			})
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl stream :", err)
+			}
+
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl stream :", err)
+		}
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF || err == nil {
+				break
+			}
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl stream reading :", err)
+				break
+			}
+			utils.Info.Println(feature.Stdout, feature.Stderr)
+		}
+
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
+
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
+		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+			})
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl :", err)
+			} else {
+				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+				data2 = kubectlResp.Stdout[0]
+			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl :", err)
+		} else {
+			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+			data2 = kubectlResp.Stdout[0]
+		}
+
+	case "patch":
+
+		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
+		_, err = agent.CreateFile(name, string(raw))
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			_, err = agent.CreateFile(name, string(raw))
+			if err != nil {
+				responseObj.Error = err.Error()
+			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+		}
+
+		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "transport is closing")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			kubectlStreamResp, err = agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
+			})
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl stream :", err)
+			}
+
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl stream :", err)
+		}
+		for {
+			feature, err := kubectlStreamResp.Recv()
+			if err == io.EOF || err == nil {
+				break
+			}
+			if err != nil {
+				//responseObj.Error = err.Error()
+				utils.Error.Println("kubectl stream reading :", err)
+				break
+			}
+			utils.Info.Println(feature.Stdout, feature.Stderr)
+		}
+
+		//_, err = agent.DeleteFile(name, string(raw))
+		//if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+		//	err = RetryAgentConn(agent)
+		//	if err != nil {
+		//		return responseObj, err
+		//	}
+		//
+		//	_, err = agent.DeleteFile(name, string(raw))
+		//	if err != nil {
+		//		responseObj.Error = err.Error()
+		//	}
+		//} else if err != nil {
+		//	responseObj.Error = err.Error()
+		//}
+
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
+		}
+
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
+			})
+			if err != nil {
+				responseObj.Error = err.Error()
+				utils.Error.Println("kubectl :", err)
+			} else {
+				fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+				data2 = kubectlResp.Stdout[0]
+			}
+		} else if err != nil {
+			responseObj.Error = err.Error()
+			utils.Error.Println("kubectl :", err)
+		} else {
+			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
+			data2 = kubectlResp.Stdout[0]
+		}
+	case "delete":
+		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			runtimeObj.Kind = "ksvc"
+		}
+
+		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},
+		})
+		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || !strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout")) {
+			err = RetryAgentConn(agent)
+			if err != nil {
+				return responseObj, err
+			}
+
+			_, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				Command: "kubectl",
+				Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},
+			})
+			if err != nil && !strings.Contains(err.Error(), "not found") {
+				responseObj.Error = err.Error()
+				utils.Error.Println(err)
+			}
+
+		} else if err != nil && !strings.Contains(err.Error(), "not found") {
+			responseObj.Error = err.Error()
+			utils.Error.Println(err)
+		}
+	case "list":
+		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"get", runtimeObj.Kind, "-n", runtimeObj.Namespace, "-o", "json"},
+		})
 		if err != nil {
 			responseObj.Error = err.Error()
-			return responseObj, err
+			utils.Error.Println(err)
 		} else {
-			responseObj.Data = data
+			data2 = kubectlResp.Stdout[0]
+		}
+	}
 
 			dd, _ := json.Marshal(data)
 			utils.Info.Println(string(dd))
@@ -3121,3 +3406,291 @@ func GetAgentID(projectId, companyId *string) *string {
 	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *projectId, *companyId)))
 	return &base
 }
+
+//func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, data []interface{}, projectId string, companyId string, kubeType string) (resp []interface{}, err error) {
+//
+//	if projectId == "" || companyId == ""{
+//		return
+//	}
+//	md := metadata.Pairs(
+//		"name", *GetSha256(&projectId, &companyId),
+//	)
+//	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+//	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
+//	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
+//
+//	var req interface{}
+//	switch kubeType {
+//	case constants.KubernetesStatefulSets:
+//		raw, err := json.Marshal(data)
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return resp, err
+//		}
+//		req = []v1.StatefulSet{}
+//		err = json.Unmarshal(raw, &req)
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return resp, err
+//		}
+//
+//	case constants.KubernetesService:
+//
+//	case constants.KubernetesConfigMaps:
+//
+//	case constants.KubernetesDeployment:
+//
+//	case constants.KubernetesPersistentVolumeClaims:
+//
+//	case constants.KubernetesStorageClasses:
+//
+//	default:
+//		//for now default case is for istio and knative
+//		respTemp, err = c.deployCRDS(kubeType, data)
+//	}
+//	switch method {
+//	case constants.POST:
+//		for i := range req {
+//			var responseObj types.SolutionResp
+//
+//			if req[i].Namespace != "" {
+//				_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//					Command: "kubectl",
+//					Args:    []string{"get", "ns", req[i].Namespace},
+//				})
+//				if err != nil {
+//					response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//						Command: "kubectl",
+//						Args:    []string{"create", "ns", req[i].Namespace},
+//					})
+//					if err != nil {
+//						errs = append(errs, err.Error())
+//						responseObj.Error = err.Error()
+//						utils.Error.Println(err)
+//						return resp, err
+//					}
+//					utils.Info.Println(response.Stdout)
+//				}
+//			}
+//
+//			raw, err := json.Marshal(req[i])
+//			_, err = agent.CreateFile(req[i].Name, string(raw))
+//			if err != nil {
+//				errs = append(errs, err.Error())
+//				responseObj.Error = err.Error()
+//				utils.Error.Println(err)
+//				return resp, err
+//			}
+//
+//			kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//				Command: "kubectl",
+//				Args:    []string{"create", "-f", "~/" + req[i].Name + ".json"},
+//			})
+//			if err != nil {
+//				errs = append(errs, err.Error())
+//				responseObj.Error = err.Error()
+//				utils.Error.Println(err)
+//				return resp, err
+//			}
+//			for {
+//				feature, err := kubectlStreamResp.Recv()
+//				if err == io.EOF {
+//					break
+//				}
+//				if err != nil {
+//					errs = append(errs, err.Error())
+//					responseObj.Error = err.Error()
+//					utils.Error.Println(err)
+//					return resp, err
+//				}
+//				utils.Info.Println(feature.Stdout)
+//			}
+//
+//			_, err = agent.DeleteFile(req[i].Name, string(raw))
+//			if err != nil {
+//				utils.Error.Println(err)
+//				return resp, err
+//			}
+//
+//			kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//				Command: "kubectl",
+//				Args:    []string{"get", req[i].Kind, req[i].Name, "-n", req[i].Namespace, "-o", "json"},
+//			})
+//			if err != nil {
+//				errs = append(errs, err.Error())
+//				responseObj.Error = err.Error()
+//				utils.Error.Println(err)
+//				return resp, err
+//			} else {
+//				responseObj.Data = kubectlResp.Stdout
+//				utils.Info.Println("kubernetes statefulsets deployed successfully")
+//			}
+//			raw, _ = json.Marshal(responseObj)
+//			utils.Info.Println("response payload", string(raw))
+//			resp = append(resp, responseObj)
+//		}
+//	case constants.GET:
+//		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"get", kind, name, "-n", namespace, "-o", "json"},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		} else {
+//			data, _ = json.Marshal(kubectlResp.Stdout)
+//		}
+//	case constants.DELETE:
+//		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"delete", kind, name, "-n", namespace},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		} else {
+//			data, _ = json.Marshal(kubectlResp.Stdout)
+//		}
+//	case constants.PATCH:
+//
+//		_, err = agent.CreateFile(name, string(request.Service))
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"apply", "-f", "~/" + name + ".json"},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//		for {
+//			feature, err := kubectlStreamResp.Recv()
+//			if err == io.EOF {
+//				break
+//			}
+//			if err != nil {
+//				utils.Error.Println(err)
+//			}
+//			utils.Info.Println(feature.Stdout)
+//		}
+//
+//		_, err = agent.DeleteFile(name, string(request.Service))
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//
+//		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"get", kind, name, "-n", namespace, "-o", "json"},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		} else {
+//			data, _ = json.Marshal(kubectlResp.Stdout)
+//		}
+//
+//	case constants.PUT:
+//		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"delete", kind, name, "-n", namespace},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//		}
+//		utils.Info.Println(kubectlResp)
+//
+//		_, err = agent.CreateFile(name, string(request.Service))
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//
+//		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"create", "-f", "~/" + name + ".json"},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//		for {
+//			feature, err := kubectlStreamResp.Recv()
+//			if err == io.EOF {
+//				break
+//			}
+//			if err != nil {
+//				utils.Error.Println(err)
+//			}
+//			utils.Info.Println(feature.Stdout)
+//		}
+//
+//		_, err = agent.DeleteFile(name, string(request.Service))
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		}
+//
+//		kubectlResp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+//			Command: "kubectl",
+//			Args:    []string{"get", kind, name, "-n", namespace, "-o", "json"},
+//		})
+//		if err != nil {
+//			utils.Error.Println(err)
+//			return data, err
+//		} else {
+//			data, _ = json.Marshal(kubectlResp.Stdout)
+//		}
+//
+//	}
+//
+//	return data, nil
+//}
+
+/*func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api.FileResponse, err error) {
+	response, err = agent.agentClient.CreateFile(agent.agentCtx, &agent_api.CreateFileRequest{
+		Name: name,
+		Files: []*agent_api.File{
+			{
+				Name: name + ".json",
+				Data: data,
+				Path: "/tmp/",
+			},
+		},
+	})
+	if err != nil {
+		utils.Error.Println(name+".json file creation failed:", err)
+		return response, err
+	}
+	utils.Info.Println(name, " ", response) //status : successfully created all file
+	return response, err
+}
+
+func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api.FileResponse, err error) {
+	response, err = agent.agentClient.DeleteFile(agent.agentCtx, &agent_api.CreateFileRequest{
+		Name: name,
+		Files: []*agent_api.File{
+			{
+				Name: name + ".json",
+				Data: data,
+				Path: "/tmp/",
+			},
+		},
+	})
+	if err != nil {
+		utils.Error.Println(name+".json file deletion failed:", err)
+		return response, err
+	}
+	utils.Info.Println(response) //status:"successfully deleted all files"
+	return response, err
+}
+
+func GetAgentID(projectId, companyId *string) *string {
+	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *projectId, *companyId)))
+	return &base
+}
+*/

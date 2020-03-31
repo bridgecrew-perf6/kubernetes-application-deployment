@@ -3,36 +3,19 @@ package core
 import (
 	agent_api "bitbucket.org/cloudplex-devs/woodpecker/agent-api"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"io"
+	v12 "k8s.io/api/core/v1"
 	"kubernetes-services-deployment/constants"
 	"kubernetes-services-deployment/core/proto"
 	"kubernetes-services-deployment/utils"
 	"time"
 )
 
-type AgentConnection struct {
-	connection  *grpc.ClientConn
-	agentCtx    context.Context
-	agentClient agent_api.AgentServerClient
-}
-
-func GetGrpcAgentConnection() (*AgentConnection, error) {
-	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure())
-	if err != nil {
-		utils.Error.Println(err)
-		return &AgentConnection{}, err
-	}
-
-	return &AgentConnection{connection: conn}, nil
-}
-
 func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, request *proto.ServiceRequest) (data []byte, err error) {
+
 	md := metadata.Pairs(
 		"name", "client2",
 	)
@@ -267,46 +250,43 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 //	return response, err
 //}
 
-func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api.FileResponse, err error) {
-	response, err = agent.agentClient.CreateFile(agent.agentCtx, &agent_api.CreateFileRequest{
-		Name: name,
-		Files: []*agent_api.File{
-			{
-				Name: name + ".json",
-				Data: data,
-				Path: "~/",
-			},
-		},
+func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.K8SResourceRequest) (data []byte, err error) {
+
+	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: request.Command,
+		Args:    request.Args,
 	})
 	if err != nil {
 		utils.Error.Println(err)
-		return response, err
+		return data, err
+	} else {
+		data = []byte(kubectlResp.Stdout[0])
 	}
-	utils.Info.Println(response) //status : successfully created all file
-	return response, err
+
+	return data, err
 }
 
-func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api.FileResponse, err error) {
-	response, err = agent.agentClient.DeleteFile(agent.agentCtx, &agent_api.CreateFileRequest{
-		Name: name,
-		Files: []*agent_api.File{
-			{
-				Name: name + ".json",
-				Data: data,
-				Path: "~/",
-			},
-		},
+func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
+	response, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"get", "ns", "-o", "json"},
 	})
 	if err != nil {
 		utils.Error.Println(err)
-		return response, err
+		return []string{}, err
 	}
-	utils.Info.Println(response) //status:"successfully deleted all files"
-	return response, err
-}
 
-func GetSha256(projectId, companyId *string) *string {
-	sha256 := sha256.Sum256([]byte(*projectId + *companyId))
-	str := fmt.Sprintf("%x", sha256)
-	return &str
+	var namespaces v12.NamespaceList
+	err = json.Unmarshal([]byte(response.Stdout[0]), &namespaces)
+	if err != nil {
+		utils.Error.Println(err)
+		return []string{}, err
+	}
+
+	var namespaceResp []string
+	for _, namespace := range namespaces.Items {
+		namespaceResp = append(namespaceResp, namespace.Name)
+	}
+
+	return namespaceResp, nil
 }

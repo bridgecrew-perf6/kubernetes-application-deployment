@@ -46,8 +46,8 @@ type ResponseData struct {
 }
 
 type SolutionResp struct {
-	Error string      `json:"error"`
-	Data  interface{} `json:"data"`
+	Error string `json:"error"`
+	Data  string `json:"data"`
 }
 
 type CacheObjectData struct {

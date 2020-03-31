@@ -1,6 +1,8 @@
 package constants
 
-import "github.com/patrickmn/go-cache"
+import (
+	"github.com/patrickmn/go-cache"
+)
 
 var (
 	LoggingURL           string

@@ -11,6 +11,7 @@ RUN go build -o service-engine main/main.go
 # final stage
 FROM ubuntu:bionic
 
+
 WORKDIR /app
 COPY --from=build-env /go/src/kubernetes-services-deployment/service-engine /app/
 

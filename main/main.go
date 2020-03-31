@@ -41,7 +41,7 @@ func main() {
 
 	e := gin.New()
 	utils.InitFlags()
-	constants.CacheObj = cache.New(5*time.Minute, 5*time.Minute)
+	constants.CacheObj = cache.New(5*time.Minute, 6*time.Minute)
 	if constants.ServicePort == "" {
 		constants.ServicePort = "8089"
 	}

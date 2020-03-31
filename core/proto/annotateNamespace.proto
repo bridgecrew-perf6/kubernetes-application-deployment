@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+service AnnotateNamespace {
+    rpc AnnotateNamespace (Namespacerequest) returns (Namespaceresponse) {}
+}
+
+
+message Namespacerequest{
+    string project_id = 1;
+    string company_id = 2;
+    string token = 3;
+    string namespace = 4;
+}
+
+message Namespaceresponse{
+    string message = 1;
+}

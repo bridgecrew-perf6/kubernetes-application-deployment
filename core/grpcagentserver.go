@@ -250,7 +250,7 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 //	return response, err
 //}
 
-func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.K8SResourceRequest) (data []byte, err error) {
+func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.KubernetesResourceRequest) (data []byte, err error) {
 
 	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 		Command: request.Command,

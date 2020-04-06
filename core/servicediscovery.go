@@ -8,31 +8,31 @@ import (
 	"reflect"
 )
 
-func (s *Server) GetK8SResource(ctx context.Context, request *pb.K8SResourceRequest) (response *pb.K8SResourceResponse, err error) {
-	response = new(pb.K8SResourceResponse)
+func (s *Server) GetK8SResource(ctx context.Context, request *pb.KubernetesResourceRequest) (response *pb.KubernetesResourceResponse, err error) {
+	response = new(pb.KubernetesResourceResponse)
 	utils.Info.Println(reflect.TypeOf(ctx))
 
 	if request.CompanyId == "" || request.ProjectId == "" {
-		return &pb.K8SResourceResponse{}, errors.New("projectId or companyId must not be empty")
+		return &pb.KubernetesResourceResponse{}, errors.New("projectId or companyId must not be empty")
 	}
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
-		return &pb.K8SResourceResponse{}, err
+		return &pb.KubernetesResourceResponse{}, err
 	}
 
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		utils.Error.Println(err)
-		return &pb.K8SResourceResponse{}, err
+		return &pb.KubernetesResourceResponse{}, err
 	}
 
 	defer agent.connection.Close()
 
 	resp, err := agent.GetK8sResources(ctx, request)
 	if err != nil {
-		return &pb.K8SResourceResponse{}, err
+		return &pb.KubernetesResourceResponse{}, err
 	}
 
 	response.Resource = resp

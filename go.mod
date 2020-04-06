@@ -1,4 +1,4 @@
-module kubernetes-services-deployment
+module bitbucket.org/cloudplex-devs/kubernetes-services-deployment
 
 go 1.12
 

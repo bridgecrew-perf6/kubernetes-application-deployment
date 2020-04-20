@@ -247,8 +247,10 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 		}
 		respTemp, err = agent.deployCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		}
+		cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 		responses[kubeType] = respTemp
 
 	}
@@ -284,8 +286,10 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		}
 		respTemp, err = agent.getCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		}
+		cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 		responses[kubeType] = respTemp
 
 	}
@@ -321,8 +325,10 @@ func ListServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respo
 		}
 		respTemp, err = agent.listCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		}
+		cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 		responses[kubeType] = respTemp
 	}
 	r, _ := json.Marshal(responses)
@@ -358,8 +364,10 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 		}
 		respTemp, err = agent.deleteCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		}
+		cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 		responses[kubeType] = respTemp
 	}
 	if len(errs) >= 1 {
@@ -398,8 +406,10 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 		}
 		respTemp, err = agent.patchCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		}
+		cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 		responses[kubeType] = respTemp
 
 	}
@@ -434,8 +444,10 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		}
 		respTemp, err = agent.putCRDS(kubeType, data, *req.ProjectId, cpContext.GetString("company_id"))
 		if err != nil {
+			cpContext.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 			errs = append(errs, err.Error())
 		} else {
+			cpContext.SendFrontendLogs(respTemp, constants.LOGGING_LEVEL_INFO)
 
 			responses[kubeType] = respTemp
 		}
@@ -2800,6 +2812,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	utils.Info.Println("response payload", responseObj)
 	return responseObj, nil
 }
+
 /*
 case constants.GET:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string))
@@ -3119,7 +3132,7 @@ case constants.GET:
 			utils.Info.Println(string(dd))
 		}
 
- */
+*/
 //func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, data []interface{}, projectId string, companyId string, kubeType string) (resp []interface{}, err error) {
 //
 //	if projectId == "" || companyId == ""{

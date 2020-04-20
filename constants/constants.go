@@ -46,8 +46,9 @@ const (
 	AWS                   = "AWS"
 	AZURE                 = "AZURE"
 
-	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
-	Rbac_Token_Info          = "/security/api/rbac/token/info"
+	BACKEND_LOGGING_ENDPOINT  = "/elephant/api/v1/backend/logging"
+	FRONTEND_LOGGING_ENDPOINT = "/elephant/api/v1/frontend/logging"
+	Rbac_Token_Info           = "/security/api/rbac/token/info"
 
 	POST   RequestType = "post"
 	GET    RequestType = "get"

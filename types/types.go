@@ -122,3 +122,15 @@ type Backendlogging struct {
 		Status int `json:"status"`
 	} `json:"http_request"  binding:"required"`
 }
+
+type LoggingRequestFrontend struct {
+	Message     string `json:"message"`
+	Id          string `json:"id"`
+	Environment string `json:"environment"`
+	Service     string `json:"service"`
+	Level       string `json:"level"`
+	//level is info erro
+	CompanyId string `json:"company_id"`
+	UserId    string `json:"userId"`
+	Type      string `json:"type"`
+}

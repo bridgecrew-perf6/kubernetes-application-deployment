@@ -1,10 +1,10 @@
 package core
 
 import (
+	pb "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"errors"
-	pb "kubernetes-services-deployment/core/proto"
-	"kubernetes-services-deployment/utils"
 	"reflect"
 )
 

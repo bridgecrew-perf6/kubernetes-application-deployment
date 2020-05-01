@@ -1,9 +1,9 @@
 package notifications
 
 import (
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/types"
-	"kubernetes-services-deployment/utils"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 )
 
 func SendLog(msg, message_type, env_id string) (int, error) {

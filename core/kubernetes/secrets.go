@@ -1,10 +1,10 @@
 package kubernetes
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"kubernetes-services-deployment/utils"
 	"time"
 )
 

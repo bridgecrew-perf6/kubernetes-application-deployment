@@ -16,16 +16,16 @@ import (
 	v12 "k8s.io/api/core/v1"
 	"sync"
 
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	appKubernetes "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/kubernetes"
+	v1alpha "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"kubernetes-services-deployment/constants"
-	appKubernetes "kubernetes-services-deployment/core/kubernetes"
-	v1alpha "kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
-	"kubernetes-services-deployment/types"
-	"kubernetes-services-deployment/utils"
 	"strings"
 	"time"
 )
@@ -2800,6 +2800,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	utils.Info.Println("response payload", responseObj)
 	return responseObj, nil
 }
+
 /*
 case constants.GET:
 			data, err = alphaClient.NewRuntimeConfigs(namespace, crdPlural).Get(runtimeConfig.(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string))
@@ -3119,7 +3120,7 @@ case constants.GET:
 			utils.Info.Println(string(dd))
 		}
 
- */
+*/
 //func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, data []interface{}, projectId string, companyId string, kubeType string) (resp []interface{}, err error) {
 //
 //	if projectId == "" || companyId == ""{

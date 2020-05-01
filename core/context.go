@@ -1,14 +1,14 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/types"
-	"kubernetes-services-deployment/utils"
 	"math"
 	"time"
 )

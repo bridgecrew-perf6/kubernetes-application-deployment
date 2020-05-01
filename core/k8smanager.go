@@ -1,13 +1,13 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	pb "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	v1alpha "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"encoding/json"
 	"errors"
-	"kubernetes-services-deployment/constants"
-	pb "kubernetes-services-deployment/core/proto"
-	v1alpha "kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
-	"kubernetes-services-deployment/utils"
 	"reflect"
 )
 
@@ -19,7 +19,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
 
 	agent, err := GetGrpcAgentConnection()
@@ -32,9 +32,9 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 		return response, err
 	}
 	runtimeObj := v1alpha.RuntimeConfig{}
-	err = json.Unmarshal(request.Service,&runtimeObj)
+	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.POST))
@@ -48,7 +48,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 	response.Service = raw
 	return response, nil
@@ -58,7 +58,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
 
 	agent, err := GetGrpcAgentConnection()
@@ -71,9 +71,9 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 		return response, err
 	}
 	runtimeObj := v1alpha.RuntimeConfig{}
-	err = json.Unmarshal(request.Service,&runtimeObj)
+	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.GET))
@@ -87,7 +87,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 	response.Service = raw
 
@@ -112,9 +112,8 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
-
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
@@ -126,9 +125,9 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 		return response, err
 	}
 	runtimeObj := v1alpha.RuntimeConfig{}
-	err = json.Unmarshal(request.Service,&runtimeObj)
+	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.DELETE))
@@ -142,7 +141,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 	response.Service = raw
 	/*conn, err := GetGrpcAgentConnection()
@@ -166,7 +165,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
 
 	agent, err := GetGrpcAgentConnection()
@@ -179,9 +178,9 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 		return response, err
 	}
 	runtimeObj := v1alpha.RuntimeConfig{}
-	err = json.Unmarshal(request.Service,&runtimeObj)
+	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.PATCH))
@@ -195,7 +194,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 	response.Service = raw
 	/*conn, err := GetGrpcAgentConnection()
@@ -219,7 +218,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	cpCtx.Keys["companyId"] = request.CompanyId
 
 	agent, err := GetGrpcAgentConnection()
@@ -232,9 +231,9 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 		return response, err
 	}
 	runtimeObj := v1alpha.RuntimeConfig{}
-	err = json.Unmarshal(request.Service,&runtimeObj)
+	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.PUT))
@@ -248,7 +247,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
-		return response,err
+		return response, err
 	}
 	response.Service = raw
 
@@ -266,7 +265,6 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 
 	utils.Info.Println(string(service))
 	response.Service = service*/
-
 
 	return response, nil
 }

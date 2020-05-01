@@ -102,11 +102,11 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 	}
 
-	raw, err := json.Marshal(responseObj.Data)
-	if err != nil {
-		return response, err
-	}
-	response.Service = raw
+	//raw, err := json.Marshal(responseObj.Data)
+	//if err != nil {
+	//	return response, err
+	//}
+	response.Service = []byte(responseObj.Data)
 
 	/*conn, err := GetGrpcAgentConnection()
 	if err != nil {

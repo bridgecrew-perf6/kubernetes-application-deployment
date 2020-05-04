@@ -54,7 +54,6 @@ func (c *KubeController) DeploySolution(g *gin.Context) {
 		return
 	}
 	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", *req.ProjectId)
-
 	responses, err := core.StartServiceDeployment(&req, cpContext)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "project_id": req.ProjectId})

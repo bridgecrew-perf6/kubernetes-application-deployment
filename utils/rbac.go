@@ -2,10 +2,12 @@ package utils
 
 import (
 	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 func TokenInfo(token string) (map[string]string, error) {
@@ -55,4 +57,21 @@ func TokenInfo(token string) (map[string]string, error) {
 		return temp, nil
 	}
 	return nil, errors.New("can not get data from token")
+}
+func GetUserIDCompanyID(token string) (userID, companyID string, err error) {
+
+	out := strings.Split(token, ".")
+	if len(out) != 3 {
+		return "", "", errors.New("token is invalid")
+	}
+	decoded, err := base64.StdEncoding.DecodeString(out[1])
+	//if err != nil {
+	//
+	//}
+	var tokenData map[string]interface{}
+	err = json.Unmarshal(decoded, &tokenData)
+	if err != nil {
+		return "", "", err
+	}
+	return tokenData["username"].(string), tokenData["companyId"].(string), nil
 }

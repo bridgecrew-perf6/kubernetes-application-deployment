@@ -20,8 +20,14 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
 	cpCtx.Keys[constants.AuthTokenKey] = request.Token
-	cpCtx.Keys["companyId"] = request.CompanyId
-
+	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
+	if err != nil {
+		utils.Error.Println(err)
+		return response, err
+	}
+	cpCtx.Keys["company_id"] = CID
+	cpCtx.Keys["user"] = uId
+	cpCtx.Keys["project_id"] = request.ProjectId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -40,9 +46,12 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.POST))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
+		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
+	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
 	if responseObj.Error != "" {
+		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 		return response, errors.New(responseObj.Error)
 	}
 
@@ -59,8 +68,14 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
 	cpCtx.Keys[constants.AuthTokenKey] = request.Token
-	cpCtx.Keys["companyId"] = request.CompanyId
-
+	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
+	if err != nil {
+		utils.Error.Println(err)
+		return response, err
+	}
+	cpCtx.Keys["company_id"] = CID
+	cpCtx.Keys["user"] = uId
+	cpCtx.Keys["project_id"] = request.ProjectId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -79,17 +94,19 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.GET))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
+		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
+	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
 	if responseObj.Error != "" {
-		return response, errors.New(responseObj.Error)
+		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 	}
 
-	raw, err := json.Marshal(responseObj.Data)
-	if err != nil {
-		return response, err
-	}
-	response.Service = raw
+	//raw, err := json.Marshal(responseObj.Data)
+	//if err != nil {
+	//	return response, err
+	//}
+	response.Service = []byte(responseObj.Data)
 
 	/*conn, err := GetGrpcAgentConnection()
 	if err != nil {
@@ -113,8 +130,14 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
 	cpCtx.Keys[constants.AuthTokenKey] = request.Token
-	cpCtx.Keys["companyId"] = request.CompanyId
-
+	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
+	if err != nil {
+		utils.Error.Println(err)
+		return response, err
+	}
+	cpCtx.Keys["company_id"] = CID
+	cpCtx.Keys["user"] = uId
+	cpCtx.Keys["project_id"] = request.ProjectId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -133,10 +156,12 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.DELETE))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
+		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
+	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
 	if responseObj.Error != "" {
-		return response, errors.New(responseObj.Error)
+		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 	}
 
 	raw, err := json.Marshal(responseObj.Data)
@@ -166,8 +191,14 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
 	cpCtx.Keys[constants.AuthTokenKey] = request.Token
-	cpCtx.Keys["companyId"] = request.CompanyId
-
+	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
+	if err != nil {
+		utils.Error.Println(err)
+		return response, err
+	}
+	cpCtx.Keys["company_id"] = CID
+	cpCtx.Keys["user"] = uId
+	cpCtx.Keys["project_id"] = request.ProjectId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -186,12 +217,13 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.PATCH))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
+		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
+	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
 	if responseObj.Error != "" {
-		return response, errors.New(responseObj.Error)
+		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 	}
-
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
 		return response, err
@@ -219,8 +251,14 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
 	cpCtx.Keys[constants.AuthTokenKey] = request.Token
-	cpCtx.Keys["companyId"] = request.CompanyId
-
+	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
+	if err != nil {
+		utils.Error.Println(err)
+		return response, err
+	}
+	cpCtx.Keys["company_id"] = CID
+	cpCtx.Keys["user"] = uId
+	cpCtx.Keys["project_id"] = request.ProjectId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -239,12 +277,13 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.PUT))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
+		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
+	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
 	if responseObj.Error != "" {
-		return response, errors.New(responseObj.Error)
+		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
 	}
-
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
 		return response, err

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"math"
@@ -224,5 +225,31 @@ func (c *Context) SendBackendLogs(message interface{}, severity string) {
 		if err != nil {
 			utils.Error.Println(err)
 		}
+	}
+}
+
+func (c *Context) SendFrontendLogs(message interface{}, severity string) {
+	if message != nil {
+		byteData, err := json.Marshal(message)
+		if err != nil {
+			utils.Error.Println(err)
+			return
+		}
+
+		url := constants.LoggingURL + constants.FRONTEND_LOGGING_ENDPOINT
+		var data types.LoggingRequestFrontend
+		data.Message = string(byteData)
+		data.Environment = "solution"
+		data.Id = c.GetString("project_id")
+		data.Service = constants.SERVICE_NAME
+		data.Level = severity
+		data.UserId = c.GetString("user")
+		data.Type = "ksd"
+		data.CompanyId = c.GetString("company_id")
+		byteData, err = utils.Post(url, data, map[string]string{"Content-Type": "application/json"})
+		if err != nil {
+			utils.Error.Println(err)
+		}
+		fmt.Println(byteData)
 	}
 }

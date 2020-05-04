@@ -1,11 +1,11 @@
 package utils
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"kubernetes-services-deployment/constants"
 	"net/http"
 	"strings"
 )

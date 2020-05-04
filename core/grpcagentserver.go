@@ -1,6 +1,9 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	agent_api "bitbucket.org/cloudplex-devs/woodpecker/agent-api"
 	"context"
 	"encoding/json"
@@ -8,9 +11,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"io"
 	v12 "k8s.io/api/core/v1"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/core/proto"
-	"kubernetes-services-deployment/utils"
 	"time"
 )
 

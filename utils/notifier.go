@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
 	"bytes"
 	"encoding/json"
 	"gopkg.in/resty.v1"
-	"kubernetes-services-deployment/types"
 	"net/http"
 	"reflect"
 )

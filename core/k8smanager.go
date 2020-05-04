@@ -1,13 +1,13 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	pb "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	v1alpha "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"encoding/json"
 	"errors"
-	"kubernetes-services-deployment/constants"
-	pb "kubernetes-services-deployment/core/proto"
-	v1alpha "kubernetes-services-deployment/kubernetes-custom-apis/core/v1"
-	"kubernetes-services-deployment/utils"
 	"reflect"
 )
 
@@ -19,7 +19,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
 	if err != nil {
 		utils.Error.Println(err)
@@ -67,7 +67,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
 	if err != nil {
 		utils.Error.Println(err)
@@ -129,7 +129,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
 	if err != nil {
 		utils.Error.Println(err)
@@ -190,7 +190,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
 	if err != nil {
 		utils.Error.Println(err)
@@ -250,7 +250,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	utils.Info.Println(reflect.TypeOf(ctx))
 	cpCtx := &Context{}
 	cpCtx.Keys = make(map[string]interface{})
-	cpCtx.Keys["token"] = request.Token
+	cpCtx.Keys[constants.AuthTokenKey] = request.Token
 	uId, CID, err := utils.GetUserIDCompanyID(request.Token)
 	if err != nil {
 		utils.Error.Println(err)

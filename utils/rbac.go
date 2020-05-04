@@ -64,7 +64,7 @@ func GetUserIDCompanyID(token string) (userID, companyID string, err error) {
 	if len(out) != 3 {
 		return "", "", errors.New("token is invalid")
 	}
-	decoded, err := base64.StdEncoding.DecodeString(out[1])
+	decoded, err := base64.RawStdEncoding.DecodeString(out[1])
 	//if err != nil {
 	//
 	//}

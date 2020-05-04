@@ -226,6 +226,5 @@ func Poll(fds []PollFd, timeout int) (n int, err error) {
 }
 
 func InotifyInit() (fd int, err error) {
-        return InotifyInit1(0)
+	return InotifyInit1(0)
 }
-

@@ -2764,7 +2764,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			runtimeObj.Kind = "ksvc"
 		}
 
-		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		kubeResponse, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
 			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},
 		})
@@ -2786,6 +2786,8 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		} else if err != nil && !strings.Contains(err.Error(), "not found") {
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
+		} else if kubeResponse != nil {
+			data2 = kubeResponse.Stdout[0]
 		}
 	case "list":
 		kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{

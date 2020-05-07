@@ -2786,7 +2786,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		} else if err != nil && !strings.Contains(err.Error(), "not found") {
 			responseObj.Error = err.Error()
 			utils.Error.Println(err)
-		} else {
+		} else if kubectlResp != nil {
 			data2 = kubectlResp.Stdout[0]
 		}
 	case "list":

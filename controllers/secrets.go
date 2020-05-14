@@ -1,17 +1,17 @@
 package controllers
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"github.com/gin-gonic/gin"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/core"
-	"kubernetes-services-deployment/types"
-	"kubernetes-services-deployment/utils"
 	"net/http"
 )
 
 // @Summary deploy services on kubernetes cluster
 // @Description deploy services on kubernetes cluster
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry [post]
@@ -51,7 +51,7 @@ func (c *KubeController) CreateRegistrySecret(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry/{namespace}/{name} [get]
@@ -101,7 +101,7 @@ func (c *KubeController) GetRegistrySecret(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @router /api/v1/registry/{namespace}/{name} [delete]

@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"kubernetes-services-deployment/core"
-	"kubernetes-services-deployment/utils"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ import (
 // @Description get status of all kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
 // @Param project_id header string	true "project id"
 // @Param namespace path string true "Namespace of kubernetes cluster"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @Router /kubeservice/{namespace} [get]
@@ -56,7 +56,7 @@ func (c *KubeController) ListKubernetesServices(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @Router /kubeservice/{name}/{namespace} [get]
@@ -106,7 +106,7 @@ func (c *KubeController) GetKubernetesService(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @Router /kubeservice/{name}/{namespace} [delete]
@@ -151,7 +151,7 @@ func (c *KubeController) DeleteKubernetesService(g *gin.Context) {
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
 // @Param project_id header string true "project_id"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @Router /kubeservice/{name}/{namespace}/endpoint [get]

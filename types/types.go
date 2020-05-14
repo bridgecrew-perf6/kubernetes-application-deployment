@@ -12,7 +12,7 @@ type APIError struct {
 
 type HTTPError struct {
 	Code    int    `json:"code" example:"400"`
-	Message string `json:"message" example:"status bad request"`
+	Message string `json:"error" example:"status bad request"`
 }
 
 type Status struct {

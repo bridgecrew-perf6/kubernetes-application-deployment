@@ -134,3 +134,40 @@ type LoggingRequestFrontend struct {
 	UserId    string `json:"userId"`
 	Type      string `json:"type"`
 }
+
+type HealthObject struct {
+	ClusterSummary ClusterSummary `json:"cluster_summary"`
+	ClusterNodes   []ClusterNodes `json:"cluster_nodes"`
+}
+type Capacity struct {
+	CPU     int64 `json:"cpu"`
+	Memory  int64 `json:"memory"`
+	Storage int64 `json:"storage"`
+	Pods    int64 `json:"pods"`
+}
+type Allocatable struct {
+	CPU     int64 `json:"cpu"`
+	Memory  int64 `json:"memory"`
+	Storage int64 `json:"storage"`
+	Pods    int64 `json:"pods"`
+}
+type UsedResources struct {
+	CPUPercentage     int `json:"cpu_percentage"`
+	MemoryPercentage   int `json:"memory_percentage"`
+	StoragePercentage int `json:"storage_percentage"`
+	Pods int `json:"pods"`
+}
+type ClusterSummary struct {
+	Name          string        `json:"name"`
+	CreationTime  string        `json:"creation_time"`
+	Capacity      Capacity      `json:"capacity"`
+	Allocatable   Allocatable   `json:"allocatable"`
+	UsedResources UsedResources `json:"used_resources"`
+}
+type ClusterNodes struct {
+	Name          string        `json:"name"`
+	CreationTime  string        `json:"creation_time"`
+	Capacity      Capacity      `json:"capacity"`
+	Allocatable   Allocatable   `json:"allocatable"`
+	UsedResources UsedResources `json:"used_resources"`
+}

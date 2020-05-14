@@ -200,3 +200,54 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 	}
 	g.JSON(http.StatusOK, gin.H{"error": "", "external_ip": data})
 }
+
+// @Summary get health status of kubernetes services deployment
+// @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
+// @Param project_id header string	true "project id"
+// @Param name path string true "Name of the kubernetes service"
+// @Param namespace path string true "Namespace of the kubernetes service"
+// @Param project_id header string true "project_id"
+// @Param token  header  string  false    "jwt token"
+// @Accept  json
+// @Produce  json
+// @Router /kubeservice/clusterhealth [get]
+// @Success 200 "{"error": "", "health": ""}"
+// @failure 404 "{"error": ""}"
+// @failure 500 "{"error": ""}"
+func (c *KubeController) GetKubernetesServiceHealth(g *gin.Context) {
+	projectId := g.GetHeader("project_id")
+
+	if projectId == "" {
+		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": "project_id is missing in request"})
+		return
+	}
+
+	cpContext := new(core.Context)
+	err := cpContext.ReadLoggingParameters(g)
+	if err != nil {
+		utils.Error.Println(err)
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+
+	companyId := cpContext.GetString("company_id")
+	agent, err := core.GetGrpcAgentConnection()
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		return
+	}
+
+	err = agent.InitializeAgentClient(projectId, companyId)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+		return
+	}
+
+	data, err := agent.GetKubernetesHealth()
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"health": "", "error": err.Error()})
+		return
+	}
+	g.JSON(http.StatusOK, gin.H{"error": nil, "health": data})
+}

@@ -130,23 +130,23 @@ Events:                      <none>
 	for scanner.Scan() {
 		//fmt.Println(".........")
 		temp := scanner.Text()
-		if (strings.Contains(temp, "Non-terminated Pods:")) {
+		if strings.Contains(temp, "Non-terminated Pods:") {
 			pods, err := strconv.Atoi(strings.Split(strings.Split(temp, "(")[1], " ")[0])
 			_ = err
 			println(pods) //PODS
 		}
-		if (strings.Contains(temp, "cpu") && strings.Contains(temp, "%")) {
+		if strings.Contains(temp, "cpu") && strings.Contains(temp, "%") {
 			cpu, err := strconv.Atoi(strings.Split(strings.Split(temp, "(")[1], "%")[0]) //CPU
 			_ = err
 			println(cpu) //PODS
 		}
-		if (strings.Contains(temp, "memory") && strings.Contains(temp, "%")) {
+		if strings.Contains(temp, "memory") && strings.Contains(temp, "%") {
 			memory, err := strconv.Atoi(strings.Split(strings.Split(temp, "(")[1], "%")[0]) //Memory
 			_ = err
 			print(memory)
 		}
 
-		if (strings.Contains(temp, "ephemeral-storage") && strings.Contains(temp, "%")) {
+		if strings.Contains(temp, "ephemeral-storage") && strings.Contains(temp, "%") {
 			storage, err := strconv.Atoi(strings.Split(strings.Split(temp, "(")[1], "%")[0]) //Storage
 			_ = err
 			print(storage)

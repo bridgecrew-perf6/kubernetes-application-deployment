@@ -2283,8 +2283,6 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 
 	defer agent.connection.Close()
 
-
-
 	var nodeList v12.NodeList
 	b := []byte(resp.Stdout[0])
 	err = json.Unmarshal(b, &nodeList)
@@ -2297,7 +2295,7 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 		//Calling Describe node
 		resp, err = agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"describe", "node" , node.Name},
+			Args:    []string{"describe", "node", node.Name},
 		})
 		if err != nil {
 			err = RetryAgentConn(agent)
@@ -2327,24 +2325,24 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 		for scanner.Scan() {
 			//fmt.Println(".........")
 			temp_str := scanner.Text()
-			if (strings.Contains(temp_str, "Non-terminated Pods:")) {
+			if strings.Contains(temp_str, "Non-terminated Pods:") {
 				temp.UsedResources.Pods, err = strconv.Atoi(strings.Split(strings.Split(temp_str, "(")[1], " ")[0])
 				summary.UsedResources.Pods = summary.UsedResources.Pods + temp.UsedResources.Pods
 			}
-			if (strings.Contains(temp_str, "cpu") && strings.Contains(temp_str, "%")) {
-				temp.UsedResources.CPUPercentage , err = strconv.Atoi(strings.Split(strings.Split(temp_str, "(")[1], "%")[0]) //CPU
+			if strings.Contains(temp_str, "cpu") && strings.Contains(temp_str, "%") {
+				temp.UsedResources.CPUPercentage, err = strconv.Atoi(strings.Split(strings.Split(temp_str, "(")[1], "%")[0]) //CPU
 				_ = err
 				summary.UsedResources.CPUPercentage = summary.UsedResources.CPUPercentage + temp.UsedResources.CPUPercentage
 
 			}
-			if (strings.Contains(temp_str, "memory") && strings.Contains(temp_str, "%")) {
+			if strings.Contains(temp_str, "memory") && strings.Contains(temp_str, "%") {
 				temp.UsedResources.MemoryPercentage, err = strconv.Atoi(strings.Split(strings.Split(temp_str, "(")[1], "%")[0]) //Memory
 				_ = err
 				summary.UsedResources.MemoryPercentage = summary.UsedResources.MemoryPercentage + temp.UsedResources.MemoryPercentage
 
 			}
 
-			if (strings.Contains(temp_str, "ephemeral-storage") && strings.Contains(temp_str, "%")) {
+			if strings.Contains(temp_str, "ephemeral-storage") && strings.Contains(temp_str, "%") {
 				temp.UsedResources.StoragePercentage, err = strconv.Atoi(strings.Split(strings.Split(temp_str, "(")[1], "%")[0]) //Storage
 				_ = err
 				summary.UsedResources.StoragePercentage = summary.UsedResources.StoragePercentage + temp.UsedResources.StoragePercentage
@@ -2354,51 +2352,51 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 		_ = node
 
 		//Capacity
-		if node.Status.Capacity.Cpu() != nil{
+		if node.Status.Capacity.Cpu() != nil {
 			temp.Capacity.CPU = node.Status.Capacity.Cpu().Value()
 			summary.Capacity.CPU += temp.Capacity.CPU
 		}
 
-		if node.Status.Capacity.Memory() != nil{
+		if node.Status.Capacity.Memory() != nil {
 			temp.Capacity.Memory = node.Status.Capacity.Memory().Value()
 			summary.Capacity.Memory += temp.Capacity.Memory
 
 		}
 
-		if node.Status.Capacity.StorageEphemeral() != nil{
+		if node.Status.Capacity.StorageEphemeral() != nil {
 			temp.Capacity.Storage = node.Status.Capacity.StorageEphemeral().Value()
 			summary.Capacity.Storage += temp.Capacity.Storage
 
 		}
 
-		if node.Status.Capacity.Pods() != nil{
+		if node.Status.Capacity.Pods() != nil {
 			temp.Capacity.Pods = node.Status.Capacity.Pods().Value()
 			summary.Capacity.Pods += temp.Capacity.Pods
 		}
 		//Allocatable
-		if node.Status.Allocatable.Cpu() != nil{
+		if node.Status.Allocatable.Cpu() != nil {
 			temp.Allocatable.CPU = node.Status.Allocatable.Cpu().Value()
 			summary.Allocatable.CPU += temp.Allocatable.CPU
 
 		}
 
-		if node.Status.Allocatable.Memory() != nil{
+		if node.Status.Allocatable.Memory() != nil {
 			temp.Allocatable.Memory = node.Status.Allocatable.Memory().Value()
 			summary.Allocatable.Memory += temp.Allocatable.Memory
 
 		}
 
-		if node.Status.Allocatable.StorageEphemeral() != nil{
+		if node.Status.Allocatable.StorageEphemeral() != nil {
 			temp.Allocatable.Storage = node.Status.Allocatable.StorageEphemeral().Value()
 			summary.Allocatable.Storage += temp.Allocatable.Storage
 
 		}
 
-		if node.Status.Allocatable.Pods() != nil{
+		if node.Status.Allocatable.Pods() != nil {
 			temp.Allocatable.Pods = node.Status.Allocatable.Pods().Value()
 			summary.Allocatable.Pods += temp.Allocatable.Pods
 		}
-		result.ClusterNodes = append(result.ClusterNodes,temp)
+		result.ClusterNodes = append(result.ClusterNodes, temp)
 
 	}
 
@@ -2407,7 +2405,7 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 		summary.UsedResources.MemoryPercentage /= len(nodeList.Items)
 		summary.UsedResources.CPUPercentage /= len(nodeList.Items)
 	}
-	
+
 	result.ClusterSummary = summary
 	return result, nil
 }

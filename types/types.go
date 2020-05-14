@@ -153,9 +153,9 @@ type Allocatable struct {
 }
 type UsedResources struct {
 	CPUPercentage     int `json:"cpu_percentage"`
-	MemoryPercentage   int `json:"memory_percentage"`
+	MemoryPercentage  int `json:"memory_percentage"`
 	StoragePercentage int `json:"storage_percentage"`
-	Pods int `json:"pods"`
+	Pods              int `json:"pods"`
 }
 type ClusterSummary struct {
 	Name          string        `json:"name"`

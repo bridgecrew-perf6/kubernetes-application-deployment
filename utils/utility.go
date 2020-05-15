@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
 	"github.com/gin-gonic/gin"
-	"kubernetes-services-deployment/types"
 )
 
 func StringPtr(input string) *string {

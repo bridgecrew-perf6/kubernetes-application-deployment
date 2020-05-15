@@ -20,6 +20,7 @@ var (
 type RequestType string
 
 const (
+	AuthTokenKey                        = "X-Auth-Token"
 	IstioServicePostEndpoint            = "/istio-mesh/deploy"
 	IstioServicePutEndpoint             = ""
 	KubernetesStatefulSets              = "statefulset"

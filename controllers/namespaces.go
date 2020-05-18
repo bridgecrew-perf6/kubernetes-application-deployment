@@ -1,16 +1,17 @@
 package controllers
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"github.com/gin-gonic/gin"
-	"kubernetes-services-deployment/core"
-	"kubernetes-services-deployment/utils"
 	"net/http"
 )
 
 // @Summary get all namespaces
 // @Description get all namespaces
 // @Param project_id path string	true "project id"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
 // @Router /getallnamespaces/{project_id}/ [get]
@@ -19,7 +20,7 @@ import (
 // @failure 500 "{"error": ""}"
 func (c *KubeController) GetAllNamespaces(g *gin.Context) {
 	projectid := g.Param("project_id")
-	token := g.GetHeader("token")
+	token := g.GetHeader(constants.AuthTokenKey)
 
 	if projectid == "" {
 		g.JSON(http.StatusInternalServerError, gin.H{"namespaces": "", "error": "project_id is missing in request"})

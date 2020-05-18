@@ -1,11 +1,11 @@
 package kubernetes
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"encoding/json"
 	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetesTypes "k8s.io/apimachinery/pkg/types"
-	"kubernetes-services-deployment/utils"
 	"time"
 )
 

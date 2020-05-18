@@ -4,7 +4,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"log"
 
-	"kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
 	"os"
 )
 

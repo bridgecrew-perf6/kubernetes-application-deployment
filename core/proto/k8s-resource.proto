@@ -1,11 +1,10 @@
 syntax = "proto3";
-
 package proto;
 
 service k8sResource {
-    rpc GetK8sResource(K8sResourceRequest) returns (K8sResourceResponse) {}
+    rpc GetK8sResource(KubernetesResourceRequest) returns (KubernetesResourceResponse) {}
 }
-message K8sResourceRequest {
+message KubernetesResourceRequest {
     string project_id = 1;
     string company_id = 2;
     string token = 3;
@@ -13,7 +12,7 @@ message K8sResourceRequest {
     repeated string namespaces = 5;
     repeated string args = 6;
 }
-message K8sResourceResponse {
+message KubernetesResourceResponse {
     bytes resource = 1;
     string error = 2;
 }

@@ -1,6 +1,9 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	agent_api "bitbucket.org/cloudplex-devs/woodpecker/agent-api"
 	"context"
 	"encoding/json"
@@ -9,9 +12,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"io"
 	v12 "k8s.io/api/core/v1"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/core/proto"
-	"kubernetes-services-deployment/utils"
 	"time"
 )
 
@@ -251,7 +251,7 @@ func (agent *AgentConnection) AgentCrdManager(method constants.RequestType, requ
 //	return response, err
 //}
 
-func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.K8SResourceRequest) (data []byte, err error) {
+func (agent *AgentConnection) GetK8sResources(ctx context.Context, request *proto.KubernetesResourceRequest) (data []byte, err error) {
 
 	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 		Command: request.Command,

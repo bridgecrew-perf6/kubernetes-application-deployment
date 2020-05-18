@@ -1,6 +1,8 @@
 package constants
 
-import "github.com/patrickmn/go-cache"
+import (
+	"github.com/patrickmn/go-cache"
+)
 
 var (
 	LoggingURL           string
@@ -18,6 +20,7 @@ var (
 type RequestType string
 
 const (
+	AuthTokenKey                        = "X-Auth-Token"
 	IstioServicePostEndpoint            = "/istio-mesh/deploy"
 	IstioServicePutEndpoint             = ""
 	KubernetesStatefulSets              = "statefulset"
@@ -44,8 +47,9 @@ const (
 	AWS                   = "AWS"
 	AZURE                 = "AZURE"
 
-	BACKEND_LOGGING_ENDPOINT = "/elephant/api/v1/backend/logging"
-	Rbac_Token_Info          = "/security/api/rbac/token/info"
+	BACKEND_LOGGING_ENDPOINT  = "/elephant/api/v1/backend/logging"
+	FRONTEND_LOGGING_ENDPOINT = "/elephant/api/v1/frontend/logging"
+	Rbac_Token_Info           = "/security/api/rbac/token/info"
 
 	POST   RequestType = "post"
 	GET    RequestType = "get"

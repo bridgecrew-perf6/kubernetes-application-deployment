@@ -12,7 +12,7 @@ type APIError struct {
 
 type HTTPError struct {
 	Code    int    `json:"code" example:"400"`
-	Message string `json:"message" example:"status bad request"`
+	Message string `json:"error" example:"status bad request"`
 }
 
 type Status struct {
@@ -46,8 +46,8 @@ type ResponseData struct {
 }
 
 type SolutionResp struct {
-	Error string      `json:"error"`
-	Data  interface{} `json:"data"`
+	Error string `json:"error"`
+	Data  string `json:"data"`
 }
 
 type CacheObjectData struct {
@@ -121,4 +121,16 @@ type Backendlogging struct {
 		//status code of service
 		Status int `json:"status"`
 	} `json:"http_request"  binding:"required"`
+}
+
+type LoggingRequestFrontend struct {
+	Message     string `json:"message"`
+	Id          string `json:"id"`
+	Environment string `json:"environment"`
+	Service     string `json:"service"`
+	Level       string `json:"level"`
+	//level is info erro
+	CompanyId string `json:"company_id"`
+	UserId    string `json:"userId"`
+	Type      string `json:"type"`
 }

@@ -1,14 +1,15 @@
 package core
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/types"
-	"kubernetes-services-deployment/utils"
 	"math"
 	"time"
 )
@@ -173,17 +174,16 @@ func (c *Context) GetStringMapStringSlice(key string) (smss map[string][]string)
 }
 
 func (c *Context) ReadLoggingParameters(ginContext *gin.Context) (err error) {
-	token := ginContext.Request.Header.Get("token")
-	if len(token) <= 0 {
-		return errors.New("invalid token")
+	companyId := ginContext.Request.Header.Get("company_id")
+	user := ginContext.Request.Header.Get("user")
+
+	//companyId := "5d945edc2dcc2f00089d8476"
+	//user := "asma.sardar@cloudplex.io"
+	if companyId == "" || user == "" {
+		return errors.New("user or companyID must not be empty")
 	}
-	tokenInfo, err := utils.TokenInfo(token)
-	if err != nil {
-		return err
-	}
-	c.Set("company_id", tokenInfo["companyId"])
-	c.Set("user", tokenInfo["username"])
-	c.Set("token", token)
+	c.Set("company_id", companyId)
+	c.Set("user", user)
 	return nil
 }
 func (c *Context) InitializeLogger(requestURL, method, path, body, projectId string) {
@@ -225,5 +225,31 @@ func (c *Context) SendBackendLogs(message interface{}, severity string) {
 		if err != nil {
 			utils.Error.Println(err)
 		}
+	}
+}
+
+func (c *Context) SendFrontendLogs(message interface{}, severity string) {
+	if message != nil {
+		byteData, err := json.Marshal(message)
+		if err != nil {
+			utils.Error.Println(err)
+			return
+		}
+
+		url := constants.LoggingURL + constants.FRONTEND_LOGGING_ENDPOINT
+		var data types.LoggingRequestFrontend
+		data.Message = string(byteData)
+		data.Environment = "solution"
+		data.Id = c.GetString("project_id")
+		data.Service = constants.SERVICE_NAME
+		data.Level = severity
+		data.UserId = c.GetString("user")
+		data.Type = "ksd"
+		data.CompanyId = c.GetString("company_id")
+		byteData, err = utils.Post(url, data, map[string]string{"Content-Type": "application/json"})
+		if err != nil {
+			utils.Error.Println(err)
+		}
+		fmt.Println(byteData)
 	}
 }

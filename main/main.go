@@ -1,6 +1,13 @@
 package main
 
 import (
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/constants"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/controllers"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core"
+	pb "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/core/proto"
+	_ "bitbucket.org/cloudplex-devs/kubernetes-services-deployment/docs"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/types"
+	"bitbucket.org/cloudplex-devs/kubernetes-services-deployment/utils"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -11,14 +18,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"io/ioutil"
-	"kubernetes-services-deployment/constants"
-	"kubernetes-services-deployment/controllers"
-	"kubernetes-services-deployment/core"
-	pb "kubernetes-services-deployment/core/proto"
-	_ "kubernetes-services-deployment/docs"
-	"kubernetes-services-deployment/utils"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 )
@@ -37,22 +39,21 @@ func init() {
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @BasePath /ksd/api/v1
-
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name X-Auth-Token
 func main() {
 
 	e := gin.New()
 	utils.InitFlags()
-	constants.CacheObj = cache.New(5*time.Minute, 5*time.Minute)
+	constants.CacheObj = cache.New(5*time.Minute, 6*time.Minute)
 	if constants.ServicePort == "" {
 		constants.ServicePort = "8089"
 	}
 	c, _ := controllers.NewController()
 	v1 := e.Group("/ksd/api/v1")
 	{
-		/*dag := v1.Group("/kubernetes")
-		{
-			dag.POST("deploy", c.DeployService)
-		}*/
+		v1.Use(auth())
 		v1.POST("/solution", c.DeploySolution)
 		v1.GET("/solution", c.GetSolution)
 		v1.GET("/solution/all", c.ListSolution)
@@ -123,7 +124,7 @@ func handleclient() {
 		utils.Error.Println(err)
 	}
 
-	_, err = pb.NewK8SResourceClient(conn).GetK8SResource(context.Background(), &pb.K8SResourceRequest{
+	_, err = pb.NewK8SResourceClient(conn).GetK8SResource(context.Background(), &pb.KubernetesResourceRequest{
 		ProjectId: "11",
 		CompanyId: "1111",
 		Token:     "dfsdfsdf",
@@ -147,3 +148,13 @@ func handleclient() {
 	}
 
 }*/
+
+func auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if len(c.GetHeader(constants.AuthTokenKey)) == 0 {
+			c.JSON(http.StatusUnauthorized, types.HTTPError{Message: "X-Auth-Token is required in Header"})
+			c.Abort()
+		}
+		c.Next()
+	}
+}

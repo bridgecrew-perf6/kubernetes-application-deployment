@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"google.golang.org/grpc/metadata"
 	"io"
 	v12 "k8s.io/api/core/v1"
@@ -311,15 +310,6 @@ func (agent *AgentConnection) Killingpod(ctx context.Context, request *proto.Pod
 		Args:    []string{"get", request.Type, request.Name, "-n", request.Namespace, "-o=jsonpath='{.spec.replicas}'"},
 	})
 	replicas := trimQuotes(resp.Stdout[0])
-	fmt.Println(replicas)
-	//var replicas string
-	//err = json.Unmarshal(byte(resp.Stdout[0]), &replicas)
-	//if err != nil {
-	//	utils.Error.Println(err)
-	//	return "", err
-	//}
-	//fmt.Println(replicas)
-
 	_, err1 := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 		Command: "kubectl",
 		Args:    []string{"scale", request.Type, request.Name, "-n", request.Namespace, "--replicas=0"},

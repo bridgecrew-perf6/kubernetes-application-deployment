@@ -80,6 +80,7 @@ func main() {
 		v1.DELETE("/kubeservice/:namespace/:name", c.DeleteKubernetesService)
 
 		v1.GET("/kubeservice/:namespace/:name/endpoint", c.GetKubernetesServiceExternalIp)
+		v1.GET("/kubehealthservice", c.GetKubernetesServiceHealth)
 
 		v1.GET("/secret/:namespace/:name", c.GetRegistrySecret)
 		v1.POST("/secret/:namespace/:name", c.CreateRegistrySecret)

@@ -290,3 +290,53 @@ func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
 
 	return namespaceResp, nil
 }
+
+func (agent *AgentConnection) AddLabel(ctx context.Context, request *proto.Namespacerequest) (string, error) {
+	_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"label", "ns", request.Namespace, "istio-injection=enabled"},
+	})
+	if err != nil {
+		utils.Error.Println(err)
+		return "", err
+	}
+	return "successful", nil
+}
+
+func (agent *AgentConnection) Killingpod(ctx context.Context, request *proto.PodRequest) (string, error) {
+
+	resp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"get", request.Type, request.Name, "-n", request.Namespace, "-o=jsonpath='{.spec.replicas}'"},
+	})
+	replicas := trimQuotes(resp.Stdout[0])
+	_, err1 := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"scale", request.Type, request.Name, "-n", request.Namespace, "--replicas=0"},
+	})
+	if err1 == nil {
+		_, err2 := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+			Command: "kubectl",
+			Args:    []string{"scale", request.Type, request.Name, "-n", request.Namespace, "--replicas=" + replicas},
+		})
+		if err2 != nil {
+			utils.Error.Println(err)
+			return "", err
+		}
+	}
+
+	if err != nil {
+		utils.Error.Println(err)
+		return "", err
+	}
+	return "successful", nil
+}
+
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if c := s[len(s)-1]; s[0] == c && (c == '"' || c == '\'') {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
+}

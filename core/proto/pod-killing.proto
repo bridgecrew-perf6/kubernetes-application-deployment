@@ -1,0 +1,20 @@
+syntax="proto3";
+package proto;
+
+service PodKillService{
+    rpc KillPod (PodRequest) returns (PodResponse) {}
+}
+
+message PodRequest {
+    string project_id = 1;
+    string company_id = 2;
+    string token = 3;
+    string namespace = 4;
+    string name = 5;
+    string type = 6;
+}
+
+message PodResponse {
+    string message = 1;
+    string error = 2;
+}

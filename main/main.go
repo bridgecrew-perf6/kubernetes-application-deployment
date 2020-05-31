@@ -108,6 +108,8 @@ func grpcMain() {
 	pb.RegisterServiceServer(srv, svc)
 
 	pb.RegisterK8SResourceServer(srv, svc)
+	pb.RegisterAnnotateNamespaceServer(srv, svc)
+	pb.RegisterPodKillServiceServer(srv, svc)
 	//go handleclient()
 
 	// Register reflection service on gRPC server.

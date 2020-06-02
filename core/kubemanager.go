@@ -2575,7 +2575,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		flag := true
 		kubectlStreamResp, err := agent.agentClient.ExecKubectlStream(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
+			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "no registered agent with")) {
 			err = RetryAgentConn(agent)

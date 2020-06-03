@@ -2347,6 +2347,19 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 				_ = err
 				summary.UsedResources.StoragePercentage = summary.UsedResources.StoragePercentage + temp.UsedResources.StoragePercentage
 			}
+
+			if strings.Contains(temp_str, "ProviderID:") &&  len(strings.Split(temp_str,":")) > 1{
+				temp.ProviderId =  strings.TrimSpace(strings.Split(temp_str, ":")[1]) //Provider
+			}
+			if strings.Contains(temp_str, "Hostname:") &&  len(strings.Split(temp_str,":")) == 2{
+				temp.NodeHostname =  strings.TrimSpace(strings.Split(temp_str, ":")[1]) //Hostname
+			}
+			if strings.Contains(temp_str, "InternalIP:") &&  len(strings.Split(temp_str,":")) == 2{
+				temp.NodeInternalIp =  strings.TrimSpace(strings.Split(temp_str, ":")[1]) //InternalIP
+			}
+			if strings.Contains(temp_str, "ExternalIP:") &&  len(strings.Split(temp_str,":")) == 2{
+				temp.NodeExternalIp =  strings.TrimSpace(strings.Split(temp_str, ":")[1]) //External IP
+				}
 		}
 
 		_ = node

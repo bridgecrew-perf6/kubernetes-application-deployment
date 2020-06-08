@@ -163,18 +163,15 @@ type ClusterSummary struct {
 	Capacity      Capacity      `json:"capacity"`
 	Allocatable   Allocatable   `json:"allocatable"`
 	UsedResources UsedResources `json:"used_resources"`
-
-
-
 }
 type ClusterNodes struct {
-	Name          string        `json:"name"`
-	CreationTime  string        `json:"creation_time"`
-	Capacity      Capacity      `json:"capacity"`
-	Allocatable   Allocatable   `json:"allocatable"`
-	UsedResources UsedResources `json:"used_resources"`
-	NodeHostname string `json:"hostname"`
-	NodeInternalIp string `json:"internal_ip"`
-	NodeExternalIp string `json:"external_ip"`
-	ProviderId		string `json:"provider_id"`
+	Name           string        `json:"name"`
+	CreationTime   string        `json:"creation_time"`
+	Capacity       Capacity      `json:"capacity"`
+	Allocatable    Allocatable   `json:"allocatable"`
+	UsedResources  UsedResources `json:"used_resources"`
+	NodeHostname   string        `json:"hostname"`
+	NodeInternalIp string        `json:"internal_ip"`
+	NodeExternalIp string        `json:"external_ip"`
+	ProviderId     string        `json:"provider_id"`
 }

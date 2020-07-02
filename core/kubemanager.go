@@ -2566,6 +2566,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 	//var data interface{}
 	var data2 string
+	var podErrors []string
 	switch method {
 	case "post":
 
@@ -2715,6 +2716,19 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			responseObj.Error = err.Error() + "service :" + runtimeObj.Kind + "-" + runtimeObj.Name
 			utils.Error.Println(err)
 		} else {
+			podStatus, err := agent.GetPodStatus(runtimeObj.Name, runtimeObj.Namespace)
+			if err != nil {
+				return responseObj, err
+			}
+			var reasons []string
+			for _, value := range podStatus.ContainerStatuses {
+				if value.State.Waiting != nil {
+					reasons = append(reasons, value.State.Waiting.Reason)
+				}
+			}
+			for _, value := range reasons {
+				podErrors = append(podErrors, value)
+			}
 			data2 = kubectlResp.Stdout[0]
 		}
 	case "put":
@@ -2926,6 +2940,17 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
 			data2 = kubectlResp.Stdout[0]
+			podStatus, err := agent.GetPodStatus(runtimeObj.Name, runtimeObj.Namespace)
+			if err != nil {
+				return responseObj, err
+			}
+			var reasons []string
+			for _, value := range podStatus.ContainerStatuses {
+				if value.State.Waiting != nil {
+					reasons = append(reasons, value.State.Waiting.Message)
+				}
+			}
+			fmt.Println(reasons)
 		}
 	case "delete":
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
@@ -2975,6 +3000,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		return responseObj, err
 	} else {
 		responseObj.Data = data2
+		responseObj.PodErrors = podErrors
 		utils.Info.Println(data2)
 		utils.Info.Println(responseObj)
 	}

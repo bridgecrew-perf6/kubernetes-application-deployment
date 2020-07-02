@@ -46,8 +46,9 @@ type ResponseData struct {
 }
 
 type SolutionResp struct {
-	Error string `json:"error"`
-	Data  string `json:"data"`
+	Error     string   `json:"error"`
+	Data      string   `json:"data"`
+	PodErrors []string `json:"pod_errors"`
 }
 
 type CacheObjectData struct {
@@ -174,4 +175,23 @@ type ClusterNodes struct {
 	NodeInternalIp string        `json:"internal_ip"`
 	NodeExternalIp string        `json:"external_ip"`
 	ProviderId     string        `json:"provider_id"`
+}
+
+type PodStatus struct {
+	Status            string            `json:"phase,omitempty"`
+	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty"`
+}
+
+type ContainerStatus struct {
+	Name  string         `json:"name"`
+	State ContainerState `json:"state,omitempty"`
+}
+
+type ContainerState struct {
+	Waiting *ContainerStateWaiting `json:"waiting,omitempty"`
+}
+
+type ContainerStateWaiting struct {
+	Reason  string `json:"reason,omitempty"`
+	Message string `json:"message,omitempty"`
 }

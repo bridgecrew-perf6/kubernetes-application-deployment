@@ -18,4 +18,5 @@ message ServiceRequest {
 }
 message SerivceFResponse{
     bytes service = 1;
+    repeated string pod_errors = 2;
 }

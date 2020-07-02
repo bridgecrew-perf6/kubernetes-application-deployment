@@ -107,6 +107,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	//	return response, err
 	//}
 	response.Service = []byte(responseObj.Data)
+	response.PodErrors = responseObj.PodErrors
 
 	/*conn, err := GetGrpcAgentConnection()
 	if err != nil {

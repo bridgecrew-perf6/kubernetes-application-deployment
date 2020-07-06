@@ -2723,7 +2723,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			var reasons []string
 			for _, value := range podStatus.ContainerStatuses {
 				if value.State.Waiting != nil {
-					reasons = append(reasons, value.State.Waiting.Reason)
+					reasons = append(reasons, value.State.Waiting.Message)
 				}
 			}
 			for _, value := range reasons {

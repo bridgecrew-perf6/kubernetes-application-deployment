@@ -57,6 +57,9 @@ func Post(url string, data interface{}, headers map[string]string) ([]byte, erro
 		return nil, err
 	}
 	Info.Println("responseCode: ", resp.StatusCode(), "\n response Body", string(resp.Body()))
+	if resp.StatusCode() != 200 {
+		return nil, errors.New(string(resp.Body()))
+	}
 	return resp.Body(), nil
 }
 

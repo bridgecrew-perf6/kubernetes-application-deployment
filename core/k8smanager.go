@@ -33,6 +33,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 		utils.Error.Println(err)
 		return response, err
 	}
+	agent.cpCtx = cpCtx
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		return response, err
@@ -81,6 +82,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 		utils.Error.Println(err)
 		return response, err
 	}
+	agent.cpCtx = cpCtx
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		return response, err
@@ -144,6 +146,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 		utils.Error.Println(err)
 		return response, err
 	}
+	agent.cpCtx = cpCtx
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		return response, err
@@ -205,6 +208,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 		utils.Error.Println(err)
 		return response, err
 	}
+	agent.cpCtx = cpCtx
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		return response, err
@@ -265,6 +269,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 		utils.Error.Println(err)
 		return response, err
 	}
+	agent.cpCtx = cpCtx
 	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
 	if err != nil {
 		return response, err

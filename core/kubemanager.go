@@ -43,6 +43,7 @@ type AgentConnection struct {
 	connection  *grpc.ClientConn
 	agentCtx    context.Context
 	agentClient agent_api.AgentServerClient
+	cpCtx       *Context
 	projectId   string
 	companyId   string
 	Mux         sync.Mutex
@@ -100,7 +101,7 @@ func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string)
 	)
 	agent.projectId = projectId
 	agent.companyId = companyId
-	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
+	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 200*time.Second)
 	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
 	agent.agentClient = agent_api.NewAgentServerClient(agent.connection)
 	return nil
@@ -2570,6 +2571,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	switch method {
 	case "post":
 
+		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
+			agent.InstallCertManager()
+		}
+
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "no registered agent with")) {
@@ -2732,6 +2737,10 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			data2 = kubectlResp.Stdout[0]
 		}
 	case "put":
+		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
+			agent.InstallCertManager()
+		}
+
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) {
@@ -2833,6 +2842,9 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		}
 
 	case "patch":
+		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
+			agent.InstallCertManager()
+		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.DeleteFile(name, string(raw))
@@ -3590,6 +3602,27 @@ func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api
 	}
 	utils.Info.Println(name, " ", response) //status : successfully created all file
 	return response, err
+}
+
+func (agent *AgentConnection) InstallCertManager() {
+	_ = RetryAgentConn(agent)
+	//checking whether cert manager already installed or not.
+	_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+		Command: "kubectl",
+		Args:    []string{"get", "ns", "cert-manager"},
+	})
+	if err != nil {
+		url := constants.KubernetesEngineURL + strings.Replace(constants.KUBERNETES_GET_CREDENTIALS_ENDPOINT, "{envId}", agent.projectId, -1)
+		_, err = utils.Post(url, nil, map[string]string{
+			"Content-Type":         "application/json",
+			constants.AuthTokenKey: agent.cpCtx.Keys[constants.AuthTokenKey].(string),
+		})
+		if err != nil {
+			utils.Error.Printf("Error while installing cert manager for project %s", agent.projectId)
+			return
+		}
+	}
+	return
 }
 
 func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api.FileResponse, err error) {

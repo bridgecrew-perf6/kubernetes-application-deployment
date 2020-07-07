@@ -40,6 +40,7 @@ const (
 	LOGGING_LEVEL_DEBUG                 = "debug"
 	CLUSTER_GET_ENDPOINT                = "/antelope/cluster/{cloud_provider}/status/"
 	KUBERNETES_GET_CREDENTIALS_ENDPOINT = "/kube/api/v1/credentials/{envId}"
+	INSTALL_CERT_MANAGER_ENDPOINT       = "/kube/api/v1/install/certificate/{envId}"
 	KUBERNETES_MASTER_PORT              = "6443"
 
 	ProjectEngineEndpoint = "/raccoon/projects/{project_id}"

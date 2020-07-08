@@ -2503,7 +2503,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 	utils.Info.Println(crdPlural, namespace)
 
-	if namespace != "" {
+	if namespace != "" && namespace != "istio-system" { //Certificates should be created in istio-system namespace
 
 		_, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
 			Command: "kubectl",
@@ -3612,7 +3612,7 @@ func (agent *AgentConnection) InstallCertManager() {
 		Args:    []string{"get", "ns", "cert-manager"},
 	})
 	if err != nil {
-		url := constants.KubernetesEngineURL + strings.Replace(constants.KUBERNETES_GET_CREDENTIALS_ENDPOINT, "{envId}", agent.projectId, -1)
+		url := constants.KubernetesEngineURL + strings.Replace(constants.INSTALL_CERT_MANAGER_ENDPOINT, "{envId}", agent.projectId, -1)
 		_, err = utils.Post(url, nil, map[string]string{
 			"Content-Type":         "application/json",
 			constants.AuthTokenKey: agent.cpCtx.Keys[constants.AuthTokenKey].(string),

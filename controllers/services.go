@@ -186,12 +186,8 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return
 	}
-
-	err = agent.InitializeAgentClient(projectId, companyId)
-	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
-		return
-	}
+	agent.CompanyId = companyId
+	agent.ProjectId = projectId
 
 	data, err := agent.GetKubernetesServiceExternalIp(namespace, name)
 	if err != nil {
@@ -237,12 +233,8 @@ func (c *KubeController) GetKubernetesServiceHealth(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return
 	}
-
-	err = agent.InitializeAgentClient(projectId, companyId)
-	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
-		return
-	}
+	agent.ProjectId = projectId
+	agent.CompanyId = companyId
 
 	data, err := agent.GetKubernetesHealth()
 	if err != nil {

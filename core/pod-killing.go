@@ -21,14 +21,16 @@ func (s *Server) KillPod(ctx context.Context, request *pb.PodRequest) (*pb.PodRe
 		utils.Error.Println(err)
 		return &pb.PodResponse{}, err
 	}
+	agent.CompanyId = request.CompanyId
+	agent.ProjectId = request.ProjectId
 
-	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
+	err = agent.InitializeAgentClient()
 	if err != nil {
 		utils.Error.Println(err)
 		return &pb.PodResponse{}, err
 	}
 
-	defer agent.connection.Close()
+	defer agent.Connection.Close()
 
 	resp, err := agent.Killingpod(ctx, request)
 	if err != nil {

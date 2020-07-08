@@ -22,13 +22,13 @@ func (s *Server) AnnotateNamespace(ctx context.Context, request *pb.Namespacereq
 		return &pb.Namespaceresponse{}, err
 	}
 
-	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
+	err = agent.InitializeAgentClient()
 	if err != nil {
 		utils.Error.Println(err)
 		return &pb.Namespaceresponse{}, err
 	}
 
-	defer agent.connection.Close()
+	defer agent.Connection.Close()
 
 	resp, err := agent.AddLabel(ctx, request)
 	if err != nil {

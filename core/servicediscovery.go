@@ -21,14 +21,16 @@ func (s *Server) GetK8SResource(ctx context.Context, request *pb.KubernetesResou
 		utils.Error.Println(err)
 		return &pb.KubernetesResourceResponse{}, err
 	}
+	agent.ProjectId = request.ProjectId
+	agent.CompanyId = request.CompanyId
 
-	err = agent.InitializeAgentClient(request.ProjectId, request.CompanyId)
+	err = agent.InitializeAgentClient()
 	if err != nil {
 		utils.Error.Println(err)
 		return &pb.KubernetesResourceResponse{}, err
 	}
 
-	defer agent.connection.Close()
+	defer agent.Connection.Close()
 
 	resp, err := agent.GetK8sResources(ctx, request)
 	if err != nil {

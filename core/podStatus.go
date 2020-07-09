@@ -8,7 +8,7 @@ import (
 )
 
 func (agent *AgentConnection) GetPodStatus(name, namespace string) (responseObj types.PodStatus, err error) {
-	kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+	kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
 		Command: "kubectl",
 		Args:    []string{"get", "pods", "-n", namespace, "-o=jsonpath={.items[*].metadata.name}"},
 	})
@@ -24,7 +24,7 @@ func (agent *AgentConnection) GetPodStatus(name, namespace string) (responseObj 
 				//	return responseObj, err
 				//}
 				//phase := kubectlResp.Stdout[0]
-				kubectlResp, err := agent.agentClient.ExecKubectl(agent.agentCtx, &agent_api.ExecKubectlRequest{
+				kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
 					Command: "kubectl",
 					Args:    []string{"get", "pod", value, "-n", namespace, "-o", "json"},
 				})

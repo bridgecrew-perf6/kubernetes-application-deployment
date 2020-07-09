@@ -2481,7 +2481,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 				utils.Error.Println(namespace+" namespace creation failed", err)
 				responseObj.Error = err.Error()
 				return responseObj, err
-			} else {
+			} else if resp != nil {
 				utils.Info.Println(resp.Stdout)
 			}
 		}
@@ -2671,6 +2671,9 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"
+		}
+		if strings.Contains(runtimeObj.Kind, "Certificate") {
+			runtimeObj.Kind = "Certificate.cert-manager.io"
 		}
 
 		kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
@@ -3342,9 +3345,8 @@ func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api
 }
 
 func (agent *AgentConnection) InstallCertManager() {
-	_ = RetryAgentConn(agent)
 	//checking whether cert manager already installed or not.
-	_, err := agent.AgentClient.ExecKubectl(agent.AgentCtx, &agent_api.ExecKubectlRequest{
+	_, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
 		Command: "kubectl",
 		Args:    []string{"get", "ns", "cert-manager"},
 	})
@@ -3358,6 +3360,7 @@ func (agent *AgentConnection) InstallCertManager() {
 			utils.Error.Printf("Error while installing cert manager for project %s", agent.ProjectId)
 			return
 		}
+		time.Sleep(time.Second * 120)
 	}
 	return
 }
@@ -3407,7 +3410,7 @@ func (agent *AgentConnection) ExecKubectlCommand(req *agent_api.ExecKubectlReque
 
 	resp, err := agent.AgentClient.ExecKubectl(agent.AgentCtx, req)
 	str := time.Now()
-	for err != nil && int(time.Since(str).Minutes()) < 1 {
+	for err != nil && strings.Contains(err.Error(), "no registered agent") && int(time.Since(str).Minutes()) < 1 {
 		utils.Error.Printf(fmt.Sprintf("%s ... retrying connecting ", err))
 		time.Sleep(5 * time.Second)
 		resp, err = agent.AgentClient.ExecKubectl(agent.AgentCtx, req)
@@ -3421,7 +3424,7 @@ func (agent *AgentConnection) ExecKubectlCommand(req *agent_api.ExecKubectlReque
 			return nil, err
 		}
 	} else {
-		if len(resp.Stderr) > 0 {
+		if len(resp.Stderr) > 0 && resp.Stderr[0] != "" {
 			utils.Error.Printf(fmt.Sprintf("ERROR : %s", resp.Stderr))
 			return nil, errors.New(fmt.Sprintf("ERROR : %s", resp.Stderr))
 		} else {

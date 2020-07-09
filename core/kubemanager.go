@@ -3317,7 +3317,7 @@ func (agent *AgentConnection) CreateFile(name, data string) (response *agent_api
 		},
 	})
 	str := time.Now()
-	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) && int(time.Since(str).Minutes()) < 1 {
+	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "timed out waiting for server handshake")) && int(time.Since(str).Minutes()) < 1 {
 		utils.Error.Printf(fmt.Sprintf("%s ... retrying connecting ", err))
 		time.Sleep(5 * time.Second)
 		response, err = agent.AgentClient.CreateFile(agent.AgentCtx, &agent_api.CreateFileRequest{
@@ -3379,7 +3379,7 @@ func (agent *AgentConnection) DeleteFile(name, data string) (response *agent_api
 		},
 	})
 	str := time.Now()
-	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) && int(time.Since(str).Minutes()) < 1 {
+	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "timed out waiting for server handshake")) && int(time.Since(str).Minutes()) < 1 {
 		utils.Error.Printf(fmt.Sprintf("%s ... retrying connecting ", err))
 		time.Sleep(5 * time.Second)
 		response, err = agent.AgentClient.CreateFile(agent.AgentCtx, &agent_api.CreateFileRequest{
@@ -3411,7 +3411,7 @@ func (agent *AgentConnection) ExecKubectlCommand(req *agent_api.ExecKubectlReque
 
 	resp, err := agent.AgentClient.ExecKubectl(agent.AgentCtx, req)
 	str := time.Now()
-	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) && int(time.Since(str).Minutes()) < 1 {
+	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "timed out waiting for server handshake")) && int(time.Since(str).Minutes()) < 1 {
 		utils.Error.Printf(fmt.Sprintf("%s ... retrying connecting ", err))
 		time.Sleep(5 * time.Second)
 		resp, err = agent.AgentClient.ExecKubectl(agent.AgentCtx, req)
@@ -3440,7 +3440,7 @@ func (agent *AgentConnection) ExecKubectlStreamCommand(req *agent_api.ExecKubect
 
 	kubectlStreamResp, err := agent.AgentClient.ExecKubectlStream(agent.AgentCtx, req)
 	str := time.Now()
-	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded")) && int(time.Since(str).Minutes()) < 1 {
+	for err != nil && (strings.Contains(err.Error(), "no registered agent") || strings.Contains(err.Error(), "transport is closing") || strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "timed out waiting for server handshake")) && int(time.Since(str).Minutes()) < 1 {
 		utils.Error.Printf(fmt.Sprintf("%s ... retrying connecting ", err))
 		time.Sleep(5 * time.Second)
 		kubectlStreamResp, err = agent.AgentClient.ExecKubectlStream(agent.AgentCtx, req)

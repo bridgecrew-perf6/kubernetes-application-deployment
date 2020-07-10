@@ -2505,7 +2505,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
 			agent.InstallCertManager()
-			time.Sleep(time.Second * 40)
+			time.Sleep(time.Second * 20)
 		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
@@ -2585,7 +2585,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	case "put":
 		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
 			agent.InstallCertManager()
-			time.Sleep(time.Second * 40)
+			time.Sleep(time.Second * 20)
 		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
@@ -2637,7 +2637,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	case "patch":
 		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
 			agent.InstallCertManager()
-			time.Sleep(time.Second * 40)
+			time.Sleep(time.Second * 20)
 		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
@@ -3367,7 +3367,7 @@ func (agent *AgentConnection) InstallCertManager() {
 			return
 		}
 		utils.Info.Printf("waiting for cert-manager to be installed successfully.......")
-		time.Sleep(time.Second * 100)
+		time.Sleep(time.Second * 120)
 	}
 	return
 }

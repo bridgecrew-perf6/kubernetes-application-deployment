@@ -3361,7 +3361,7 @@ func (agent *AgentConnection) InstallCertManager() {
 			return
 		}
 		utils.Info.Printf("waiting for cert-manager to be installed successfully.......")
-		time.Sleep(time.Second * 300)
+		time.Sleep(time.Second * 180)
 	}
 	return
 }

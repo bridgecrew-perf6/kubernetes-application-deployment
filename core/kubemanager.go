@@ -2541,6 +2541,9 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"
 		}
+		if strings.Contains(runtimeObj.Kind, "Certificate") {
+			runtimeObj.Kind = "Certificate.cert-manager.io"
+		}
 
 		kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
 			Command: "kubectl",
@@ -2557,6 +2560,9 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	case "get":
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"
+		}
+		if strings.Contains(runtimeObj.Kind, "Certificate") {
+			runtimeObj.Kind = "Certificate.cert-manager.io"
 		}
 
 		kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
@@ -2620,6 +2626,9 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
 			runtimeObj.Kind = "ksvc"
+		}
+		if strings.Contains(runtimeObj.Kind, "Certificate") {
+			runtimeObj.Kind = "Certificate.cert-manager.io"
 		}
 
 		kubectlResp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{

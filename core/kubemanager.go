@@ -222,9 +222,11 @@ func GetKubernetesClient(c *Context, projectId *string) (kubeClient KubernetesCl
 func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (responses map[string]interface{}, err error) {
 	responses = make(map[string]interface{})
 	if req == nil {
-		return responses, errors.New("invalid request while starting depleoyment")
+		return responses, errors.New("invalid request while starting deployment")
 	}
-
+	if *req.ProjectId == "" || cpContext.GetString("company_id") == "" {
+		return responses, errors.New("projectId or companyId must not be empty")
+	}
 	var errs []string
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 
@@ -236,11 +238,6 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
-
-	err = agent.InitializeAgentClient()
-	if err != nil {
-		return responses, err
-	}
 
 	for kubeType, data := range req.ServiceData {
 		var respTemp interface{}
@@ -266,18 +263,18 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
+	if *req.ProjectId == "" || cpContext.GetString("company_id") == "" {
+		return responses, errors.New("projectId or companyId must not be empty")
+	}
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		return responses, err
 	}
+	agent.ProjectId = *req.ProjectId
+	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
-
-	err = agent.InitializeAgentClient()
-	if err != nil {
-		return responses, err
-	}
 
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
@@ -343,18 +340,18 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
+	if *req.ProjectId == "" || cpContext.GetString("company_id") == "" {
+		return responses, errors.New("projectId or companyId must not be empty")
+	}
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 	}
+	agent.ProjectId = *req.ProjectId
+	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
-
-	err = agent.InitializeAgentClient()
-	if err != nil {
-		return responses, err
-	}
 
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
@@ -386,17 +383,18 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
+	if *req.ProjectId == "" || cpContext.GetString("company_id") == "" {
+		return responses, errors.New("projectId or companyId must not be empty")
+	}
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 	}
-	defer agent.Connection.Close()
+	agent.ProjectId = *req.ProjectId
+	agent.CompanyId = cpContext.GetString("company_id")
 
-	err = agent.InitializeAgentClient()
-	if err != nil {
-		return responses, err
-	}
+	defer agent.Connection.Close()
 
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string
@@ -423,18 +421,19 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if req == nil {
 		return responses, errors.New("invalid request while starting deployment")
 	}
+	if *req.ProjectId == "" || cpContext.GetString("company_id") == "" {
+		return responses, errors.New("projectId or companyId must not be empty")
+	}
 
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
 		return responses, err
 	}
-	defer agent.Connection.Close()
+	agent.ProjectId = *req.ProjectId
+	agent.CompanyId = cpContext.GetString("company_id")
 
-	err = agent.InitializeAgentClient()
-	if err != nil {
-		return responses, err
-	}
+	defer agent.Connection.Close()
 
 	cpContext.SendBackendLogs(req.ServiceData, constants.LOGGING_LEVEL_DEBUG)
 	var errs []string

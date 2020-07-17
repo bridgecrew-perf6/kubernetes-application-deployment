@@ -2244,6 +2244,38 @@ func (agent *AgentConnection) GetKubernetesServiceExternalIp(namespace, name str
 	return externalIp, nil
 }
 
+func (agent *AgentConnection) GetOPExternalIP() (string, error) {
+
+	resp, err := agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
+		Command: "kubeclt",
+		Args:    []string{"get", "nodes", "-o", "json"},
+	})
+	if err != nil {
+		utils.Error.Println("getting nodes info :", err.Error())
+		return "", err
+	}
+
+	defer agent.Connection.Close()
+
+	var nodeList v12.NodeList
+	b := []byte(resp.Stdout[0])
+	err = json.Unmarshal(b, &nodeList)
+	if err != nil {
+		return "", err
+	}
+
+	var nodeExternalIP string
+	if len(nodeList.Items) > 0 {
+		for _, nodeAddr := range nodeList.Items[0].Status.Addresses {
+			if nodeAddr.Type == v12.NodeExternalIP {
+				nodeExternalIP = nodeAddr.Address
+			}
+		}
+	}
+	nodeExternalIP = nodeExternalIP + ":31380"
+	return nodeExternalIP, nil
+}
+
 func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) {
 
 	var result types.HealthObject

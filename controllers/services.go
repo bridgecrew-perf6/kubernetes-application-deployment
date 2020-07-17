@@ -147,7 +147,7 @@ func (c *KubeController) DeleteKubernetesService(g *gin.Context) {
 
 // @Summary get status of kubernetes services deployment
 // @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
-// @Param project_id header string	true "project id"
+// @Param OP header boolean	true "cluster name"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
 // @Param project_id header string true "project_id"
@@ -162,6 +162,7 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 	namespace := g.Param("namespace")
 	name := g.Param("name")
 	projectId := g.GetHeader("project_id")
+	isOP := g.GetHeader("OP")
 
 	if projectId == "" {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": "project_id is missing in request"})
@@ -189,10 +190,19 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 	agent.CompanyId = companyId
 	agent.ProjectId = projectId
 
-	data, err := agent.GetKubernetesServiceExternalIp(namespace, name)
-	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
-		return
+	var data string
+	if isOP == "true" {
+		data, err = agent.GetOPExternalIP()
+		if err != nil {
+			g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+			return
+		}
+	} else {
+		data, err = agent.GetKubernetesServiceExternalIp(namespace, name)
+		if err != nil {
+			g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
+			return
+		}
 	}
 	g.JSON(http.StatusOK, gin.H{"error": "", "external_ip": data})
 }

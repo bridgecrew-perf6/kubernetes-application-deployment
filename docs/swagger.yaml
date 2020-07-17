@@ -5,11 +5,14 @@ definitions:
       project_id:
         type: string
       service:
-        required:
-        - service
+        additionalProperties:
+          items:
+            type: object
+          type: array
         type: object
     required:
     - project_id
+    - service
     type: object
   v1.StatefulSet:
     properties:
@@ -36,13 +39,10 @@ paths:
       consumes:
       - application/json
       description: deploy services on kubernetes cluster
-      parameters:
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
   /api/v1/registry/{namespace}/{name}:
     delete:
@@ -65,12 +65,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
     get:
       consumes:
@@ -92,12 +90,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
   /api/v1/statefulsets/{name}/{namespace}:
     delete:
@@ -121,12 +117,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
     get:
       consumes:
@@ -149,10 +143,6 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -160,6 +150,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/v1.StatefulSet'
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
   /api/v1/statefulsets/{namespace}:
     get:
@@ -178,12 +170,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of  all kubernetes services deployment
   /deployment/{name}/{namespace}:
     get:
@@ -207,12 +197,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
       tags:
       - deployment
@@ -233,15 +221,36 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of  all kubernetes services deployment
       tags:
       - deployment
+  /getallnamespaces/{project_id}/:
+    get:
+      consumes:
+      - application/json
+      description: get all namespaces
+      parameters:
+      - description: project id
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"error": "", "namespaces": ""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      security:
+      - Bearer: []
+      summary: get all namespaces
   /health:
     get:
       produces:
@@ -277,12 +286,10 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
     get:
       consumes:
@@ -305,14 +312,73 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
+      produces:
+      - application/json
+      security:
+      - Bearer: []
+      summary: get status of kubernetes services deployment
+  /kubeservice/{name}/{namespace}/endpoint:
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: cluster name
         in: header
-        name: token
+        name: OP
+        required: true
+        type: boolean
+      - description: Name of the kubernetes service
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Namespace of the kubernetes service
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: project_id
+        in: header
+        name: project_id
+        required: true
         type: string
       produces:
       - application/json
+      responses:
+        "200":
+          description: '{"error": "", "external_ip": ""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
-  /kubeservice/{name}/{namespace}/endpoint:
+  /kubeservice/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: get status of all kubernetes services deployment on a Kubernetes
+        Cluster. If you need all services status then pass namespace=""
+      parameters:
+      - description: project id
+        in: header
+        name: project_id
+        required: true
+        type: string
+      - description: Namespace of kubernetes cluster
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      security:
+      - Bearer: []
+      summary: get status of  all kubernetes services deployment
+  /kubeservice/clusterhealth:
     get:
       consumes:
       - application/json
@@ -347,36 +413,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"error": "", "external_ip": ""}'
+          description: '{"error": "", "health": ""}'
         "404":
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
-      summary: get status of kubernetes services deployment
-  /kubeservice/{namespace}:
-    get:
-      consumes:
-      - application/json
-      description: get status of all kubernetes services deployment on a Kubernetes
-        Cluster. If you need all services status then pass namespace=""
-      parameters:
-      - description: project id
-        in: header
-        name: project_id
-        required: true
-        type: string
-      - description: Namespace of kubernetes cluster
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
-      produces:
-      - application/json
-      summary: get status of  all kubernetes services deployment
+      summary: get health status of kubernetes services deployment
   /solution:
     delete:
       consumes:
@@ -389,11 +431,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -403,6 +440,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -417,11 +456,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -431,6 +465,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -445,11 +481,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -459,6 +490,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -472,11 +505,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -486,6 +514,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -500,11 +530,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -514,6 +539,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -529,11 +556,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
-          type: object
-      - description: token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
       responses:
@@ -543,6 +565,8 @@ paths:
           description: '{"error": ""}'
         "500":
           description: '{"error": ""}'
+      security:
+      - Bearer: []
       summary: deploy services on kubernetes cluster
       tags:
       - solutions
@@ -568,13 +592,16 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
       produces:
       - application/json
+      security:
+      - Bearer: []
       summary: get status of kubernetes services deployment
       tags:
       - deployment
+securityDefinitions:
+  Bearer:
+    in: header
+    name: X-Auth-Token
+    type: apiKey
 swagger: "2.0"

@@ -2267,7 +2267,9 @@ func (agent *AgentConnection) GetOPExternalIP() (string, error) {
 	var nodeExternalIP string
 	if len(nodeList.Items) > 0 {
 		for _, nodeAddr := range nodeList.Items[0].Status.Addresses {
-			if nodeAddr.Type == v12.NodeExternalIP {
+			if nodeAddr.Type == v12.NodeExternalIP && nodeAddr.Address != "" {
+				nodeExternalIP = nodeAddr.Address
+			} else if nodeAddr.Type == v12.NodeInternalIP {
 				nodeExternalIP = nodeAddr.Address
 			}
 		}

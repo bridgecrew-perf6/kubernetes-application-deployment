@@ -2539,6 +2539,8 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
 			agent.InstallCertManager()
 			time.Sleep(time.Second * 20)
+		} else if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			time.Sleep(time.Second * 10)
 		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)

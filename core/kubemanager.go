@@ -2267,7 +2267,9 @@ func (agent *AgentConnection) GetOPExternalIP() (string, error) {
 	var nodeExternalIP string
 	if len(nodeList.Items) > 0 {
 		for _, nodeAddr := range nodeList.Items[0].Status.Addresses {
-			if nodeAddr.Type == v12.NodeExternalIP {
+			if nodeAddr.Type == v12.NodeExternalIP && nodeAddr.Address != "" {
+				nodeExternalIP = nodeAddr.Address
+			} else if nodeAddr.Type == v12.NodeInternalIP {
 				nodeExternalIP = nodeAddr.Address
 			}
 		}
@@ -2537,6 +2539,8 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		if runtimeObj.Kind == "Certificate" || runtimeObj.Kind == "ClusterIssuer" {
 			agent.InstallCertManager()
 			time.Sleep(time.Second * 20)
+		} else if strings.Contains(runtimeObj.APIVersion, "serving.knative") {
+			time.Sleep(time.Second * 10)
 		}
 
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)

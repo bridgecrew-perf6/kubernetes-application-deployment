@@ -2304,7 +2304,7 @@ func (agent *AgentConnection) GetKubernetesHealth() (types.HealthObject, error) 
 		//Calling Describe node
 		resp, err = agent.ExecKubectlCommand(&agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"describe", "nodes"},
+			Args:    []string{"describe", "nodes", node.Name},
 		})
 		if err != nil {
 			utils.Error.Println("describing nodes : ", err.Error())

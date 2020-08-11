@@ -102,13 +102,13 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	responseObj, err := agent.crdManager(runtimeObj, string(constants.GET))
 	//service, err := agent.AgentCrdManager(constants.POST, request)
 	if err != nil {
-		cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
+		//cpCtx.SendFrontendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR)
 		return response, err
 	}
-	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
-	if responseObj.Error != "" {
-		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
-	}
+	//cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
+	//if responseObj.Error != "" {
+	//	cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
+	//}
 
 	//raw, err := json.Marshal(responseObj.Data)
 	//if err != nil {

@@ -39,7 +39,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -91,7 +91,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -158,7 +158,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
@@ -222,7 +222,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -286,7 +286,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)

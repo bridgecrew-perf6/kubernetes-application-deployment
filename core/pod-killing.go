@@ -22,7 +22,7 @@ func (s *Server) KillPod(ctx context.Context, request *pb.PodRequest) (*pb.PodRe
 		return &pb.PodResponse{}, err
 	}
 	agent.CompanyId = request.CompanyId
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 
 	err = agent.InitializeAgentClient()
 	if err != nil {

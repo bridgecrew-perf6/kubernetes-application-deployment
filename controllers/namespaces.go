@@ -45,7 +45,7 @@ func (c *KubeController) GetAllNamespaces(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"namespaces": "", "error": err.Error()})
 		return
 	}
-	agent.ProjectId = projectid
+	agent.InfraId = projectid
 	agent.CompanyId = companyId
 
 	namespaces, err := agent.GetAllNameSpaces()

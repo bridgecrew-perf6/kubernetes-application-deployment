@@ -21,7 +21,7 @@ func (s *Server) GetK8SResource(ctx context.Context, request *pb.KubernetesResou
 		utils.Error.Println(err)
 		return &pb.KubernetesResourceResponse{}, err
 	}
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.ProjectId
 	agent.CompanyId = request.CompanyId
 
 	err = agent.InitializeAgentClient()

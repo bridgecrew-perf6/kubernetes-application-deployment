@@ -2551,7 +2551,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		err := agent.ExecKubectlStreamCommand(&agent_api.ExecKubectlRequest{
 			Command: "kubectl",
-			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
+			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil {
 			responseObj.Error = err.Error() + "service :" + name

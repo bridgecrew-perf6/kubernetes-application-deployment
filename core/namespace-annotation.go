@@ -12,7 +12,7 @@ func (s *Server) AnnotateNamespace(ctx context.Context, request *pb.Namespacereq
 	response := new(pb.Namespaceresponse)
 	utils.Info.Println(reflect.TypeOf(ctx))
 
-	if request.CompanyId == "" || request.ProjectId == "" {
+	if request.CompanyId == "" || request.InfraId == "" {
 		return &pb.Namespaceresponse{}, errors.New("projectId or companyId must not be empty")
 	}
 

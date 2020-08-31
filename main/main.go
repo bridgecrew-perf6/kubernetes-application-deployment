@@ -126,7 +126,7 @@ func handleclient() {
 	}
 
 	_, err = pb.NewK8SResourceClient(conn).GetK8SResource(context.Background(), &pb.KubernetesResourceRequest{
-		ProjectId: "11",
+		InfraId:   "11",
 		CompanyId: "1111",
 		Token:     "dfsdfsdf",
 	})

@@ -25,13 +25,13 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 		utils.Error.Println(err)
 		return response, err
 	}
-	if request.ProjectId == "" || request.CompanyId == "" {
+	if request.InfraId == "" || request.CompanyId == "" {
 		utils.Error.Println("ProjectID or CompanyID is empty")
 		return response, errors.New("ProjectID or CompanyID is empty")
 	}
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
-	cpCtx.Keys["project_id"] = request.ProjectId
+	cpCtx.Keys["InfraId_id"] = request.InfraId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -39,7 +39,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.InfraId = request.ProjectId
+	agent.InfraId = request.InfraId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -77,13 +77,13 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 		utils.Error.Println(err)
 		return response, err
 	}
-	if request.ProjectId == "" || request.CompanyId == "" {
+	if request.InfraId == "" || request.CompanyId == "" {
 		utils.Error.Println("ProjectID or CompanyID is empty")
 		return response, errors.New("ProjectID or CompanyID is empty")
 	}
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
-	cpCtx.Keys["project_id"] = request.ProjectId
+	cpCtx.Keys["InfraId_id"] = request.InfraId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -91,7 +91,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.InfraId = request.ProjectId
+	agent.InfraId = request.InfraId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -144,13 +144,13 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 		utils.Error.Println(err)
 		return response, err
 	}
-	if request.ProjectId == "" || request.CompanyId == "" {
+	if request.InfraId == "" || request.CompanyId == "" {
 		utils.Error.Println("ProjectID or CompanyID is empty")
 		return response, errors.New("ProjectID or CompanyID is empty")
 	}
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
-	cpCtx.Keys["project_id"] = request.ProjectId
+	cpCtx.Keys["InfraId_id"] = request.InfraId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -158,7 +158,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.InfraId = request.ProjectId
+	agent.InfraId = request.InfraId
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
 	if err != nil {
@@ -208,13 +208,13 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 		utils.Error.Println(err)
 		return response, err
 	}
-	if request.ProjectId == "" || request.CompanyId == "" {
+	if request.InfraId == "" || request.CompanyId == "" {
 		utils.Error.Println("ProjectID or CompanyID is empty")
 		return response, errors.New("ProjectID or CompanyID is empty")
 	}
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
-	cpCtx.Keys["project_id"] = request.ProjectId
+	cpCtx.Keys["InfraId_id"] = request.InfraId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -222,7 +222,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.InfraId = request.ProjectId
+	agent.InfraId = request.InfraId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)
@@ -272,13 +272,13 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 		utils.Error.Println(err)
 		return response, err
 	}
-	if request.ProjectId == "" || request.CompanyId == "" {
+	if request.InfraId == "" || request.CompanyId == "" {
 		utils.Error.Println("ProjectID or CompanyID is empty")
 		return response, errors.New("ProjectID or CompanyID is empty")
 	}
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
-	cpCtx.Keys["project_id"] = request.ProjectId
+	cpCtx.Keys["InfraId_id"] = request.InfraId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -286,7 +286,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	}
 	agent.CpCtx = cpCtx
 	agent.CompanyId = request.CompanyId
-	agent.InfraId = request.ProjectId
+	agent.InfraId = request.InfraId
 
 	runtimeObj := v1alpha.RuntimeConfig{}
 	err = json.Unmarshal(request.Service, &runtimeObj)

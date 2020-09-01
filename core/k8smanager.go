@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strings"
 )
 
 type Server struct {
@@ -54,9 +55,9 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 		return response, err
 	}
 	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
-	if responseObj.Error != "" {
+	if len(responseObj.Error) > 0 {
 		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
-		return response, errors.New(responseObj.Error)
+		return response, errors.New(strings.Join(responseObj.Error, ";"))
 	}
 
 	raw, err := json.Marshal(responseObj.Data)
@@ -172,8 +173,9 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 		return response, err
 	}
 	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
-	if responseObj.Error != "" {
+	if len(responseObj.Error) > 0 {
 		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
+		return response, errors.New(strings.Join(responseObj.Error, ";"))
 	}
 
 	raw, err := json.Marshal(responseObj.Data)
@@ -237,8 +239,9 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 		return response, err
 	}
 	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
-	if responseObj.Error != "" {
+	if len(responseObj.Error) > 0 {
 		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
+		return response, errors.New(strings.Join(responseObj.Error, ";"))
 	}
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {
@@ -301,8 +304,9 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 		return response, err
 	}
 	cpCtx.SendFrontendLogs(responseObj, constants.LOGGING_LEVEL_INFO)
-	if responseObj.Error != "" {
+	if len(responseObj.Error) > 0 {
 		cpCtx.SendFrontendLogs(responseObj.Error, constants.LOGGING_LEVEL_ERROR)
+		return response, errors.New(strings.Join(responseObj.Error, ";"))
 	}
 	raw, err := json.Marshal(responseObj.Data)
 	if err != nil {

@@ -46,7 +46,7 @@ type ResponseData struct {
 }
 
 type SolutionResp struct {
-	Error     string   `json:"error"`
+	Error     []string `json:"error"`
 	Data      string   `json:"data"`
 	PodErrors []string `json:"pod_errors"`
 }

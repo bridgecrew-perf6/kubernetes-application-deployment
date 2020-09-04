@@ -44,7 +44,7 @@ type AgentConnection struct {
 	AgentCtx    context.Context
 	AgentClient agent_api.AgentServerClient
 	CpCtx       *Context
-	ProjectId   string
+	InfraId     string
 	CompanyId   string
 	Mux         sync.Mutex
 }
@@ -94,7 +94,7 @@ func GetGrpcAgentConnection() (*AgentConnection, error) {
 
 func (agent *AgentConnection) InitializeAgentClient() error {
 	md := metadata.Pairs(
-		"name", *GetAgentID(&agent.ProjectId, &agent.CompanyId),
+		"name", *GetAgentID(&agent.InfraId, &agent.CompanyId),
 	)
 	if agent.AgentClient == nil {
 		agent.AgentClient = agent_api.NewAgentServerClient(agent.Connection)
@@ -234,7 +234,7 @@ func StartServiceDeployment(req *types.ServiceRequest, cpContext *Context) (resp
 	if err != nil {
 		return responses, err
 	}
-	agent.ProjectId = *req.ProjectId
+	agent.InfraId = *req.ProjectId
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
@@ -271,7 +271,7 @@ func GetServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 	if err != nil {
 		return responses, err
 	}
-	agent.ProjectId = *req.ProjectId
+	agent.InfraId = *req.ProjectId
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
@@ -348,7 +348,7 @@ func DeleteServiceDeployment(cpContext *Context, req *types.ServiceRequest) (res
 	if err != nil {
 		utils.Error.Println(err)
 	}
-	agent.ProjectId = *req.ProjectId
+	agent.InfraId = *req.ProjectId
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
@@ -391,7 +391,7 @@ func PatchServiceDeployment(cpContext *Context, req *types.ServiceRequest) (resp
 	if err != nil {
 		utils.Error.Println(err)
 	}
-	agent.ProjectId = *req.ProjectId
+	agent.InfraId = *req.ProjectId
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
@@ -430,7 +430,7 @@ func PutServiceDeployment(cpContext *Context, req *types.ServiceRequest) (respon
 		utils.Error.Println(err)
 		return responses, err
 	}
-	agent.ProjectId = *req.ProjectId
+	agent.InfraId = *req.ProjectId
 	agent.CompanyId = cpContext.GetString("company_id")
 
 	defer agent.Connection.Close()
@@ -3401,13 +3401,13 @@ func (agent *AgentConnection) InstallCertManager() {
 		Args:    []string{"get", "ns", "cert-manager"},
 	})
 	if err != nil {
-		url := constants.KubernetesEngineURL + strings.Replace(constants.INSTALL_CERT_MANAGER_ENDPOINT, "{envId}", agent.ProjectId, -1)
+		url := constants.KubernetesEngineURL + strings.Replace(constants.INSTALL_CERT_MANAGER_ENDPOINT, "{envId}", agent.InfraId, -1)
 		_, err = utils.Post(url, nil, map[string]string{
 			"Content-Type":         "application/json",
 			constants.AuthTokenKey: agent.CpCtx.Keys[constants.AuthTokenKey].(string),
 		})
 		if err != nil {
-			utils.Error.Printf("Error while installing cert manager for project %s", agent.ProjectId)
+			utils.Error.Printf("Error while installing cert manager for project %s", agent.InfraId)
 			return
 		}
 		utils.Info.Printf("waiting for cert-manager to be installed successfully.......")

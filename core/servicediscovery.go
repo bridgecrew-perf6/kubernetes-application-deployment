@@ -12,7 +12,7 @@ func (s *Server) GetK8SResource(ctx context.Context, request *pb.KubernetesResou
 	response = new(pb.KubernetesResourceResponse)
 	utils.Info.Println(reflect.TypeOf(ctx))
 
-	if request.CompanyId == "" || request.ProjectId == "" {
+	if request.CompanyId == "" || request.InfraId == "" {
 		return &pb.KubernetesResourceResponse{}, errors.New("projectId or companyId must not be empty")
 	}
 
@@ -21,7 +21,7 @@ func (s *Server) GetK8SResource(ctx context.Context, request *pb.KubernetesResou
 		utils.Error.Println(err)
 		return &pb.KubernetesResourceResponse{}, err
 	}
-	agent.ProjectId = request.ProjectId
+	agent.InfraId = request.InfraId
 	agent.CompanyId = request.CompanyId
 
 	err = agent.InitializeAgentClient()

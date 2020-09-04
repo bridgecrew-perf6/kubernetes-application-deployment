@@ -10,7 +10,7 @@ service Service {
     rpc PutService (ServiceRequest) returns (SerivceFResponse) {}
 }
 message ServiceRequest {
-    string project_id = 1;
+    string infra_id = 1;
     string company_id = 2;
     string token = 3;
     bytes service = 4;

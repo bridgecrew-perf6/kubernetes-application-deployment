@@ -5,7 +5,7 @@ service k8sResource {
     rpc GetK8sResource(KubernetesResourceRequest) returns (KubernetesResourceResponse) {}
 }
 message KubernetesResourceRequest {
-    string project_id = 1;
+    string infra_id = 1;
     string company_id = 2;
     string token = 3;
     string command = 4;

@@ -150,7 +150,7 @@ func (c *KubeController) DeleteKubernetesService(g *gin.Context) {
 // @Param OP header boolean	true "cluster name"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param project_id header string true "project_id"
+// @Param infra_id header string true "infra_id"
 // @Security Bearer
 // @Accept  json
 // @Produce  json
@@ -161,10 +161,10 @@ func (c *KubeController) DeleteKubernetesService(g *gin.Context) {
 func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 	namespace := g.Param("namespace")
 	name := g.Param("name")
-	projectId := g.GetHeader("project_id")
+	infraId := g.GetHeader("infra_id")
 	isOP := g.GetHeader("OP")
 
-	if projectId == "" {
+	if infraId == "" {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": "project_id is missing in request"})
 		return
 	}
@@ -179,7 +179,7 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", infraId)
 
 	companyId := cpContext.GetString("company_id")
 	agent, err := core.GetGrpcAgentConnection()
@@ -188,7 +188,7 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 		return
 	}
 	agent.CompanyId = companyId
-	agent.ProjectId = projectId
+	agent.InfraId = infraId
 
 	var data string
 	if isOP == "true" {
@@ -212,7 +212,7 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 // @Param project_id header string	true "project id"
 // @Param name path string true "Name of the kubernetes service"
 // @Param namespace path string true "Namespace of the kubernetes service"
-// @Param project_id header string true "project_id"
+// @Param infra_id header string true "infra_id"
 // @Param token  header  string  false    "jwt token"
 // @Accept  json
 // @Produce  json
@@ -221,9 +221,9 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 // @failure 404 "{"error": ""}"
 // @failure 500 "{"error": ""}"
 func (c *KubeController) GetKubernetesServiceHealth(g *gin.Context) {
-	projectId := g.GetHeader("project_id")
+	infraId := g.GetHeader("infra_id")
 
-	if projectId == "" {
+	if infraId == "" {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": "project_id is missing in request"})
 		return
 	}
@@ -235,7 +235,7 @@ func (c *KubeController) GetKubernetesServiceHealth(g *gin.Context) {
 		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", projectId)
+	cpContext.InitializeLogger(g.Request.Host, g.Request.Method, g.Request.RequestURI, "", infraId)
 
 	companyId := cpContext.GetString("company_id")
 	agent, err := core.GetGrpcAgentConnection()
@@ -243,7 +243,7 @@ func (c *KubeController) GetKubernetesServiceHealth(g *gin.Context) {
 		g.JSON(http.StatusInternalServerError, gin.H{"external_ip": "", "error": err.Error()})
 		return
 	}
-	agent.ProjectId = projectId
+	agent.InfraId = infraId
 	agent.CompanyId = companyId
 
 	data, err := agent.GetKubernetesHealth()

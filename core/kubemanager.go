@@ -1721,8 +1721,8 @@ func (agent *AgentConnection) deleteCRDS(key string, data []interface{}, project
 	utils.Info.Println(len(runtimeConfig))
 	for i := range runtimeConfig {
 		responseObj, _ := agent.crdManager(runtimeConfig[i], "delete")
-		if responseObj.Error != "" {
-			errs = append(errs, responseObj.Error)
+		if len(responseObj.Error) > 0 {
+			errs = append(errs, strings.Join(responseObj.Error, ";"))
 		}
 		resp = append(resp, responseObj)
 	}
@@ -2476,19 +2476,19 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	runtimeObj := v1alpha.RuntimeConfig{}
 	if err != nil {
 		utils.Error.Println(err)
-		responseObj.Error = err.Error()
+		responseObj.Error = append(responseObj.Error, err.Error())
 		return responseObj, err
 	}
 	err = json.Unmarshal(raw, &runtimeObj)
 	if err != nil {
 		utils.Error.Println(err)
-		responseObj.Error = err.Error()
+		responseObj.Error = append(responseObj.Error, err.Error())
 		return responseObj, err
 	}
 
 	if runtimeObj.Kind == "" || runtimeObj.APIVersion == "" {
 		utils.Error.Println("Kind/APIVersion is empty")
-		responseObj.Error = "Kind/APIVersion is empty"
+		responseObj.Error = append(responseObj.Error, "Kind/APIVersion is empty")
 		return responseObj, errors.New("Kind/APIVersion is empty")
 	}
 
@@ -2512,7 +2512,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			})
 			if err != nil && !strings.Contains(err.Error(), "already exists") {
 				utils.Error.Println(namespace+" namespace creation failed", err)
-				responseObj.Error = err.Error()
+				responseObj.Error = append(responseObj.Error, err.Error())
 				return responseObj, err
 			} else if resp != nil {
 				utils.Info.Println(resp.Stdout)
@@ -2525,7 +2525,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		})
 		if err != nil && !strings.Contains(err.Error(), "already has a value (enabled)") {
 			utils.Error.Println(namespace+" label attachment failed", err)
-			responseObj.Error = err.Error()
+			responseObj.Error = append(responseObj.Error, err.Error())
 			return responseObj, err
 		}
 	}
@@ -2546,7 +2546,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 		}
 
 		err := agent.ExecKubectlStreamCommand(&agent_api.ExecKubectlRequest{
@@ -2554,7 +2554,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 			utils.Error.Println("kubectl stream :", err)
 		}
 
@@ -2585,7 +2585,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
@@ -2605,7 +2605,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + runtimeObj.Kind + "-" + runtimeObj.Name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+runtimeObj.Kind+"-"+runtimeObj.Name)
 			utils.Error.Println(err)
 		} else {
 			podStatus, err := agent.GetPodStatus(runtimeObj.Name, runtimeObj.Namespace)
@@ -2632,7 +2632,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 		name := fmt.Sprintf("%s-%s", runtimeObj.Name, runtimeObj.Kind)
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil {
-			responseObj.Error = err.Error()
+			responseObj.Error = append(responseObj.Error, err.Error())
 		}
 
 		err := agent.ExecKubectlStreamCommand(&agent_api.ExecKubectlRequest{
@@ -2640,7 +2640,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"create", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 			utils.Error.Println("kubectl stream :", err)
 		}
 
@@ -2671,7 +2671,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error()
+			responseObj.Error = append(responseObj.Error, err.Error())
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
@@ -2689,7 +2689,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 
 		_, err = agent.CreateFile(name, string(raw))
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 		}
 
 		err = agent.ExecKubectlStreamCommand(&agent_api.ExecKubectlRequest{
@@ -2697,7 +2697,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"apply", "-f", "/tmp/" + name + ".json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 			utils.Error.Println("kubectl stream :", err)
 		}
 
@@ -2728,7 +2728,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"get", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error() + "service :" + name
+			responseObj.Error = append(responseObj.Error, err.Error()+"service :"+name)
 			utils.Error.Println("kubectl :", err)
 		} else {
 			fmt.Println(kubectlResp.Stdout, kubectlResp.Stderr, "haroon")
@@ -2758,7 +2758,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"delete", runtimeObj.Kind, runtimeObj.Name, "-n", runtimeObj.Namespace},
 		})
 		if err != nil && !strings.Contains(err.Error(), "not found") {
-			responseObj.Error = err.Error()
+			responseObj.Error = append(responseObj.Error, err.Error())
 			utils.Error.Println(err)
 		} else if kubeResponse != nil {
 			data2 = kubeResponse.Stdout[0]
@@ -2769,7 +2769,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 			Args:    []string{"get", runtimeObj.Kind, "-n", runtimeObj.Namespace, "-o", "json"},
 		})
 		if err != nil {
-			responseObj.Error = err.Error()
+			responseObj.Error = append(responseObj.Error, err.Error())
 			utils.Error.Println(err)
 		} else {
 			data2 = kubectlResp.Stdout[0]
@@ -2777,7 +2777,7 @@ func (agent *AgentConnection) crdManager(runtimeConfig interface{}, method strin
 	}
 
 	if err != nil {
-		responseObj.Error = err.Error()
+		responseObj.Error = append(responseObj.Error, err.Error())
 		return responseObj, err
 	} else {
 		responseObj.Data = data2
@@ -3512,6 +3512,8 @@ func (agent *AgentConnection) ExecKubectlStreamCommand(req *agent_api.ExecKubect
 			if err != nil {
 				utils.Error.Println("kubectl stream reading :", err)
 				return err
+			} else if len(feature.Stdout) > 0 && strings.Contains(feature.Stdout[0], "Error from server") {
+				return errors.New(feature.Stdout[0])
 			} else {
 				utils.Info.Println(feature.Stdout, feature.Stderr)
 			}

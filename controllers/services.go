@@ -209,14 +209,11 @@ func (c *KubeController) GetKubernetesServiceExternalIp(g *gin.Context) {
 
 // @Summary get health status of kubernetes services deployment
 // @Description get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=""
-// @Param project_id header string	true "project id"
-// @Param name path string true "Name of the kubernetes service"
-// @Param namespace path string true "Namespace of the kubernetes service"
 // @Param infra_id header string true "infra_id"
-// @Param token  header  string  false    "jwt token"
+// @Security Bearer
 // @Accept  json
 // @Produce  json
-// @Router /kubeservice/clusterhealth [get]
+// @Router /kubehealthservice [get]
 // @Success 200 "{"error": "", "health": ""}"
 // @failure 404 "{"error": ""}"
 // @failure 500 "{"error": ""}"

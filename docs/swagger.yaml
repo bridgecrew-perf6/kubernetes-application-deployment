@@ -5,14 +5,11 @@ definitions:
       project_id:
         type: string
       service:
-        additionalProperties:
-          items:
-            type: object
-          type: array
+        required:
+        - service
         type: object
     required:
     - project_id
-    - service
     type: object
   v1.StatefulSet:
     properties:
@@ -21,6 +18,7 @@ definitions:
       status:
         type: StatefulSetStatus
     type: object
+host: '{{.Host}}'
 info:
   contact:
     email: haseeb@cloudplex.io
@@ -150,6 +148,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/v1.StatefulSet'
+            type: object
       security:
       - Bearer: []
       summary: get status of kubernetes services deployment
@@ -264,6 +263,30 @@ paths:
           description: '{"error": ""}'
       tags:
       - health
+  /kubehealthservice:
+    get:
+      consumes:
+      - application/json
+      description: get status of kubernetes services deployment on a Kubernetes Cluster.
+        If you need all services status then pass namespace=""
+      parameters:
+      - description: infra_id
+        in: header
+        name: infra_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"error": "", "health": ""}'
+        "404":
+          description: '{"error": ""}'
+        "500":
+          description: '{"error": ""}'
+      security:
+      - Bearer: []
+      summary: get health status of kubernetes services deployment
   /kubeservice/{name}/{namespace}:
     delete:
       consumes:
@@ -339,9 +362,9 @@ paths:
         name: namespace
         required: true
         type: string
-      - description: project_id
+      - description: infra_id
         in: header
-        name: project_id
+        name: infra_id
         required: true
         type: string
       produces:
@@ -378,47 +401,6 @@ paths:
       security:
       - Bearer: []
       summary: get status of  all kubernetes services deployment
-  /kubeservice/clusterhealth:
-    get:
-      consumes:
-      - application/json
-      description: get status of kubernetes services deployment on a Kubernetes Cluster.
-        If you need all services status then pass namespace=""
-      parameters:
-      - description: project id
-        in: header
-        name: project_id
-        required: true
-        type: string
-      - description: Name of the kubernetes service
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: Namespace of the kubernetes service
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: project_id
-        in: header
-        name: project_id
-        required: true
-        type: string
-      - description: jwt token
-        in: header
-        name: token
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"error": "", "health": ""}'
-        "404":
-          description: '{"error": ""}'
-        "500":
-          description: '{"error": ""}'
-      summary: get health status of kubernetes services deployment
   /solution:
     delete:
       consumes:
@@ -431,6 +413,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -456,6 +439,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -481,6 +465,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -505,6 +490,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -530,6 +516,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -556,6 +543,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ServiceRequest'
+          type: object
       produces:
       - application/json
       responses:

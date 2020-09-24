@@ -15,6 +15,7 @@
         },
         "version": "1.0"
     },
+    "host": "{{.Host}}",
     "basePath": "/ksd/api/v1",
     "paths": {
         "/api/v1/registry": {
@@ -187,6 +188,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/v1.StatefulSet"
                         }
                     }
@@ -368,8 +370,13 @@
                 }
             }
         },
-        "/kubeservice/clusterhealth": {
+        "/kubehealthservice": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "get status of kubernetes services deployment on a Kubernetes Cluster. If you need all services status then pass namespace=\"\"",
                 "consumes": [
                     "application/json"
@@ -381,37 +388,10 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "project id",
-                        "name": "project_id",
+                        "description": "infra_id",
+                        "name": "infra_id",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Name of the kubernetes service",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Namespace of the kubernetes service",
-                        "name": "namespace",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "project_id",
-                        "name": "project_id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "token",
-                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -577,8 +557,8 @@
                     },
                     {
                         "type": "string",
-                        "description": "project_id",
-                        "name": "project_id",
+                        "description": "infra_id",
+                        "name": "infra_id",
                         "in": "header",
                         "required": true
                     }
@@ -621,6 +601,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -661,6 +642,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -700,6 +682,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -740,6 +723,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -780,6 +764,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -822,6 +807,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/types.ServiceRequest"
                         }
                     }
@@ -887,8 +873,7 @@
         "types.ServiceRequest": {
             "type": "object",
             "required": [
-                "project_id",
-                "service"
+                "project_id"
             ],
             "properties": {
                 "project_id": {
@@ -896,12 +881,9 @@
                 },
                 "service": {
                     "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "object"
-                        }
-                    }
+                    "required": [
+                        "service"
+                    ]
                 }
             }
         },

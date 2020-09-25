@@ -205,10 +205,10 @@ func (c *Context) SendBackendLogs(message interface{}, severity string) {
 	if message != nil {
 		url := constants.LoggingURL + constants.BACKEND_LOGGING_ENDPOINT
 		var data types.Backendlogging
-		data.ProjectId = c.GetString("project_id")
+		data.ProjectId = c.GetString("InfraId_id")
 		data.ServiceName = constants.SERVICE_NAME
 		data.Severity = severity
-		data.ResourceName = "solution"
+		data.ResourceName = "application"
 		data.UserId = c.GetString("user")
 		data.Company = c.GetString("company_id")
 		//data.MessageType = ""
@@ -239,8 +239,8 @@ func (c *Context) SendFrontendLogs(message interface{}, severity string) {
 		url := constants.LoggingURL + constants.FRONTEND_LOGGING_ENDPOINT
 		var data types.LoggingRequestFrontend
 		data.Message = string(byteData)
-		data.Environment = "solution"
-		data.Id = c.GetString("project_id")
+		data.Environment = "application"
+		data.Id = c.GetString("InfraId_id")
 		data.Service = constants.SERVICE_NAME
 		data.Level = severity
 		data.UserId = c.GetString("user")

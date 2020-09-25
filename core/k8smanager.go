@@ -33,6 +33,7 @@ func (s *Server) CreateService(ctx context.Context, request *pb.ServiceRequest) 
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
 	cpCtx.Keys["InfraId_id"] = request.InfraId
+	cpCtx.Keys["application_id"] = request.ApplicationId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -85,6 +86,7 @@ func (s *Server) GetService(ctx context.Context, request *pb.ServiceRequest) (re
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
 	cpCtx.Keys["InfraId_id"] = request.InfraId
+	cpCtx.Keys["application_id"] = request.ApplicationId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -152,6 +154,7 @@ func (s *Server) DeleteService(ctx context.Context, request *pb.ServiceRequest) 
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
 	cpCtx.Keys["InfraId_id"] = request.InfraId
+	cpCtx.Keys["application_id"] = request.ApplicationId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -217,6 +220,7 @@ func (s *Server) PatchService(ctx context.Context, request *pb.ServiceRequest) (
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
 	cpCtx.Keys["InfraId_id"] = request.InfraId
+	cpCtx.Keys["application_id"] = request.ApplicationId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)
@@ -282,6 +286,7 @@ func (s *Server) PutService(ctx context.Context, request *pb.ServiceRequest) (re
 	cpCtx.Keys["company_id"] = CID
 	cpCtx.Keys["user"] = uId
 	cpCtx.Keys["InfraId_id"] = request.InfraId
+	cpCtx.Keys["application_id"] = request.ApplicationId
 	agent, err := GetGrpcAgentConnection()
 	if err != nil {
 		utils.Error.Println(err)

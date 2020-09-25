@@ -14,7 +14,7 @@ message ServiceRequest {
     string company_id = 2;
     string token = 3;
     bytes service = 4;
-
+    string application_id = 5;
 }
 message SerivceFResponse{
     bytes service = 1;

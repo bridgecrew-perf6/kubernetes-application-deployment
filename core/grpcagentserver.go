@@ -66,6 +66,9 @@ func (agent *AgentConnection) GetAllNameSpaces() ([]string, error) {
 
 	var namespaceResp []string
 	for _, namespace := range namespaces.Items {
+		if namespace.Name == "cloudplex" {
+			continue
+		}
 		namespaceResp = append(namespaceResp, namespace.Name)
 	}
 
